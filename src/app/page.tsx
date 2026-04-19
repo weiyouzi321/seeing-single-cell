@@ -131,16 +131,8 @@ function ChapterCard({
   color: string
   comingSoon?: boolean
 }) {
-  const Wrapper = comingSoon ? 'div' : Link
-  const wrapperProps = comingSoon ? {} : { href }
-
-  return (
-    <Wrapper
-      {...wrapperProps}
-      className={`group block p-6 bg-white rounded-2xl border border-gray-100 
-                  shadow-sm transition-all duration-200
-                  ${comingSoon ? 'opacity-60' : 'hover:shadow-md hover:-translate-y-1 hover:border-gray-200'}`}
-    >
+  const cardContent = (
+    <>
       <div className="flex items-start justify-between mb-4">
         <span className={`inline-block px-3 py-1 rounded-lg bg-gradient-to-r ${color} text-white text-xs font-bold`}>
           Chapter {number}
@@ -167,6 +159,15 @@ function ChapterCard({
           </span>
         ))}
       </div>
-    </Wrapper>
+    </>
   )
+
+  const cls = `group block p-6 bg-white rounded-2xl border border-gray-100 
+               shadow-sm transition-all duration-200
+               ${comingSoon ? 'opacity-60' : 'hover:shadow-md hover:-translate-y-1 hover:border-gray-200'}`
+
+  if (comingSoon) {
+    return <div className={cls}>{cardContent}</div>
+  }
+  return <Link href={href} className={cls}>{cardContent}</Link>
 }
