@@ -202,16 +202,16 @@ export default function MatrixChapter() {
       </section>
 
       <div className="flex justify-between items-center py-8 border-t border-gray-100">
-        <a href="/" className="text-gray-400 hover:text-[#4361ee] transition-colors">
+        <Link href="/" className="text-gray-400 hover:text-[#4361ee] transition-colors">
           ← Home
-        </a>
-        <a
+        </Link>
+        <Link
           href="/chapters/2-distribution"
           className="px-5 py-2.5 rounded-xl bg-[#4361ee] text-white font-medium 
                      hover:bg-[#3651d4] transition-colors shadow-sm"
         >
           Next: Data Distribution →
-        </a>
+        </Link>
       </div>
     </div>
   )

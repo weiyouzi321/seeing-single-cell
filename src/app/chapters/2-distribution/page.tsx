@@ -199,12 +199,12 @@ export default function DistributionChapter() {
       </section>
 
       <div className="flex justify-between items-center py-8 border-t border-gray-100">
-        <a
+        <Link
           href="/chapters/1-matrix"
           className="text-gray-400 hover:text-[#4361ee] transition-colors"
         >
           ← Gene Expression Matrix
-        </a>
+        </Link>
         <span className="text-sm text-gray-300">
           Chapter 3 (Normalization) coming soon →
         </span>
