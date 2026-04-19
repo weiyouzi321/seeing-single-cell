@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* 数学公式样式 */
+.math-formula {
+  font-family: 'KaTeX_Math', 'Times New Roman', serif;
+  font-size: 1.1em;
+}
+
+/* 代码块样式 */
+.code-block {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  overflow-x: auto;
+}
+
+/* 可视化容器 */
+.viz-container {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
+/* 章节标题 */
+.chapter-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+/* 小节标题 */
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #555;
+  margin: 2rem 0 1rem;
+}
+
+/* 交互按钮 */
+.interactive-btn {
+  background-color: #4A90E2;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.interactive-btn:hover {
+  background-color: #357ABD;
+}
+
+/* 滑块样式 */
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.slider-label {
+  font-weight: 500;
+  color: #555;
+}
+
+.slider-value {
+  font-family: 'JetBrains Mono', monospace;
+  background-color: #f0f0f0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* p5.js 画布容器 */
+.p5-canvas-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.p5-canvas-container canvas {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
