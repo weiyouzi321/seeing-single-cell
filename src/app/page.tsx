@@ -1,7 +1,9 @@
+import Link from 'next/link'
+
 export default function Home() {
   return (
     <div>
-      {/* Hero Section */}
+      {/* Hero */}
       <section className="pt-16 pb-12 text-center">
         <p className="text-sm font-semibold tracking-widest uppercase text-[#7c3aed] mb-4">
           Interactive Learning
@@ -18,14 +20,14 @@ export default function Home() {
           Play with the math. See what happens.
         </p>
         <div className="flex justify-center gap-4">
-          <a
+          <Link
             href="/chapters/1-matrix"
             className="px-6 py-3 rounded-xl bg-[#4361ee] text-white font-semibold 
                        hover:bg-[#3651d4] transition-all shadow-md hover:shadow-lg 
                        hover:-translate-y-0.5"
           >
             Start Learning →
-          </a>
+          </Link>
           <a
             href="#chapters"
             className="px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold
@@ -36,7 +38,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Chapter Grid */}
+      {/* Chapters */}
       <section id="chapters" className="py-12">
         <h2 className="text-sm font-semibold tracking-widest uppercase text-gray-400 mb-8 text-center">
           Chapters
@@ -129,10 +131,8 @@ function ChapterCard({
   color: string
   comingSoon?: boolean
 }) {
-  const Wrapper = comingSoon ? 'div' : 'a'
-  const wrapperProps = comingSoon
-    ? {}
-    : { href }
+  const Wrapper = comingSoon ? 'div' : Link
+  const wrapperProps = comingSoon ? {} : { href }
 
   return (
     <Wrapper

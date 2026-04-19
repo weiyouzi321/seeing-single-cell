@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
 const DistributionViz = dynamic(
@@ -58,9 +59,9 @@ export default function DistributionChapter() {
     <div>
       <div className="chapter-hero">
         <div className="breadcrumb">
-          <a href="/">Home</a>
+          <Link href="/">Home</Link>
           <span>›</span>
-          <a href="/chapters/1-matrix">Chapter 1</a>
+          <Link href="/chapters/1-matrix">Chapter 1</Link>
           <span>›</span>
           <span>Chapter 2</span>
         </div>

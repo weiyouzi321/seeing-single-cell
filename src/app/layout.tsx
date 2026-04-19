@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import '../styles/globals.css'
 
@@ -33,19 +34,19 @@ export default function RootLayout({
       <body className="min-h-screen">
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-            <a href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
+            <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
               <span className="text-2xl">🔬</span>
               <span className="bg-gradient-to-r from-[#4361ee] to-[#7c3aed] bg-clip-text text-transparent">
                 Seeing Single-Cell
               </span>
-            </a>
+            </Link>
             <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
-              <a href="/chapters/1-matrix" className="hover:text-[#4361ee] transition-colors">
+              <Link href="/chapters/1-matrix" className="hover:text-[#4361ee] transition-colors">
                 1 · Matrix
-              </a>
-              <a href="/chapters/2-distribution" className="hover:text-[#4361ee] transition-colors">
+              </Link>
+              <Link href="/chapters/2-distribution" className="hover:text-[#4361ee] transition-colors">
                 2 · Distribution
-              </a>
+              </Link>
             </div>
           </div>
         </nav>

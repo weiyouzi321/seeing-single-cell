@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
 const MatrixViz = dynamic(
@@ -63,7 +64,7 @@ export default function MatrixChapter() {
     <div>
       <div className="chapter-hero">
         <div className="breadcrumb">
-          <a href="/">Home</a>
+          <Link href="/">Home</Link>
           <span>›</span>
           <span>Chapter 1</span>
         </div>
