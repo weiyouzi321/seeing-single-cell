@@ -1,7 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import MatrixViz from '@/components/visualizations/MatrixViz'
+import dynamic from 'next/dynamic'
+
+const MatrixViz = dynamic(
+  () => import('@/components/visualizations/MatrixViz'),
+  { ssr: false, loading: () => <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4361ee]" /></div> }
+)
 
 interface PBMCData {
   metadata: {
@@ -19,192 +24,192 @@ interface PBMCData {
 export default function MatrixChapter() {
   const [data, setData] = useState<PBMCData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadData() {
       try {
         const basePath = process.env.NODE_ENV === 'production' ? '/seeing-single-cell' : ''
-        const response = await fetch(\`\${basePath}/data/pbmc_data.json\`)
-        if (!response.ok) {
-          throw new Error('Failed to load data')
+        const res = await fetch(`${basePath}/data/pbmc_data.json`)
+        if (res.ok) {
+          setData(await res.json())
         }
-        const pbmcData = await response.json()
-        setData(pbmcData)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error')
+      } catch (e) {
+        console.error(e)
       } finally {
         setLoading(false)
       }
     }
-
     loadData()
   }, [])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-red-500">Error: {error}</p>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#4361ee]" />
       </div>
     )
   }
 
   if (!data) {
-    return null
+    return <p className="text-center text-red-500 py-12">Failed to load data.</p>
   }
 
+  const flat = data.expression_matrix.flat()
+  const zeros = flat.filter(v => v === 0).length
+  const sparsity = ((zeros / flat.length) * 100).toFixed(1)
+  const maxVal = Math.max(...flat).toFixed(1)
+
   return (
-    <div className="prose max-w-none">
-      <h1 className="chapter-title">
-        Chapter 1: Gene Expression Matrix
-      </h1>
-      
-      <p className="text-xl text-gray-600 mb-8">
-        Understanding the fundamental data structure of single-cell RNA sequencing
-      </p>
-
-      {/* 1.1 矩阵可视化 */}
-      <section className="mb-12">
-        <h2 className="section-title">1.1 Matrix Visualization</h2>
-        
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <p className="text-gray-700 mb-4">
-            In single-cell RNA sequencing, we measure the expression levels of thousands of genes 
-            across thousands of individual cells. This creates a <strong>gene expression matrix</strong> where:
-          </p>
-          
-          <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
-            <li><strong>Each row</strong> represents an individual cell</li>
-            <li><strong>Each column</strong> represents a gene</li>
-            <li><strong>Each value</strong> represents the expression level of that gene in that cell</li>
-          </ul>
-          
-          <p className="text-gray-700">
-            The matrix is often <strong>sparse</strong>, meaning many values are zero. 
-            This is due to technical limitations where lowly expressed genes may not be detected.
-          </p>
+    <div>
+      <div className="chapter-hero">
+        <div className="breadcrumb">
+          <a href="/">Home</a>
+          <span>›</span>
+          <span>Chapter 1</span>
         </div>
+        <h1>The Gene Expression Matrix</h1>
+        <p className="subtitle">
+          Every single-cell experiment begins with a matrix — rows are cells, columns are genes,
+          and each value tells us how much a gene is expressed. Let's explore this fundamental data structure.
+        </p>
+      </div>
 
-        <MatrixViz 
-          data={data.expression_matrix} 
-          geneNames={data.gene_names}
-          cellTypes={data.cell_types}
-        />
-
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-6">
-          <p className="text-yellow-800">
-            <strong>Try it!</strong> Hover over cells to see expression values. 
-            Click on rows or columns to highlight entire cells or genes. 
-            Adjust the color scale to see how it affects visualization.
-          </p>
-        </div>
-      </section>
-
-      {/* 1.2 数学表示 */}
       <section className="mb-12">
-        <h2 className="section-title">1.2 Mathematical Representation</h2>
-        
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <p className="text-gray-700 mb-4">
-            The gene expression matrix can be represented mathematically as:
-          </p>
-          
-          <div className="bg-gray-50 p-4 rounded-lg mb-4 overflow-x-auto">
-            <div className="text-center">
-              <span className="math-formula text-lg">
-                X = [x<sub>ij</sub>]<sub>m×n</sub>
-              </span>
-            </div>
-            
-            <div className="mt-4 text-sm text-gray-600">
-              <p>Where:</p>
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li><span className="math-formula">x<sub>ij</sub></span> = expression level of gene <span className="math-formula">j</span> in cell <span className="math-formula">i</span></li>
-                <li><span className="math-formula">m</span> = number of cells ({data.metadata.n_cells})</li>
-                <li><span className="math-formula">n</span> = number of genes ({data.metadata.n_genes})</li>
-              </ul>
-            </div>
+        <div className="viz-card">
+          <div className="viz-card-header">
+            <div className="step-number">1</div>
+            <h2>What Does the Data Look Like?</h2>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-900">Dimensions</h4>
-              <p className="text-blue-800 text-sm mt-1">
-                {data.metadata.n_cells} cells × {data.metadata.n_genes} genes
-              </p>
-            </div>
-            
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-green-900">Cell Types</h4>
-              <p className="text-green-800 text-sm mt-1">
-                {data.metadata.cell_types.join(', ')}
-              </p>
-            </div>
-            
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-purple-900">Sparsity</h4>
-              <p className="text-purple-800 text-sm mt-1">
-                ~36% of values are zero
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* 1.3 关键概念 */}
-      <section className="mb-12">
-        <h2 className="section-title">1.3 Key Concepts</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Expression Level</h3>
-            <p className="text-gray-700 mb-3">
-              The expression level represents how actively a gene is being transcribed in a cell. 
-              Higher values indicate more RNA molecules detected.
+          <div className="info-panel concept mb-6">
+            <h3>💡 Key Concept</h3>
+            <p>
+              In scRNA-seq, we measure the expression of <strong>{data.metadata.n_genes} genes</strong> across{' '}
+              <strong>{data.metadata.n_cells} individual cells</strong>. The result is a matrix where each cell
+              (row) has a "barcode" — its unique pattern of gene expression.
             </p>
-            <div className="bg-gray-50 p-3 rounded">
-              <p className="text-sm text-gray-600">
-                <strong>Interpretation:</strong> A value of 0 means the gene was not detected 
-                (dropout), while higher values indicate active expression.
-              </p>
-            </div>
           </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Sparsity</h3>
-            <p className="text-gray-700 mb-3">
-              Single-cell data is inherently sparse due to technical limitations. 
-              Many genes have zero counts in most cells.
-            </p>
-            <div className="bg-gray-50 p-3 rounded">
-              <p className="text-sm text-gray-600">
-                <strong>Challenge:</strong> This sparsity requires special analytical approaches 
-                to distinguish true biological zeros from technical dropouts.
-              </p>
+
+          <MatrixViz
+            data={data.expression_matrix}
+            geneNames={data.gene_names}
+            cellTypes={data.cell_types}
+          />
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+            <div className="stat-card">
+              <h3>Cells</h3>
+              <div className="stat-value">{data.metadata.n_cells}</div>
+            </div>
+            <div className="stat-card">
+              <h3>Genes</h3>
+              <div className="stat-value">{data.metadata.n_genes}</div>
+            </div>
+            <div className="stat-card">
+              <h3>Sparsity</h3>
+              <div className="stat-value">{sparsity}%</div>
+            </div>
+            <div className="stat-card">
+              <h3>Max Value</h3>
+              <div className="stat-value">{maxVal}</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 导航 */}
-      <div className="flex justify-between items-center mt-16 pt-8 border-t">
-        <div></div>
-        <a 
+      <section className="mb-12">
+        <div className="viz-card">
+          <div className="viz-card-header">
+            <div className="step-number">2</div>
+            <h2>Why Are There So Many Zeros?</h2>
+          </div>
+
+          <div className="space-y-4 text-gray-600 leading-relaxed">
+            <p>
+              Look at the matrix above — notice the many white (zero) cells? This is called{' '}
+              <strong className="text-gray-800">sparsity</strong>, and it's a hallmark of single-cell data.
+            </p>
+            <p>
+              In our dataset, <strong className="text-gray-800">{sparsity}%</strong> of all values are zero.
+              This happens for two main reasons:
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div className="info-panel concept">
+              <h3>🔬 Biological Zero</h3>
+              <p>
+                The gene is truly not expressed in that cell. Cell-type specific genes will show
+                zeros in cells where they are inactive.
+              </p>
+            </div>
+            <div className="info-panel tip">
+              <h3>⚙️ Technical Dropout</h3>
+              <p>
+                The gene was expressed, but at such low levels that the sequencing process failed
+                to capture it. This is a key challenge in scRNA-seq analysis.
+              </p>
+            </div>
+          </div>
+
+          <div className="info-panel math mt-6">
+            <h3>📐 Mathematical Formulation</h3>
+            <p>
+              The expression matrix <span className="math-inline">X</span> has dimensions{' '}
+              <span className="math-inline">n × p</span>, where <span className="math-inline">n</span> is the number of cells
+              and <span className="math-inline">p</span> is the number of genes. The sparsity is defined as:
+            </p>
+            <p className="text-center my-3 font-mono text-sm text-purple-700">
+              sparsity = |{'{x ∈ X : x = 0}'}| / (n × p)
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-12">
+        <div className="viz-card">
+          <div className="viz-card-header">
+            <div className="step-number">3</div>
+            <h2>Reading the Matrix</h2>
+          </div>
+
+          <div className="space-y-4 text-gray-600 leading-relaxed">
+            <p>
+              <strong className="text-gray-800">Each row</strong> is a single cell. Cells of the same type
+              (e.g., CD4 T cells) tend to have similar expression patterns — they'll cluster together visually.
+            </p>
+            <p>
+              <strong className="text-gray-800">Each column</strong> is a gene. Marker genes like{' '}
+              <span className="code-inline">CD3D</span> are highly expressed only in specific cell types,
+              creating bright vertical "stripes" in the matrix.
+            </p>
+            <p>
+              <strong className="text-gray-800">Try it:</strong> Hover over the matrix to see individual values.
+              Click on a row or column to highlight it. Use the color scale slider to adjust contrast.
+            </p>
+          </div>
+
+          <div className="info-panel tip mt-6">
+            <h3>🎯 What to Look For</h3>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Rows with similar patterns → same cell type</li>
+              <li>Columns with many zeros → lowly expressed or cell-type specific</li>
+              <li>Bright "hotspots" → marker genes in specific cell types</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <div className="flex justify-between items-center py-8 border-t border-gray-100">
+        <a href="/" className="text-gray-400 hover:text-[#4361ee] transition-colors">
+          ← Home
+        </a>
+        <a
           href="/chapters/2-distribution"
-          className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="px-5 py-2.5 rounded-xl bg-[#4361ee] text-white font-medium 
+                     hover:bg-[#3651d4] transition-colors shadow-sm"
         >
-          Next: Data Distribution
-          <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          Next: Data Distribution →
         </a>
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import p5 from 'p5'
 
 interface MatrixVizProps {
@@ -12,31 +12,36 @@ interface MatrixVizProps {
 export default function MatrixViz({ data, geneNames, cellTypes }: MatrixVizProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const p5Ref = useRef<p5 | null>(null)
-  const [hoveredCell, setHoveredCell] = useState<{row: number, col: number, value: number, gene: string, cellType: string} | null>(null)
+  const [hoveredCell, setHoveredCell] = useState<{
+    row: number; col: number; value: number; gene: string; cellType: string
+  } | null>(null)
   const [selectedGene, setSelectedGene] = useState<number | null>(null)
   const [selectedCell, setSelectedCell] = useState<number | null>(null)
   const [colorScale, setColorScale] = useState<number>(1)
 
   useEffect(() => {
     if (!containerRef.current) return
-
-    // 清理之前的 p5 实例
-    if (p5Ref.current) {
-      p5Ref.current.remove()
-    }
+    if (p5Ref.current) p5Ref.current.remove()
 
     const sketch = (p: p5) => {
-      const cellSize = 12
-      const margin = 100
-      const matrixWidth = data[0].length * cellSize
-      const matrixHeight = data.length * cellSize
-      
-      // 计算颜色范围
+      const cellSize = 10
+      const marginLeft = 80
+      const marginTop = 120
+      const marginRight = 20
+      const marginBottom = 20
+      const cols = data[0].length
+      const rows = data.length
+      const matrixW = cols * cellSize
+      const matrixH = rows * cellSize
+      const canvasW = matrixW + marginLeft + marginRight
+      const canvasH = matrixH + marginTop + marginBottom
       const maxVal = Math.max(...data.flat()) * colorScale
-      const minVal = 0
+
+      // Color: white → blue
+      const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
       p.setup = () => {
-        const canvas = p.createCanvas(matrixWidth + margin * 2, matrixHeight + margin * 2)
+        const canvas = p.createCanvas(canvasW, canvasH)
         canvas.parent(containerRef.current!)
         p.textFont('Inter')
         p.noLoop()
@@ -44,85 +49,95 @@ export default function MatrixViz({ data, geneNames, cellTypes }: MatrixVizProps
 
       p.draw = () => {
         p.background(255)
-        
-        // 绘制矩阵
-        for (let i = 0; i < data.length; i++) {
-          for (let j = 0; j < data[i].length; j++) {
-            const x = margin + j * cellSize
-            const y = margin + i * cellSize
+
+        // Matrix cells
+        for (let i = 0; i < rows; i++) {
+          for (let j = 0; j < cols; j++) {
+            const x = marginLeft + j * cellSize
+            const y = marginTop + i * cellSize
             const value = data[i][j]
-            
-            // 颜色映射（从白色到蓝色）
-            const normalizedValue = (value - minVal) / (maxVal - minVal)
-            const color = p.lerpColor(p.color(255), p.color(65, 105, 225), normalizedValue)
-            
-            // 高亮选中的行或列
-            if (selectedGene === j || selectedCell === i) {
-              p.stroke(255, 165, 0)
+            const t = Math.min(value / maxVal, 1)
+
+            // White to deep blue
+            const r = lerp(240, 43, t)
+            const g = lerp(245, 97, t)
+            const b = lerp(250, 238, t)
+
+            const isSelected = selectedGene === j || selectedCell === i
+            if (isSelected) {
+              p.stroke(245, 158, 11) // amber stroke
               p.strokeWeight(2)
             } else {
-              p.stroke(200)
-              p.strokeWeight(1)
+              p.stroke(230)
+              p.strokeWeight(0.5)
             }
-            
-            p.fill(color)
+            p.fill(r, g, b)
             p.rect(x, y, cellSize, cellSize)
           }
         }
-        
-        // 绘制基因名称（列标签）
-        p.fill(0)
-        p.textSize(9)
-        p.textAlign(p.CENTER, p.TOP)
-        for (let j = 0; j < geneNames.length; j++) {
-          const x = margin + j * cellSize + cellSize / 2
-          const y = margin - 5
+
+        // Gene labels (columns) — rotated
+        p.noStroke()
+        p.fill(100)
+        p.textSize(8)
+        p.textAlign(p.LEFT, p.CENTER)
+        for (let j = 0; j < Math.min(cols, geneNames.length); j++) {
+          const x = marginLeft + j * cellSize + cellSize / 2
+          const y = marginTop - 4
           p.push()
           p.translate(x, y)
-          p.rotate(-p.PI / 4)
+          p.rotate(-Math.PI / 4)
           p.text(geneNames[j], 0, 0)
           p.pop()
         }
-        
-        // 绘制细胞类型（行标签）
+
+        // Cell type labels (rows) — abbreviated
         p.textAlign(p.RIGHT, p.CENTER)
-        for (let i = 0; i < cellTypes.length; i++) {
-          const x = margin - 5
-          const y = margin + i * cellSize + cellSize / 2
-          p.text(cellTypes[i], x, y)
+        // Show type at type boundaries
+        let lastType = ''
+        for (let i = 0; i < rows; i++) {
+          if (cellTypes[i] !== lastType) {
+            p.fill(60)
+            p.textSize(8)
+            p.text(cellTypes[i], marginLeft - 4, marginTop + i * cellSize + cellSize / 2)
+            lastType = cellTypes[i]
+          }
         }
-        
-        // 绘制标题
+
+        // Colorbar
+        const cbX = canvasW - 50
+        const cbY = marginTop
+        const cbH = matrixH
+        const cbW = 12
+        for (let i = 0; i < cbH; i++) {
+          const t = i / cbH
+          const r = lerp(43, 240, t)
+          const g = lerp(97, 245, t)
+          const b = lerp(238, 250, t)
+          p.stroke(r, g, b)
+          p.line(cbX, cbY + i, cbX + cbW, cbY + i)
+        }
+        p.noStroke()
+        p.fill(100)
+        p.textSize(8)
         p.textAlign(p.CENTER, p.TOP)
-        p.textSize(14)
-        p.text('Gene Expression Matrix', matrixWidth / 2 + margin, 10)
-        
-        p.textSize(10)
-        p.text(\`\${data.length} cells × \${data[0].length} genes\`, matrixWidth / 2 + margin, 30)
+        p.text(maxVal.toFixed(0), cbX + cbW / 2, cbY - 12)
+        p.text('0', cbX + cbW / 2, cbY + cbH + 2)
       }
 
       p.mouseMoved = () => {
-        if (!containerRef.current) return
-        
-        const rect = containerRef.current.getBoundingClientRect()
-        const x = p.mouseX - margin
-        const y = p.mouseY - margin
-        
-        if (x >= 0 && x < matrixWidth && y >= 0 && y < matrixHeight) {
+        const x = p.mouseX - marginLeft
+        const y = p.mouseY - marginTop
+        if (x >= 0 && x < cols * cellSize && y >= 0 && y < rows * cellSize) {
           const col = Math.floor(x / cellSize)
           const row = Math.floor(y / cellSize)
-          
-          if (row >= 0 && row < data.length && col >= 0 && col < data[row].length) {
+          if (row >= 0 && row < rows && col >= 0 && col < cols) {
             setHoveredCell({
-              row,
-              col,
+              row, col,
               value: data[row][col],
               gene: geneNames[col],
-              cellType: cellTypes[row]
+              cellType: cellTypes[row],
             })
-            
-            // 高亮单元格
-            p.redraw()
           }
         } else {
           setHoveredCell(null)
@@ -130,87 +145,81 @@ export default function MatrixViz({ data, geneNames, cellTypes }: MatrixVizProps
       }
 
       p.mousePressed = () => {
-        const x = p.mouseX - margin
-        const y = p.mouseY - margin
-        
-        if (x >= 0 && x < matrixWidth && y >= 0 && y < matrixHeight) {
+        const x = p.mouseX - marginLeft
+        const y = p.mouseY - marginTop
+        if (x >= 0 && x < cols * cellSize && y >= 0 && y < rows * cellSize) {
           const col = Math.floor(x / cellSize)
           const row = Math.floor(y / cellSize)
-          
-          if (col >= 0 && col < geneNames.length) {
-            setSelectedGene(selectedGene === col ? null : col)
-          }
-          if (row >= 0 && row < cellTypes.length) {
-            setSelectedCell(selectedCell === row ? null : row)
-          }
-          
+          setSelectedGene(prev => prev === col ? null : col)
+          setSelectedCell(prev => prev === row ? null : row)
           p.redraw()
         }
       }
     }
 
     p5Ref.current = new p5(sketch)
-
-    return () => {
-      if (p5Ref.current) {
-        p5Ref.current.remove()
-      }
-    }
+    return () => { if (p5Ref.current) p5Ref.current.remove() }
   }, [data, geneNames, cellTypes, colorScale, selectedGene, selectedCell])
 
   return (
-    <div className="viz-container">
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-1">
-          <div ref={containerRef} className="p5-canvas-container" />
-          
-          <div className="mt-4 flex items-center gap-4">
-            <label className="slider-label">Color Scale:</label>
-            <input
-              type="range"
-              min="0.1"
-              max="2"
-              step="0.1"
-              value={colorScale}
-              onChange={(e) => setColorScale(parseFloat(e.target.value))}
-              className="w-48"
-            />
-            <span className="slider-value">{colorScale.toFixed(1)}</span>
-          </div>
+    <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex-1">
+        <div ref={containerRef} className="p5-canvas-container" />
+        <div className="control-group">
+          <label>Color Scale</label>
+          <input
+            type="range"
+            min="0.2"
+            max="2"
+            step="0.1"
+            value={colorScale}
+            onChange={(e) => setColorScale(parseFloat(e.target.value))}
+            className="w-40"
+          />
+          <span className="font-mono text-sm text-gray-500">{colorScale.toFixed(1)}×</span>
         </div>
-        
-        <div className="w-full md:w-64">
-          {hoveredCell ? (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">Cell Info</h3>
-              <div className="space-y-1 text-sm">
-                <p><span className="text-gray-500">Gene:</span> {hoveredCell.gene}</p>
-                <p><span className="text-gray-500">Cell Type:</span> {hoveredCell.cellType}</p>
-                <p><span className="text-gray-500">Expression:</span> {hoveredCell.value.toFixed(2)}</p>
-                <p><span className="text-gray-500">Position:</span> [{hoveredCell.row}, {hoveredCell.col}]</p>
+      </div>
+
+      <div className="w-full lg:w-56 space-y-4 flex-shrink-0">
+        {hoveredCell ? (
+          <div className="bg-gray-900 text-white rounded-xl p-4 text-sm">
+            <div className="text-gray-400 text-xs uppercase tracking-wider mb-2">Cell Detail</div>
+            <div className="space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Gene</span>
+                <span className="font-mono font-semibold">{hoveredCell.gene}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Type</span>
+                <span>{hoveredCell.cellType}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Value</span>
+                <span className="font-mono font-semibold text-[#4361ee]">{hoveredCell.value.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Position</span>
+                <span className="font-mono text-gray-300">[{hoveredCell.row}, {hoveredCell.col}]</span>
               </div>
             </div>
-          ) : (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">Instructions</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Hover over cells to see details</li>
-                <li>• Click rows/columns to highlight</li>
-                <li>• Adjust color scale with slider</li>
-              </ul>
-            </div>
-          )}
-          
-          <div className="mt-4 bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-blue-900 mb-2">Matrix Structure</h3>
-            <div className="text-sm text-blue-800">
-              <p>• <strong>Rows:</strong> Individual cells</p>
-              <p>• <strong>Columns:</strong> Genes</p>
-              <p>• <strong>Values:</strong> Expression levels</p>
-              <p>• <strong>Zeros:</strong> Dropout events</p>
-            </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-500">
+            <p className="font-semibold text-gray-700 mb-2">👆 Interact</p>
+            <ul className="space-y-1">
+              <li>• Hover for cell details</li>
+              <li>• Click to highlight row/column</li>
+              <li>• Slider adjusts color range</li>
+            </ul>
+          </div>
+        )}
+
+        {selectedGene !== null && (
+          <div className="stat-card">
+            <h3>Selected Gene</h3>
+            <div className="stat-value text-[#4361ee]">{geneNames[selectedGene]}</div>
+          </div>
+        )}
       </div>
     </div>
   )

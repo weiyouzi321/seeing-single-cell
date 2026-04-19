@@ -1,12 +1,20 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, JetBrains_Mono } from 'next/font/google'
 import '../styles/globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter',
+})
+
+const jetbrains = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+})
 
 export const metadata: Metadata = {
   title: 'Seeing Single-Cell',
-  description: 'Interactive visualization of single-cell analysis mathematics',
+  description: 'An interactive visual exploration of single-cell RNA sequencing analysis',
 }
 
 export default function RootLayout({
@@ -15,46 +23,48 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
       <head>
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css"
-          integrity="sha384-wcIxjf483k7xO1y7dbLRl6l7aCg2B8y7Gk7vZ7k7k7k7k7k7k7k7k7k7k7k7k7k7"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
         />
       </head>
-      <body className={inter.className}>
-        <nav className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center">
-                <a href="/" className="text-xl font-bold text-primary">
-                  Seeing Single-Cell
-                </a>
-              </div>
-              <div className="flex items-center space-x-4">
-                <a href="/chapters/1-matrix" className="text-gray-600 hover:text-primary">
-                  Matrix
-                </a>
-                <a href="/chapters/2-distribution" className="text-gray-600 hover:text-primary">
-                  Distribution
-                </a>
-              </div>
+      <body className="min-h-screen">
+        <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+          <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+            <a href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
+              <span className="text-2xl">🔬</span>
+              <span className="bg-gradient-to-r from-[#4361ee] to-[#7c3aed] bg-clip-text text-transparent">
+                Seeing Single-Cell
+              </span>
+            </a>
+            <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
+              <a href="/chapters/1-matrix" className="hover:text-[#4361ee] transition-colors">
+                1 · Matrix
+              </a>
+              <a href="/chapters/2-distribution" className="hover:text-[#4361ee] transition-colors">
+                2 · Distribution
+              </a>
             </div>
           </div>
         </nav>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-6xl mx-auto px-6">
           {children}
         </main>
-        <footer className="bg-gray-50 border-t mt-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <p className="text-center text-gray-500 text-sm">
-              Seeing Single-Cell - Interactive Single-Cell Analysis Education
+        <footer className="border-t border-gray-100 mt-20">
+          <div className="max-w-6xl mx-auto px-6 py-8 text-center text-sm text-gray-400">
+            <p>
+              Inspired by{' '}
+              <a href="https://seeing-theory.brown.edu" className="text-[#4361ee] hover:underline" target="_blank" rel="noopener">
+                Seeing Theory
+              </a>{' '}
+              and{' '}
+              <a href="https://www.3blue1brown.com" className="text-[#4361ee] hover:underline" target="_blank" rel="noopener">
+                3Blue1Brown
+              </a>
+              {' · '}
+              Built with Next.js + p5.js
             </p>
           </div>
         </footer>

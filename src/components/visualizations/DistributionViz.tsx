@@ -15,62 +15,55 @@ export default function DistributionViz({ data, geneNames, cellTypes }: Distribu
   const [selectedGene, setSelectedGene] = useState<number>(0)
   const [binCount, setBinCount] = useState<number>(20)
   const [showKDE, setShowKDE] = useState<boolean>(true)
-  const [distributionType, setDistributionType] = useState<'histogram' | 'density'>('histogram')
 
-  // 获取选中基因的表达数据
-  const getGeneData = (geneIndex: number) => {
-    return data.map(row => row[geneIndex])
-  }
+  const getGeneData = (geneIndex: number) => data.map(row => row[geneIndex])
 
-  // 计算直方图
   const calculateHistogram = (values: number[], bins: number) => {
     const min = Math.min(...values)
     const max = Math.max(...values)
-    const binWidth = (max - min) / bins
-    
+    const range = max - min || 1
+    const binWidth = range / bins
     const histogram = new Array(bins).fill(0)
     values.forEach(v => {
-      const binIndex = Math.min(Math.floor((v - min) / binWidth), bins - 1)
-      histogram[binIndex]++
+      const idx = Math.min(Math.floor((v - min) / binWidth), bins - 1)
+      histogram[idx]++
     })
-    
     return {
       histogram,
-      binEdges: Array.from({ length: bins + 1 }, (_, i) => min + i * binWidth)
+      binEdges: Array.from({ length: bins + 1 }, (_, i) => min + i * binWidth),
     }
   }
 
-  // 计算核密度估计
-  const calculateKDE = (values: number[], bandwidth: number = 0.5) => {
+  const calculateKDE = (values: number[], bandwidth?: number) => {
+    const std = Math.sqrt(values.reduce((s, v) => {
+      const mean = values.reduce((a, b) => a + b, 0) / values.length
+      return s + (v - mean) ** 2
+    }, 0) / values.length)
+    const h = bandwidth ?? ((1.06 * std * Math.pow(values.length, -0.2)) || 0.5)
     const min = Math.min(...values)
     const max = Math.max(...values)
-    const step = (max - min) / 100
-    
+    const step = (max - min) / 100 || 1
     const x = Array.from({ length: 101 }, (_, i) => min + i * step)
     const y = x.map(xi => {
       const sum = values.reduce((acc, v) => {
-        const z = (xi - v) / bandwidth
-        return acc + Math.exp(-0.5 * z * z) / (bandwidth * Math.sqrt(2 * Math.PI))
+        const z = (xi - v) / h
+        return acc + Math.exp(-0.5 * z * z)
       }, 0)
-      return sum / values.length
+      return sum / (values.length * h * Math.sqrt(2 * Math.PI))
     })
-    
     return { x, y }
   }
 
   useEffect(() => {
     if (!containerRef.current) return
-
-    if (p5Ref.current) {
-      p5Ref.current.remove()
-    }
+    if (p5Ref.current) p5Ref.current.remove()
 
     const sketch = (p: p5) => {
       const width = 600
-      const height = 400
-      const margin = 60
-      const plotWidth = width - margin * 2
-      const plotHeight = height - margin * 2
+      const height = 380
+      const margin = { top: 60, right: 30, bottom: 50, left: 55 }
+      const plotW = width - margin.left - margin.right
+      const plotH = height - margin.top - margin.bottom
 
       p.setup = () => {
         const canvas = p.createCanvas(width, height)
@@ -81,186 +74,185 @@ export default function DistributionViz({ data, geneNames, cellTypes }: Distribu
 
       p.draw = () => {
         p.background(255)
-        
         const geneData = getGeneData(selectedGene)
         const { histogram, binEdges } = calculateHistogram(geneData, binCount)
         const kde = showKDE ? calculateKDE(geneData) : null
-        
         const maxCount = Math.max(...histogram)
-        const maxDensity = kde ? Math.max(...kde.y) : 0
-        
-        // 绘制坐标轴
-        p.stroke(200)
-        p.strokeWeight(1)
-        p.line(margin, margin, margin, height - margin)
-        p.line(margin, height - margin, width - margin, height - margin)
-        
-        // 绘制网格线
+        const maxDensity = kde ? Math.max(...kde.y) : 1
+
+        const ox = margin.left
+        const oy = margin.top
+
+        // Grid lines
         p.stroke(240)
+        p.strokeWeight(1)
         for (let i = 0; i <= 5; i++) {
-          const y = margin + (plotHeight / 5) * i
-          p.line(margin, y, width - margin, y)
+          const y = oy + (plotH / 5) * i
+          p.line(ox, y, ox + plotW, y)
         }
-        
-        // 绘制直方图
-        if (distributionType === 'histogram') {
-          const binWidth = plotWidth / binCount
-          
-          p.fill(74, 144, 226, 150)
-          p.stroke(74, 144, 226)
-          p.strokeWeight(1)
-          
-          histogram.forEach((count, i) => {
-            const x = margin + i * binWidth
-            const barHeight = (count / maxCount) * plotHeight
-            const y = height - margin - barHeight
-            
-            p.rect(x, y, binWidth - 1, barHeight)
-          })
+
+        // Axes
+        p.stroke(180)
+        p.strokeWeight(1.5)
+        p.line(ox, oy, ox, oy + plotH)
+        p.line(ox, oy + plotH, ox + plotW, oy + plotH)
+
+        // Histogram bars
+        const bw = plotW / binCount
+        p.noStroke()
+        for (let i = 0; i < binCount; i++) {
+          const count = histogram[i]
+          const barH = (count / maxCount) * plotH
+          const x = ox + i * bw
+          const y = oy + plotH - barH
+          const alpha = 180
+          p.fill(67, 97, 238, alpha)
+          p.rect(x + 0.5, y, bw - 1, barH, 2, 2, 0, 0)
         }
-        
-        // 绘制 KDE 曲线
+
+        // KDE curve
         if (showKDE && kde) {
           p.noFill()
-          p.stroke(245, 166, 35)
-          p.strokeWeight(2)
-          
+          p.stroke(245, 158, 11)
+          p.strokeWeight(2.5)
           p.beginShape()
           kde.x.forEach((xi, i) => {
-            const x = margin + ((xi - kde.x[0]) / (kde.x[kde.x.length - 1] - kde.x[0])) * plotWidth
-            const y = height - margin - (kde.y[i] / maxDensity) * plotHeight
+            const x = ox + ((xi - kde.x[0]) / (kde.x[kde.x.length - 1] - kde.x[0] || 1)) * plotW
+            const y = oy + plotH - (kde.y[i] / maxDensity) * plotH
             p.vertex(x, y)
           })
           p.endShape()
         }
-        
-        // 绘制标题
-        p.fill(0)
+
+        // X-axis ticks & labels
         p.noStroke()
-        p.textSize(16)
-        p.textAlign(p.CENTER, p.TOP)
-        p.text(\`Distribution of \${geneNames[selectedGene]}\`, width / 2, 15)
-        
-        p.textSize(12)
-        p.text(\`\${distributionType === 'histogram' ? 'Histogram' : 'Density'}\`, width / 2, 35)
-        
-        // 绘制轴标签
+        p.fill(120)
         p.textSize(10)
-        p.textAlign(p.CENTER, p.TOP)
-        p.text('Expression Level', width / 2, height - 25)
-        
-        p.push()
-        p.translate(15, height / 2)
-        p.rotate(-p.PI / 2)
-        p.text('Frequency', 0, 0)
-        p.pop()
-        
-        // 绘制刻度
-        p.textSize(9)
         p.textAlign(p.CENTER, p.TOP)
         const xMin = binEdges[0]
         const xMax = binEdges[binEdges.length - 1]
         for (let i = 0; i <= 5; i++) {
-          const x = margin + (plotWidth / 5) * i
-          const value = xMin + (xMax - xMin) * (i / 5)
-          p.text(value.toFixed(1), x, height - margin + 5)
+          const val = xMin + (xMax - xMin) * (i / 5)
+          const x = ox + (plotW / 5) * i
+          p.text(val.toFixed(1), x, oy + plotH + 6)
+        }
+
+        // Y-axis ticks
+        p.textAlign(p.RIGHT, p.CENTER)
+        for (let i = 0; i <= 5; i++) {
+          const val = (maxCount * (5 - i) / 5)
+          const y = oy + (plotH / 5) * i
+          p.text(Math.round(val).toString(), ox - 8, y)
+        }
+
+        // Axis labels
+        p.fill(80)
+        p.textSize(11)
+        p.textAlign(p.CENTER, p.TOP)
+        p.text('Expression Level', ox + plotW / 2, oy + plotH + 28)
+
+        p.push()
+        p.translate(14, oy + plotH / 2)
+        p.rotate(-Math.PI / 2)
+        p.textAlign(p.CENTER, p.BOTTOM)
+        p.text('Frequency', 0, 0)
+        p.pop()
+
+        // Title
+        p.fill(30)
+        p.textSize(15)
+        p.textAlign(p.CENTER, p.TOP)
+        p.text(geneNames[selectedGene], width / 2, 12)
+
+        // Legend
+        const lx = ox + plotW - 140
+        const ly = oy + 10
+        p.fill(67, 97, 238, 180)
+        p.noStroke()
+        p.rect(lx, ly, 14, 14, 3)
+        p.fill(100)
+        p.textSize(10)
+        p.textAlign(p.LEFT, p.CENTER)
+        p.text('Histogram', lx + 20, ly + 7)
+
+        if (showKDE) {
+          p.stroke(245, 158, 11)
+          p.strokeWeight(2.5)
+          p.line(lx, ly + 28, lx + 14, ly + 28)
+          p.noStroke()
+          p.fill(100)
+          p.text('KDE', lx + 20, ly + 28)
         }
       }
     }
 
     p5Ref.current = new p5(sketch)
+    return () => { if (p5Ref.current) p5Ref.current.remove() }
+  }, [data, geneNames, selectedGene, binCount, showKDE])
 
-    return () => {
-      if (p5Ref.current) {
-        p5Ref.current.remove()
-      }
-    }
-  }, [data, geneNames, selectedGene, binCount, showKDE, distributionType])
+  // Stats
+  const geneData = getGeneData(selectedGene)
+  const mean = (geneData.reduce((a, b) => a + b, 0) / geneData.length).toFixed(2)
+  const min = Math.min(...geneData).toFixed(2)
+  const max = Math.max(...geneData).toFixed(2)
+  const zeros = geneData.filter(v => v === 0).length
+  const zeroPct = ((zeros / geneData.length) * 100).toFixed(1)
 
   return (
-    <div className="viz-container">
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1">
-          <div ref={containerRef} className="p5-canvas-container" />
-          
-          <div className="mt-4 space-y-4">
-            <div>
-              <label className="slider-label block mb-2">Select Gene:</label>
-              <select
-                value={selectedGene}
-                onChange={(e) => setSelectedGene(parseInt(e.target.value))}
-                className="w-full p-2 border rounded-lg"
-              >
-                {geneNames.map((gene, index) => (
-                  <option key={gene} value={index}>
-                    {gene}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="slider-label block mb-2">Number of Bins: {binCount}</label>
-              <input
-                type="range"
-                min="5"
-                max="50"
-                value={binCount}
-                onChange={(e) => setBinCount(parseInt(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={showKDE}
-                  onChange={(e) => setShowKDE(e.target.checked)}
-                  className="mr-2"
-                />
-                Show KDE
-              </label>
-              
-              <select
-                value={distributionType}
-                onChange={(e) => setDistributionType(e.target.value as 'histogram' | 'density')}
-                className="p-2 border rounded-lg"
-              >
-                <option value="histogram">Histogram</option>
-                <option value="density">Density</option>
-              </select>
-            </div>
-          </div>
+    <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex-1">
+        <div ref={containerRef} className="p5-canvas-container" />
+
+        <div className="control-group">
+          <label>Gene</label>
+          <select
+            value={selectedGene}
+            onChange={(e) => setSelectedGene(parseInt(e.target.value))}
+          >
+            {geneNames.map((gene, i) => (
+              <option key={gene} value={i}>{gene}</option>
+            ))}
+          </select>
+
+          <label>Bins</label>
+          <input
+            type="range"
+            min="5"
+            max="50"
+            value={binCount}
+            onChange={(e) => setBinCount(parseInt(e.target.value))}
+            className="w-32"
+          />
+          <span className="font-mono text-sm text-gray-500">{binCount}</span>
+
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={showKDE}
+              onChange={(e) => setShowKDE(e.target.checked)}
+            />
+            Show KDE
+          </label>
         </div>
-        
-        <div className="w-full lg:w-64 space-y-4">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-gray-900 mb-2">Gene Statistics</h3>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p><strong>Gene:</strong> {geneNames[selectedGene]}</p>
-              <p><strong>Mean:</strong> {(getGeneData(selectedGene).reduce((a, b) => a + b, 0) / data.length).toFixed(2)}</p>
-              <p><strong>Min:</strong> {Math.min(...getGeneData(selectedGene)).toFixed(2)}</p>
-              <p><strong>Max:</strong> {Math.max(...getGeneData(selectedGene)).toFixed(2)}</p>
-              <p><strong>Zeros:</strong> {getGeneData(selectedGene).filter(v => v === 0).length}</p>
-            </div>
-          </div>
-          
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-blue-900 mb-2">Distribution Types</h3>
-            <div className="text-sm text-blue-800 space-y-2">
-              <p><strong>Histogram:</strong> Shows frequency counts in bins</p>
-              <p><strong>KDE:</strong> Smooth probability density estimate</p>
-            </div>
-          </div>
-          
-          <div className="bg-yellow-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-yellow-900 mb-2">Try These</h3>
-            <ul className="text-sm text-yellow-800 list-disc list-inside space-y-1">
-              <li>Compare housekeeping genes vs cell-type markers</li>
-              <li>Adjust bin count to see granularity effects</li>
-              <li>Toggle KDE to see smoothing</li>
-            </ul>
+      </div>
+
+      <div className="w-full lg:w-48 space-y-4 flex-shrink-0">
+        <div className="stat-card">
+          <h3>Gene</h3>
+          <div className="stat-value text-[#7c3aed]">{geneNames[selectedGene]}</div>
+        </div>
+        <div className="stat-card">
+          <h3>Mean</h3>
+          <div className="stat-value">{mean}</div>
+        </div>
+        <div className="stat-card">
+          <h3>Range</h3>
+          <div className="stat-value">{min} – {max}</div>
+        </div>
+        <div className="stat-card">
+          <h3>Zeros</h3>
+          <div className="stat-value">
+            {zeros} <span className="text-xs text-gray-400">({zeroPct}%)</span>
           </div>
         </div>
       </div>
