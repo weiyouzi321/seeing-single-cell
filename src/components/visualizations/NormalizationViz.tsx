@@ -7,13 +7,41 @@ interface NormalizationVizProps {
   data: number[][]
   geneNames: string[]
   cellTypes: string[]
+  lang?: 'en' | 'zh'
 }
 
-export default function NormalizationViz({ data, geneNames, cellTypes }: NormalizationVizProps) {
+export default function NormalizationViz({ data, geneNames, cellTypes, lang = 'en' }: NormalizationVizProps) {
   const matrixRef = useRef<HTMLDivElement>(null)
   const distRef = useRef<HTMLDivElement>(null)
   const matrixP5 = useRef<p5 | null>(null)
   const distP5 = useRef<p5 | null>(null)
+
+  const isZh = lang === 'zh'
+  const L = {
+    transformSteps: isZh ? '变换步骤' : 'Transform Steps',
+    divLibSize: isZh ? '÷ 文库大小' : '÷ Library Size',
+    mul10k: isZh ? '× 10,000' : '× 10,000',
+    logTransform: isZh ? '对数变换' : 'Log Transform',
+    logNone: isZh ? '无' : 'None',
+    log1p: 'log1p(x)',
+    log2: 'log₂(x+1)',
+    logLn: 'ln(x+1)',
+    rawLabel: isZh ? '原始计数' : 'Raw counts',
+    gene: isZh ? '基因' : 'Gene',
+    raw: isZh ? '原始' : 'Raw',
+    normalized: isZh ? '归一化' : 'Normalized',
+    interact: isZh ? '交互' : 'Interact',
+    interactDesc: isZh ? '悬停查看细胞详情' : 'Hover to see cell details',
+    cellDetail: isZh ? '细胞详情' : 'Cell Detail',
+    typeLabel: isZh ? '类型' : 'Type',
+    valueLabel: isZh ? '值' : 'Value',
+    positionLabel: isZh ? '位置' : 'Position',
+    rawLibSize: isZh ? '原始文库大小' : 'Raw Lib Size',
+    rawRange: isZh ? '原始范围' : 'Raw Range',
+    valueMin: isZh ? '最小值' : 'Value Min',
+    valueMax: isZh ? '最大值' : 'Value Max',
+    valueMean: isZh ? '平均值' : 'Value Mean',
+  }
 
   const [divideByLibSize, setDivideByLibSize] = useState(false)
   const [multiplyBy10k, setMultiplyBy10k] = useState(false)
@@ -57,7 +85,7 @@ export default function NormalizationViz({ data, geneNames, cellTypes }: Normali
   }, [normalizedData])
 
   const formulaText = useMemo(() => {
-    if (!divideByLibSize && !multiplyBy10k && logTransform === 'none') return 'Raw counts'
+    if (!divideByLibSize && !multiplyBy10k && logTransform === 'none') return L.rawLabel
     let steps: string[] = []
     if (divideByLibSize) steps.push('v / libsize')
     if (multiplyBy10k) steps.push('x 10k')
@@ -136,14 +164,15 @@ export default function NormalizationViz({ data, geneNames, cellTypes }: Normali
         p.text(xLabel, ox + plotW / 2, oy + plotH + 24)
         p.fill(30); p.textSize(13); p.textAlign(p.LEFT, p.TOP)
         p.text(geneNames[selectedGene], ox + 4, 8)
-        const lx = ox + 4, ly = 26
+        // Legend at upper right
+        const lx = ox + plotW - 80, ly = 8
         p.fill(200, 200, 210, 120); p.noStroke()
-        p.rect(lx, ly, 12, 8, 2)
+        p.rect(lx, ly + 2, 12, 8, 2)
         p.fill(100); p.textSize(9); p.textAlign(p.LEFT, p.CENTER)
-        p.text('Raw', lx + 16, ly + 4)
+        p.text(L.raw, lx + 16, ly + 6)
         p.fill(16, 185, 129, 180)
-        p.rect(lx, ly + 14, 12, 8, 2)
-        p.fill(100); p.text('Normalized', lx + 16, ly + 18)
+        p.rect(lx, ly + 16, 12, 8, 2)
+        p.fill(100); p.text(L.normalized, lx + 16, ly + 20)
       }
     }
     distP5.current = new p5(sketch)
@@ -170,7 +199,7 @@ export default function NormalizationViz({ data, geneNames, cellTypes }: Normali
       p.draw = () => {
         p.background(255)
         p.fill(50); p.textSize(12); p.textAlign(p.LEFT, p.TOP)
-        p.text('Expression Matrix', marginLeft, 8)
+        p.text((L as any).exprMatrix || "Expression Matrix", marginLeft, 8)
         p.noStroke()
         let lastType = ''
         for (let i = 0; i < rows; i++) {
@@ -231,7 +260,7 @@ export default function NormalizationViz({ data, geneNames, cellTypes }: Normali
     <div className="space-y-6">
       <div className="flex gap-6 items-start">
         <div className="flex flex-col gap-3 flex-shrink-0 w-48">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Transform Steps</div>
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{L.transformSteps}</div>
           <button onClick={() => setDivideByLibSize(!divideByLibSize)}
             className={"flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all " +
               (divideByLibSize ? 'bg-emerald-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
@@ -239,7 +268,7 @@ export default function NormalizationViz({ data, geneNames, cellTypes }: Normali
               (divideByLibSize ? 'border-white' : 'border-gray-400')}>
               {divideByLibSize && <span className="w-2 h-2 bg-white rounded-full" />}
             </span>
-            {'\u00F7'} Library Size
+            {L.divLibSize}
           </button>
           <button onClick={() => setMultiplyBy10k(!multiplyBy10k)}
             className={"flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all " +
@@ -248,16 +277,16 @@ export default function NormalizationViz({ data, geneNames, cellTypes }: Normali
               (multiplyBy10k ? 'border-white' : 'border-gray-400')}>
               {multiplyBy10k && <span className="w-2 h-2 bg-white rounded-full" />}
             </span>
-            {'\u00D7'} 10,000
+            {L.mul10k}
           </button>
           <div className="border-t border-gray-200 pt-2 mt-1">
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Log Transform</div>
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{L.logTransform}</div>
             <div className="flex flex-col gap-1.5">
               {['none', 'log1p', 'log2', 'ln'].map((mode) => (
                 <button key={mode} onClick={() => setLogTransform(mode as any)}
                   className={"px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all text-left " +
                     (logTransform === mode ? 'bg-emerald-600 text-white shadow-sm' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')}>
-                  {mode === 'none' ? 'None' : mode === 'log1p' ? 'log1p(x)' : mode === 'log2' ? 'log\u2082(x+1)' : 'ln(x+1)'}
+                  {mode === 'none' ? L.logNone : mode === 'log1p' ? L.log1p : mode === 'log2' ? L.log2 : L.logLn}
                 </button>
               ))}
             </div>
@@ -269,29 +298,53 @@ export default function NormalizationViz({ data, geneNames, cellTypes }: Normali
         <div className="flex-1 min-w-0">
           <div ref={distRef} className="p5-canvas-container" />
           <div className="control-group mt-2">
-            <label>Gene</label>
+            <label>{L.gene}</label>
             <select value={selectedGene} onChange={(e) => setSelectedGene(parseInt(e.target.value))}>
               {geneNames.map((gene, i) => (<option key={gene} value={i}>{gene}</option>))}
             </select>
           </div>
         </div>
       </div>
-      <div>
-        <div ref={matrixRef} className="p5-canvas-container" />
-        {hoveredCell && (
-          <div className="mt-2 bg-gray-900 text-white rounded-lg p-2.5 text-xs flex gap-4">
-            <span><span className="text-gray-400">Gene:</span> <span className="font-mono font-semibold">{hoveredCell.gene}</span></span>
-            <span><span className="text-gray-400">Type:</span> {hoveredCell.cellType}</span>
-            <span><span className="text-gray-400">Value:</span> <span className="font-mono text-emerald-400">{hoveredCell.value.toFixed(2)}</span></span>
-          </div>
-        )}
+      <div className="flex gap-6 items-start">
+        <div className="flex-1 min-w-0">
+          <div ref={matrixRef} className="p5-canvas-container" />
+        </div>
+        <div className="w-56 flex-shrink-0 space-y-4">
+          {hoveredCell ? (
+            <div className="bg-gray-900 text-white rounded-xl p-4 text-sm">
+              <div className="text-gray-400 text-xs uppercase tracking-wider mb-2">{L.cellDetail}</div>
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">{L.gene}</span>
+                  <span className="font-mono font-semibold">{hoveredCell.gene}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">{L.typeLabel}</span>
+                  <span>{hoveredCell.cellType}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">{L.valueLabel}</span>
+                  <span className="font-mono font-semibold text-emerald-400">{hoveredCell.value.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">{L.positionLabel}</span>
+                  <span className="font-mono text-gray-300">[{hoveredCell.row}, {hoveredCell.col}]</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gray-50 rounded-lg p-2.5 text-xs text-gray-400">
+              <p>👆 {L.interactDesc}</p>
+            </div>
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="stat-card"><h3>Raw Lib Size</h3><div className="stat-value">{(libSizes.reduce((a: number, b: number) => a + b, 0) / libSizes.length).toFixed(0)}</div></div>
-        <div className="stat-card"><h3>Raw Range</h3><div className="stat-value text-xs">{Math.min(...libSizes) + ' - ' + Math.max(...libSizes)}</div></div>
-        <div className="stat-card"><h3>Value Min</h3><div className="stat-value text-emerald-600">{currentStats.min}</div></div>
-        <div className="stat-card"><h3>Value Max</h3><div className="stat-value text-emerald-600">{currentStats.max}</div></div>
-        <div className="stat-card"><h3>Value Mean</h3><div className="stat-value text-emerald-600">{currentStats.mean}</div></div>
+        <div className="stat-card"><h3>{L.rawLibSize}</h3><div className="stat-value">{(libSizes.reduce((a: number, b: number) => a + b, 0) / libSizes.length).toFixed(0)}</div></div>
+        <div className="stat-card"><h3>{L.rawRange}</h3><div className="stat-value text-xs">{Math.min(...libSizes) + ' - ' + Math.max(...libSizes)}</div></div>
+        <div className="stat-card"><h3>{L.valueMin}</h3><div className="stat-value text-emerald-600">{currentStats.min}</div></div>
+        <div className="stat-card"><h3>{L.valueMax}</h3><div className="stat-value text-emerald-600">{currentStats.max}</div></div>
+        <div className="stat-card"><h3>{L.valueMean}</h3><div className="stat-value text-emerald-600">{currentStats.mean}</div></div>
       </div>
     </div>
   )

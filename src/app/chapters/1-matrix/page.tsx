@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useLang } from '@/lib/i18n/LangContext'
@@ -17,8 +17,29 @@ interface PBMCData {
   expression_matrix: number[][]
 }
 
+
+function K({ math }: { math: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
+    const render = () => {
+      if (ref.current && typeof window !== 'undefined' && (window as any).katex) {
+        try { (window as any).katex.render(math, ref.current, { throwOnError: false }) } catch(e) {}
+      }
+    }
+    // Load KaTeX if not loaded
+    if (typeof window !== 'undefined' && !(window as any).katex) {
+      const s = document.createElement('script')
+      s.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js'
+      s.async = true
+      s.onload = render
+      document.head.appendChild(s)
+    } else { setTimeout(render, 300) }
+  }, [math])
+  return <span ref={ref} className="inline-block" />
+}
+
 export default function MatrixChapter() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const [data, setData] = useState<PBMCData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -45,7 +66,7 @@ export default function MatrixChapter() {
     <div>
       <div className="chapter-hero">
         <div className="breadcrumb">
-          <Link href="/">{t('ch1.home')}</Link><span>\u003E</span><span>{t('ch1.chapter')}</span>
+          <Link href="/">{t('ch1.home')}</Link><span>{'>'}</span><span>{t('ch1.chapter')}</span>
         </div>
         <h1>{t('ch1.title')}</h1>
         <p className="subtitle">{t('ch1.subtitle')}</p>
@@ -58,10 +79,22 @@ export default function MatrixChapter() {
             <h2>{t('ch1.step1Title')}</h2>
           </div>
           <div className="info-panel concept mb-6">
-            <h3>{'\u{1F4A1}'} {t('ch1.keyConcept')}</h3>
+            <h3>{'💡'} {t('ch1.keyConcept')}</h3>
             <p>{t('ch1.conceptText1')} <strong>{data.metadata.n_genes} {t('ch1.conceptText2')}</strong> {t('ch1.conceptText3')} <strong>{data.metadata.n_cells} {t('ch1.conceptText4')}</strong>. {t('ch1.conceptText5')}</p>
           </div>
-          <MatrixViz data={data.expression_matrix} geneNames={data.gene_names} cellTypes={data.cell_types} />
+          <MatrixViz data={data.expression_matrix} geneNames={data.gene_names} cellTypes={data.cell_types} lang={lang} translations={{
+            cellDetail: t('ch3.cellDetail'),
+            typeLabel: t('ch3.typeLabel'),
+            valueLabel: t('ch3.valueLabel'),
+            positionLabel: t('ch3.positionLabel'),
+            geneLabel: t('ch1.genesStat'),
+            selectedGene: t('ch1.selectedGene'),
+            interactTitle: t('ch1.interactTitle'),
+            interactHover: t('ch1.interactHover'),
+            interactClick: t('ch1.interactClick'),
+            interactSlider: t('ch1.interactSlider'),
+            colorScale: t('ch1.colorScale'),
+          }} />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <div className="stat-card"><h3>{t('ch1.cells')}</h3><div className="stat-value">{data.metadata.n_cells}</div></div>
             <div className="stat-card"><h3>{t('ch1.genesStat')}</h3><div className="stat-value">{data.metadata.n_genes}</div></div>
@@ -93,8 +126,8 @@ export default function MatrixChapter() {
           </div>
           <div className="info-panel math mt-6">
             <h3>{t('ch1.mathFormula')}</h3>
-            <p>{t('ch1.mathDesc1')} <span className="math-inline">X</span> {t('ch1.mathDesc2')} <span className="math-inline">n \u00d7 p</span>, {t('ch1.mathDesc3')} <span className="math-inline">n</span> {t('ch1.mathDesc4')} <span className="math-inline">p</span> {t('ch1.mathDesc5')}</p>
-            <p className="text-center my-3 font-mono text-sm text-purple-700">sparsity = |{'{x \u2208 X : x = 0}'}| / (n \u00d7 p)</p>
+            <p>{t('ch1.mathDesc1')} <span className="math-inline">X</span> {t('ch1.mathDesc2')} <span className="math-inline">n × p</span>, {t('ch1.mathDesc3')} <span className="math-inline">n</span> {t('ch1.mathDesc4')} <span className="math-inline">p</span> {t('ch1.mathDesc5')}</p>
+            <p className="text-center my-3"><K math="\text{sparsity} = \dfrac{|\{x \in X : x = 0\}|}{n \times p}" /></p>
           </div>
         </div>
       </section>

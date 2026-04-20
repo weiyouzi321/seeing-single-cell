@@ -7,12 +7,13 @@ interface ScaleDataVizProps {
   data: number[][]
   geneNames: string[]
   cellTypes: string[]
+  lang?: 'en' | 'zh'
 }
 
 // Fixed 20 HVGs for ScaleData demo
 const FIXED_HVG_COUNT = 20
 
-export default function ScaleDataViz({ data, geneNames, cellTypes }: ScaleDataVizProps) {
+export default function ScaleDataViz({ data, geneNames, cellTypes, lang = 'en' }: ScaleDataVizProps) {
   const beforeRef = useRef<HTMLDivElement>(null)
   const afterRef = useRef<HTMLDivElement>(null)
   const beforeP5 = useRef<p5 | null>(null)
@@ -20,6 +21,25 @@ export default function ScaleDataViz({ data, geneNames, cellTypes }: ScaleDataVi
 
   const [selectedGeneIdx, setSelectedGeneIdx] = useState(0)
   const [scaleApplied, setScaleApplied] = useState(true)
+
+  const isZh = lang === 'zh'
+  const L = {
+    inputTitle: isZh ? '输入数据' : 'Input Data',
+    inputDesc: isZh ? '来自log归一化数据的' + FIXED_HVG_COUNT + '个高变基因（按方差排序）。本演示使用固定数量。' : FIXED_HVG_COUNT + ' HVGs from log-normalized data. Fixed set by variance for this demo.',
+    toggleLabel: isZh ? '应用标准化（Z-score）' : 'Apply ScaleData (Z-score)',
+    before: isZh ? '标准化前' : 'Before Scaling',
+    after: isZh ? '标准化后' : 'After Scaling',
+    hvgGene: isZh ? '高变基因' : 'HVG Gene',
+    normMean: isZh ? '归一化均值' : 'Normalized Mean',
+    normStd: isZh ? '归一化标准差' : 'Normalized Std',
+    scaledMean: isZh ? '标准化均值' : 'Scaled Mean',
+    scaledStd: isZh ? '标准化标准差' : 'Scaled Std',
+    perGene: isZh ? '各基因统计' : 'Per-Gene Statistics',
+    normMu: isZh ? '归一化 μ' : 'Norm μ',
+    normSigma: isZh ? '归一化 σ' : 'Norm σ',
+    scaledMu: isZh ? '标准化 μ' : 'Scaled μ',
+    scaledSigma: isZh ? '标准化 σ' : 'Scaled σ',
+  }
 
   // data is already log-normalized (from page.tsx)
   // Select top N HVGs by variance
@@ -181,8 +201,8 @@ export default function ScaleDataViz({ data, geneNames, cellTypes }: ScaleDataVi
     <div className="space-y-6">
       {/* Info banner */}
       <div className="info-panel concept">
-        <h3>Input: {FIXED_HVG_COUNT} HVGs from log-normalized data</h3>
-        <p>ScaleData operates on the HVG subset of the <strong>log-normalized</strong> expression matrix (libsize/10k/log1p). We use a fixed set of {FIXED_HVG_COUNT} top HVGs by variance for this demo.</p>
+        <h3>{L.inputTitle}</h3>
+        <p>{L.inputDesc}</p>
       </div>
 
       {/* Scale toggle */}
@@ -194,7 +214,7 @@ export default function ScaleDataViz({ data, geneNames, cellTypes }: ScaleDataVi
           >
             <div className={"absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 " + (scaleApplied ? 'translate-x-5' : '')} />
           </div>
-          <span className="text-sm font-semibold text-gray-700">Apply ScaleData (Z-score)</span>
+          <span className="text-sm font-semibold text-gray-700">{L.toggleLabel}</span>
         </label>
 
         <div className="ml-auto text-xs font-mono text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg">
@@ -205,18 +225,18 @@ export default function ScaleDataViz({ data, geneNames, cellTypes }: ScaleDataVi
       {/* Before / After histograms */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <h4 className="text-sm font-semibold text-gray-500 mb-2">Before Scaling</h4>
+          <h4 className="text-sm font-semibold text-gray-500 mb-2">{L.before}</h4>
           <div ref={beforeRef} className="p5-canvas-container" />
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-gray-500 mb-2">After Scaling</h4>
+          <h4 className="text-sm font-semibold text-gray-500 mb-2">{L.after}</h4>
           <div ref={afterRef} className="p5-canvas-container" />
         </div>
       </div>
 
       {/* Gene selector */}
       <div className="control-group">
-        <label>HVG Gene</label>
+        <label>{L.hvgGene}</label>
         <select value={selectedGeneIdx} onChange={(e) => setSelectedGeneIdx(parseInt(e.target.value))}>
           {hvgNames.map((gene, i) => (
             <option key={gene} value={i}>{gene}</option>
@@ -227,36 +247,36 @@ export default function ScaleDataViz({ data, geneNames, cellTypes }: ScaleDataVi
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="stat-card">
-          <h3>Normalized Mean</h3>
+          <h3>{L.normMean}</h3>
           <div className="stat-value">{geneStat.rawMean.toFixed(2)}</div>
         </div>
         <div className="stat-card">
-          <h3>Normalized Std</h3>
+          <h3>{L.normStd}</h3>
           <div className="stat-value">{geneStat.rawStd.toFixed(2)}</div>
         </div>
         <div className="stat-card">
-          <h3>Scaled Mean</h3>
+          <h3>{L.scaledMean}</h3>
           <div className="stat-value text-blue-600">{scaleApplied ? geneStat.scaledMean.toFixed(2) : '-'}</div>
         </div>
         <div className="stat-card">
-          <h3>Scaled Std</h3>
+          <h3>{L.scaledStd}</h3>
           <div className="stat-value text-blue-600">{scaleApplied ? geneStat.scaledStd.toFixed(2) : '-'}</div>
         </div>
       </div>
 
       {/* All HVGs stats table */}
       <div className="viz-card" style={{ padding: '1rem' }}>
-        <h4 className="text-sm font-semibold text-gray-600 mb-3">Per-Gene Statistics ({FIXED_HVG_COUNT} HVGs)</h4>
+        <h4 className="text-sm font-semibold text-gray-600 mb-3">{L.perGene}</h4>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-2 px-2 font-semibold text-gray-500">Gene</th>
-                <th className="text-right py-2 px-2 font-semibold text-gray-500">Norm mu</th>
-                <th className="text-right py-2 px-2 font-semibold text-gray-500">Norm sigma</th>
-                <th className="text-right py-2 px-2 font-semibold text-gray-500">Scaled mu</th>
-                <th className="text-right py-2 px-2 font-semibold text-gray-500">Scaled sigma</th>
-                <th className="text-center py-2 px-2 font-semibold text-gray-500 w-32">mu Bar</th>
+                <th className="text-left py-2 px-2 font-semibold text-gray-500">{L.hvgGene}</th>
+                <th className="text-right py-2 px-2 font-semibold text-gray-500">{L.normMean}</th>
+                <th className="text-right py-2 px-2 font-semibold text-gray-500">{L.normStd}</th>
+                <th className="text-right py-2 px-2 font-semibold text-gray-500">{L.scaledMean}</th>
+                <th className="text-right py-2 px-2 font-semibold text-gray-500">{L.scaledStd}</th>
+                <th className="text-center py-2 px-2 font-semibold text-gray-500 w-32"></th>
               </tr>
             </thead>
             <tbody>

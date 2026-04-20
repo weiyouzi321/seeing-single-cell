@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useLang } from '@/lib/i18n/LangContext'
 
 export default function Home() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
 
   return (
     <div>
@@ -53,34 +53,38 @@ export default function Home() {
             number="01"
             title={t('ch1.title')}
             description={t('ch1.subtitle')}
-            concepts={['Cells \u00d7 Genes', 'Sparsity', 'Expression values']}
+            concepts={[t('home.ch1Kw1'), t('home.ch1Kw2'), t('home.ch1Kw3')]}
             href="/chapters/1-matrix"
             color="from-[#4361ee] to-[#3b82f6]"
+            lang={lang} t={t}
           />
           <ChapterCard
             number="02"
             title={t('ch2.title')}
             description={t('ch2.subtitle')}
-            concepts={['Histogram', 'KDE', 'Gene statistics']}
+            concepts={[t('home.ch2Kw1'), t('home.ch2Kw2'), t('home.ch2Kw3')]}
             href="/chapters/2-distribution"
             color="from-[#7c3aed] to-[#a855f7]"
+            lang={lang} t={t}
           />
           <ChapterCard
             number="03"
             title={t('ch3.title')}
+            lang={lang} t={t}
             description={t('ch3.subtitle') + ' ' + t('ch3.subtitleNorm') + ', ' + t('ch3.subtitleHVG') + ', ' + t('ch3.subtitleScale') + '. ' + t('ch3.subtitleEnd')}
-            concepts={[t('ch3.subtitleNorm'), t('ch3.subtitleHVG'), t('ch3.subtitleScale')]}
+            concepts={[t('home.ch3Kw1'), t('home.ch3Kw2'), t('home.ch3Kw3')]}
             href="/chapters/3-preprocessing"
             color="from-[#10b981] to-[#34d399]"
           />
           <ChapterCard
             number="04"
-            title="Dimensionality Reduction"
-            description="From thousands of dimensions to a 2D map. Understand PCA, t-SNE, and UMAP through interactive visualizations."
+            title={t('home.ch4Title')}
+            description={t('home.ch4Desc')}
             concepts={['PCA', 't-SNE', 'UMAP']}
             href="#"
             color="from-[#f59e0b] to-[#fbbf24]"
             comingSoon
+            lang={lang} t={t}
           />
         </div>
       </section>
@@ -91,17 +95,17 @@ export default function Home() {
           <h2 className="text-2xl font-bold mb-6">{t('home.howTitle')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
             <div>
-              <div className="text-3xl mb-3">{'\u{1F446}'}</div>
+              <div className="text-3xl mb-3">{'👆'}</div>
               <h3 className="font-semibold mb-1">{t('home.interact')}</h3>
               <p className="text-sm text-gray-500">{t('home.interactDesc')}</p>
             </div>
             <div>
-              <div className="text-3xl mb-3">{'\u{1F4D6}'}</div>
+              <div className="text-3xl mb-3">{'📖'}</div>
               <h3 className="font-semibold mb-1">{t('home.read')}</h3>
               <p className="text-sm text-gray-500">{t('home.readDesc')}</p>
             </div>
             <div>
-              <div className="text-3xl mb-3">{'\u{1F9EA}'}</div>
+              <div className="text-3xl mb-3">{'🧪'}</div>
               <h3 className="font-semibold mb-1">{t('home.experiment')}</h3>
               <p className="text-sm text-gray-500">{t('home.experimentDesc')}</p>
             </div>
@@ -120,6 +124,8 @@ function ChapterCard({
   href,
   color,
   comingSoon,
+  lang,
+  t,
 }: {
   number: string
   title: string
@@ -128,16 +134,18 @@ function ChapterCard({
   href: string
   color: string
   comingSoon?: boolean
+  lang: string
+  t: (key: string) => string
 }) {
   const cardContent = (
     <>
       <div className="flex items-start justify-between mb-4">
         <span className={`inline-block px-3 py-1 rounded-lg bg-gradient-to-r ${color} text-white text-xs font-bold`}>
-          Chapter {number}
+          {(lang === "zh" ? t("home.chapterLabel") + number + "章" : t("home.chapterLabel") + " " + number)}
         </span>
         {comingSoon && (
           <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded">
-            Coming Soon
+            {t('home.comingSoon')}
           </span>
         )}
       </div>

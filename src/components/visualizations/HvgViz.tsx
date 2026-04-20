@@ -7,15 +7,37 @@ interface HvgVizProps {
   data: number[][]
   geneNames: string[]
   cellTypes: string[]
+  lang?: 'en' | 'zh'
 }
 
-export default function HvgViz({ data, geneNames, cellTypes }: HvgVizProps) {
+export default function HvgViz({ data, geneNames, cellTypes, lang = 'en' }: HvgVizProps) {
   const scatterRef = useRef<HTMLDivElement>(null)
   const heatmapRef = useRef<HTMLDivElement>(null)
   const scatterP5 = useRef<p5 | null>(null)
   const heatmapP5 = useRef<p5 | null>(null)
 
+  const isZh = lang === 'zh'
+  const L = {
+    numHVGs: isZh ? '高变基因数量' : 'Number of HVGs',
+    meanVar: isZh ? '均值 vs 方差' : 'Mean vs Variance',
+    selectedHVGs: isZh ? '选中的高变基因' : 'Selected HVGs',
+    ratio: isZh ? '占比' : 'Ratio',
+    heatmapTitle: isZh ? '高变基因在全部细胞中的表达（按类型排序）' : 'HVG Expression Across Cells (sorted by type)',
+    heatmapDesc: isZh ? '细胞按类型排序。高变基因在不同细胞中表现出异质性表达。' : 'Cells sorted by type. HVGs show heterogeneous expression across cells.',
+    otherGenes: isZh ? '其他基因' : 'Other genes',
+    poisson: isZh ? '泊松分布' : 'Poisson',
+    nb: isZh ? '负二项分布' : 'Negative Binomial',
+    interactLabel: isZh ? '交互提示' : 'Interact',
+    interactDesc: isZh ? '悬停查看细胞详情' : 'Hover for cell details',
+    geneLabel: isZh ? '基因' : 'Gene',
+    typeLabel: isZh ? '类型' : 'Type',
+    valueLabel: isZh ? '值' : 'Value',
+    varLabel: isZh ? '方差' : 'var',
+    selectedHVGsLabel: isZh ? '选中的高变基因' : 'Selected HVGs',
+  }
+
   const [nTopGenes, setNTopGenes] = useState(10)
+  const [hoveredHeatmapCell, setHoveredHeatmapCell] = useState<{row: number, col: number, gene: string, cellType: string, value: number} | null>(null)
 
   const geneStats = useMemo(() => {
     const nCells = data.length
@@ -139,7 +161,7 @@ export default function HvgViz({ data, geneNames, cellTypes }: HvgVizProps) {
         p.text('Poisson (var=mean)', lx + 14, ly + 42)
         p.stroke(147, 51, 234, 100); p.strokeWeight(1.5)
         p.line(lx, ly + 58, lx + 10, ly + 58); p.noStroke(); p.fill(80)
-        p.text('Negative Binomial', lx + 14, ly + 58)
+        p.text(L.nb, lx + 14, ly + 58)
       }
     }
     scatterP5.current = new p5(sketch)
@@ -164,19 +186,20 @@ export default function HvgViz({ data, geneNames, cellTypes }: HvgVizProps) {
         p.textFont('Inter')
         p.noLoop()
       }
+      // Compute global max for colorbar
+      const maxGlobalVal = Math.max(...hvgIndices.map(gi => Math.max(...sortedCellIndices.map(ci => data[ci][gi])))) || 1
       p.draw = () => {
         p.background(255)
         p.fill(50); p.textSize(12); p.textAlign(p.LEFT, p.TOP)
-        p.text('HVG Expression Across Cells (sorted by type)', marginLeft, 4)
+        p.text(L.heatmapTitle, marginLeft, 4)
         const lerp = (a: number, b: number, t: number) => a + (b - a) * t
         for (let hi = 0; hi < nHVGs; hi++) {
           const geneIdx = hvgIndices[hi]
           const values = sortedCellIndices.map(ci => data[ci][geneIdx])
-          const maxVal = Math.max(...values) || 1
           p.fill(60); p.noStroke(); p.textSize(8); p.textAlign(p.RIGHT, p.CENTER)
           p.text(hvgList[hi].gene, marginLeft - 4, marginTop + hi * cellH + cellH / 2)
           for (let ci = 0; ci < nCells; ci++) {
-            const t = Math.min(values[ci] / maxVal, 1)
+            const t = Math.min(values[ci] / maxGlobalVal, 1)
             p.stroke(230); p.strokeWeight(0.3)
             p.fill(lerp(240, 43, t), lerp(245, 97, t), lerp(250, 238, t))
             p.rect(marginLeft + ci * cellW, marginTop + hi * cellH, cellW, cellH)
@@ -201,6 +224,28 @@ export default function HvgViz({ data, geneNames, cellTypes }: HvgVizProps) {
             lastType = cellTypes[actualIdx]
           }
         }
+        // Colorbar on the right
+        const cbX = marginLeft + nCells * cellW + 10
+        const cbH = nHVGs * cellH
+        for (let hi = 0; hi < cbH; hi++) {
+          const t = hi / cbH
+          p.stroke(lerp(43, 240, t), lerp(97, 245, t), lerp(238, 250, t))
+          p.line(cbX, marginTop + hi, cbX + 12, marginTop + hi)
+        }
+        p.noStroke(); p.fill(80); p.textSize(7); p.textAlign(p.CENTER, p.TOP)
+        p.text(maxGlobalVal.toFixed(1), cbX + 6, marginTop - 12)
+        p.text('0', cbX + 6, marginTop + cbH + 2)
+      }
+      p.mouseMoved = () => {
+        const x = p.mouseX - marginLeft, y = p.mouseY - marginTop
+        if (x >= 0 && x < nCells * cellW && y >= 0 && y < nHVGs * cellH) {
+          const col = Math.floor(x / cellW), row = Math.floor(y / cellH)
+          if (row >= 0 && row < nHVGs && col >= 0 && col < nCells) {
+            const ci = sortedCellIndices[col]
+            const geneIdx = hvgIndices[row]
+            setHoveredHeatmapCell({ row, col, gene: hvgList[row].gene, cellType: cellTypes[ci], value: data[ci][geneIdx] })
+          }
+        } else { setHoveredHeatmapCell(null) }
       }
     }
     heatmapP5.current = new p5(sketch)
@@ -243,11 +288,38 @@ export default function HvgViz({ data, geneNames, cellTypes }: HvgVizProps) {
       </div>
 
       {/* Bottom: Heatmap (full width, cells sorted by type) */}
-      <div>
-        <div ref={heatmapRef} className="p5-canvas-container" />
-        <p className="text-xs text-gray-400 mt-1">
-          Cells sorted by type. HVGs show heterogeneous expression across cells; uniform genes look the same everywhere.
-        </p>
+      <div className="flex gap-6 items-start">
+        <div className="flex-1 min-w-0">
+          <div ref={heatmapRef} className="p5-canvas-container" />
+          <p className="text-xs text-gray-400 mt-1">
+            {L.heatmapDesc}
+          </p>
+        </div>
+        <div className="w-56 flex-shrink-0">
+          {hoveredHeatmapCell ? (
+            <div className="bg-gray-900 text-white rounded-xl p-4 text-sm">
+              <div className="text-gray-400 text-xs uppercase tracking-wider mb-2">{L.interactLabel || 'Cell Detail'}</div>
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">{L.geneLabel || 'Gene'}</span>
+                  <span className="font-mono font-semibold">{hoveredHeatmapCell.gene}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">{L.typeLabel || 'Type'}</span>
+                  <span>{hoveredHeatmapCell.cellType}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">{L.valueLabel || 'Value'}</span>
+                  <span className="font-mono font-semibold text-red-400">{hoveredHeatmapCell.value.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gray-50 rounded-lg p-2.5 text-xs text-gray-400">
+              <p>👆 {L.interactDesc || 'Hover for cell details'}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

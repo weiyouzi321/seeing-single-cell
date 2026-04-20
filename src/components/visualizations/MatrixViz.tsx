@@ -7,9 +7,11 @@ interface MatrixVizProps {
   data: number[][]
   geneNames: string[]
   cellTypes: string[]
+  lang?: string
+  translations?: Record<string, string>
 }
 
-export default function MatrixViz({ data, geneNames, cellTypes }: MatrixVizProps) {
+export default function MatrixViz({ data, geneNames, cellTypes, lang, translations }: MatrixVizProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const p5Ref = useRef<p5 | null>(null)
   const [hoveredCell, setHoveredCell] = useState<{
@@ -166,7 +168,7 @@ export default function MatrixViz({ data, geneNames, cellTypes }: MatrixVizProps
       <div className="flex-1">
         <div ref={containerRef} className="p5-canvas-container" />
         <div className="control-group">
-          <label>Color Scale</label>
+          <label>{translations?.colorScale || 'Color Scale'}</label>
           <input
             type="range"
             min="0.2"
@@ -182,41 +184,41 @@ export default function MatrixViz({ data, geneNames, cellTypes }: MatrixVizProps
 
       <div className="w-full lg:w-56 space-y-4 flex-shrink-0">
         {hoveredCell ? (
-          <div className="bg-gray-900 text-white rounded-xl p-4 text-sm">
-            <div className="text-gray-400 text-xs uppercase tracking-wider mb-2">Cell Detail</div>
+            <div className="bg-gray-900 text-white rounded-xl p-4 text-sm">
+            <div className="text-gray-400 text-xs uppercase tracking-wider mb-2">{translations?.cellDetail || 'Cell Detail'}</div>
             <div className="space-y-1.5">
               <div className="flex justify-between">
-                <span className="text-gray-400">Gene</span>
+                <span className="text-gray-400">{translations?.geneLabel || 'Gene'}</span>
                 <span className="font-mono font-semibold">{hoveredCell.gene}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Type</span>
+                <span className="text-gray-400">{translations?.typeLabel || 'Type'}</span>
                 <span>{hoveredCell.cellType}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Value</span>
+                <span className="text-gray-400">{translations?.valueLabel || 'Value'}</span>
                 <span className="font-mono font-semibold text-[#4361ee]">{hoveredCell.value.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Position</span>
+                <span className="text-gray-400">{translations?.positionLabel || 'Position'}</span>
                 <span className="font-mono text-gray-300">[{hoveredCell.row}, {hoveredCell.col}]</span>
               </div>
             </div>
           </div>
         ) : (
           <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-500">
-            <p className="font-semibold text-gray-700 mb-2">👆 Interact</p>
+            <p className="font-semibold text-gray-700 mb-2">{translations?.interactTitle || '👆 Interact'}</p>
             <ul className="space-y-1">
-              <li>• Hover for cell details</li>
-              <li>• Click to highlight row/column</li>
-              <li>• Slider adjusts color range</li>
+              <li>{translations?.interactHover || '• Hover for cell details'}</li>
+              <li>{translations?.interactClick || '• Click to highlight row/column'}</li>
+              <li>{translations?.interactSlider || '• Slider adjusts color range'}</li>
             </ul>
           </div>
         )}
 
         {selectedGene !== null && (
           <div className="stat-card">
-            <h3>Selected Gene</h3>
+            <h3>{translations?.selectedGene || 'Selected Gene'}</h3>
             <div className="stat-value text-[#4361ee]">{geneNames[selectedGene]}</div>
           </div>
         )}
