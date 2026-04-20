@@ -60,11 +60,13 @@ export default function Home() {
           />
           <ChapterCard
             number="02"
-            title={t('ch2.title')}
-            description={t('ch2.subtitle')}
-            concepts={[t('home.ch2Kw1'), t('home.ch2Kw2'), t('home.ch2Kw3')]}
+            title={lang === 'zh' ? '质控与过滤' : 'Quality Control'}
+            description={lang === 'zh' 
+              ? '识别并去除低质量细胞——空液滴、破损细胞和双胞体。'
+              : 'Identify and remove low-quality cells — empty droplets, damaged cells, and doublets.'}
+            concepts={[lang === 'zh' ? 'nCount' : 'nCount', lang === 'zh' ? 'nFeature' : 'nFeature', lang === 'zh' ? '%mito' : '%mito']}
             href="/chapters/2-distribution"
-            color="from-[#7c3aed] to-[#a855f7]"
+            color="from-[#ef4444] to-[#f87171]"
             lang={lang} t={t}
           />
           <ChapterCard

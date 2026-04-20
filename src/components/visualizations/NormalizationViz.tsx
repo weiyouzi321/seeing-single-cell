@@ -29,7 +29,7 @@ export default function NormalizationViz({ data, geneNames, cellTypes, lang = 'e
     rawLabel: isZh ? '原始计数' : 'Raw counts',
     gene: isZh ? '基因' : 'Gene',
     raw: isZh ? '原始' : 'Raw',
-    normalized: isZh ? '归一化' : 'Normalized',
+    normalized: isZh ? '对数标准化' : 'Log-Normalized',
     interact: isZh ? '交互' : 'Interact',
     interactDesc: isZh ? '悬停查看细胞详情' : 'Hover to see cell details',
     cellDetail: isZh ? '细胞详情' : 'Cell Detail',

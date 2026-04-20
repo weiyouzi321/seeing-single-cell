@@ -30,15 +30,15 @@ export default function ScaleDataViz({ data, geneNames, cellTypes, lang = 'en' }
     before: isZh ? '标准化前' : 'Before Scaling',
     after: isZh ? '标准化后' : 'After Scaling',
     hvgGene: isZh ? '高变基因' : 'HVG Gene',
-    normMean: isZh ? '归一化均值' : 'Normalized Mean',
-    normStd: isZh ? '归一化标准差' : 'Normalized Std',
-    scaledMean: isZh ? '标准化均值' : 'Scaled Mean',
-    scaledStd: isZh ? '标准化标准差' : 'Scaled Std',
+    normMean: isZh ? '对数标准化均值' : 'Log-Norm Mean',
+    normStd: isZh ? '对数标准化标准差' : 'Log-Norm Std',
+    scaledMean: isZh ? '中心化均值' : 'Centered Mean',
+    scaledStd: isZh ? '中心化标准差' : 'Centered Std',
     perGene: isZh ? '各基因统计' : 'Per-Gene Statistics',
-    normMu: isZh ? '归一化 μ' : 'Norm μ',
-    normSigma: isZh ? '归一化 σ' : 'Norm σ',
-    scaledMu: isZh ? '标准化 μ' : 'Scaled μ',
-    scaledSigma: isZh ? '标准化 σ' : 'Scaled σ',
+    normMu: isZh ? '对数标准化 μ' : 'Log-Norm μ',
+    normSigma: isZh ? '对数标准化 σ' : 'Log-Norm σ',
+    scaledMu: isZh ? '中心化 μ' : 'Centered μ',
+    scaledSigma: isZh ? '中心化 σ' : 'Centered σ',
   }
 
   // data is already log-normalized (from page.tsx)

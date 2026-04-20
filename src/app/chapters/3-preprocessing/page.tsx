@@ -193,6 +193,53 @@ export default function PreprocessingChapter() {
               <p className="font-mono text-purple-700 text-sm my-2"><K math="\widetilde{X} = \log\left(1 + \dfrac{X}{\Sigma} \times 10^4\right)" /></p>
               <p className="text-xs text-gray-500">{t('ch3.formulaDesc')}</p>
             </div>
+            {/* Library size definition */}
+            <div className="info-panel concept mb-6">
+              <h3>{'📏 ' + t('ch1.libSizeDef')}</h3>
+              <p>{t('ch1.libSizeDefDesc')}</p>
+            </div>
+
+            {/* Why log transform */}
+            <div className="info-panel tip mb-6">
+              <h3>{'🔢 ' + t('ch3.whyLog')}</h3>
+              <p className="mb-3">{t('ch3.whyLogDesc1')}</p>
+              <div className="bg-white rounded-lg p-4 border border-amber-200 mb-3">
+                <p className="text-sm font-semibold text-gray-700 mb-2">{t('ch3.whyLogExample')}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="bg-amber-50 rounded-lg p-3">
+                    <span className="font-mono font-bold text-amber-700">50 → 10</span>
+                    <span className="text-gray-500 ml-2">(log₂: 5.64 → 3.32)</span>
+                    <p className="text-xs text-gray-500 mt-1">{t('ch3.whyLogGeneA')}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <span className="font-mono font-bold text-gray-400">1100 → 1000</span>
+                    <span className="text-gray-500 ml-2">(log₂: 10.10 → 9.97)</span>
+                    <p className="text-xs text-gray-500 mt-1">{t('ch3.whyLogGeneB')}</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600">{t('ch3.whyLogConclusion')}</p>
+            </div>
+
+            {/* Three key concepts in a row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="info-panel math">
+                <h3>{'⚠️ ' + t('ch3.compBias')}</h3>
+                <p className="text-sm">{t('ch3.compBiasDesc')}</p>
+                <p className="text-xs text-gray-500 mt-2">{t('ch3.compBiasWhy')}</p>
+              </div>
+              <div className="info-panel concept">
+                <h3>{'📐 ' + t('ch3.logFC')}</h3>
+                <div className="text-center my-2"><K math="\log_2\!\left(\dfrac{x_2}{x_1}\right) = \log_2(x_2) - \log_2(x_1)" /></div>
+                <p className="text-xs text-gray-500">{t('ch3.logFCDesc')}</p>
+              </div>
+              <div className="info-panel tip">
+                <h3>{'⚖️ ' + t('ch3.sizeFactor')}</h3>
+                <div className="text-center my-2"><K math="s_i = \dfrac{\text{LibSize}_i}{\overline{\text{LibSize}}}" /></div>
+                <p className="text-xs text-gray-500">{t('ch3.sizeFactorDesc')}</p>
+              </div>
+            </div>
+
             <NormalizationViz data={data.expression_matrix} geneNames={data.gene_names} cellTypes={data.cell_types} lang={lang} />
             <div className="info-panel tip mt-6">
               <h3>{t('ch3.tryThisTitle')}</h3>
@@ -216,11 +263,22 @@ export default function PreprocessingChapter() {
               <div className="step-number" style={{ background: '#ef4444' }}>2</div>
               <h2>{t('ch3.step2Name')}</h2>
             </div>
-            <div className="info-panel concept mb-6">
-              <h3>{t('ch3.whyHVG')}</h3>
-              <p>{t('ch3.step2Desc')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="info-panel concept">
+                <h3>{'🎯 ' + t('ch3.whyHVG')}</h3>
+                <p className="text-sm">{t('ch3.step2Desc')}</p>
+              </div>
+              <div className="info-panel math">
+                <h3>{'📊 ' + t('ch3.varDecomp')}</h3>
+                <div className="text-center my-2">
+                  <K math="\text{Var}_{\text{total}} = \text{Var}_{\text{tech}} + \text{Var}_{\text{bio}}" />
+                </div>
+                <p className="text-xs text-gray-600 mb-1">{t('ch3.varDecompDesc')}</p>
+                <p className="text-xs text-gray-400">{t('ch3.negBio')}</p>
+              </div>
             </div>
             <p className="text-sm text-gray-600 mb-4">{t('ch3.hvgDataInput')}</p>
+
             <HvgViz data={normalizedData} geneNames={data.gene_names} cellTypes={data.cell_types} lang={lang} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <div className="info-panel math"><h3>Poisson: <K math="\text{Var} = \mu" /></h3><p className="text-xs text-gray-500">{t('ch3.poissonDesc2')}</p></div>
@@ -241,15 +299,26 @@ export default function PreprocessingChapter() {
               <div className="step-number" style={{ background: '#3b82f6' }}>3</div>
               <h2>{t('ch3.step3Name')}</h2>
             </div>
-            <div className="info-panel concept mb-6">
-              <h3>{t('ch3.whyScale')}</h3>
-              <p>{t('ch3.step3Desc')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="info-panel concept">
+                <h3>{'🎯 ' + t('ch3.whyScale')}</h3>
+                <p className="text-sm">{t('ch3.step3Desc')}</p>
+              </div>
+              <div className="info-panel tip">
+                <h3>{'⚖️ ' + t('ch3.whyEqualWeight')}</h3>
+                <p className="text-sm">{t('ch3.equalWeightDesc')}</p>
+              </div>
+              <div className="info-panel math">
+                <h3>{'🧹 ' + t('ch3.regressOut')}</h3>
+                <p className="text-sm">{t('ch3.regressOutDesc')}</p>
+              </div>
             </div>
             <div className="info-panel math mb-6">
               <h3>{t('ch3.formulaTitle')}</h3>
               <p className="font-mono text-purple-700 text-sm my-2"><K math="z = \dfrac{x - \mu}{\sigma}" /></p>
               <p className="text-xs text-gray-500">{t('ch3.scaleFormulaDesc')}</p>
             </div>
+
             <ScaleDataViz data={normalizedData} geneNames={data.gene_names} cellTypes={data.cell_types} lang={lang} />
             <div className="flex justify-between mt-6">
               <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-red-500 hover:text-red-600 transition-colors">← {t('ch3.backHVG')}</button>

@@ -217,8 +217,9 @@ export default function HvgViz({ data, geneNames, cellTypes, lang = 'en' }: HvgV
             p.noStroke()
             p.push()
             p.translate(x + 2, marginTop + nHVGs * cellH + 4)
-            p.rotate(-Math.PI / 3)
+            p.rotate(-Math.PI / 4)
             p.textAlign(p.LEFT, p.CENTER)
+            p.textSize(6)
             p.text(cellTypes[actualIdx], 0, 0)
             p.pop()
             lastType = cellTypes[actualIdx]
