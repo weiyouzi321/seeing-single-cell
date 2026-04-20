@@ -205,9 +205,13 @@ export default function DistributionChapter() {
         >
           ← Gene Expression Matrix
         </Link>
-        <span className="text-sm text-gray-300">
-          Chapter 3 (Normalization) coming soon →
-        </span>
+        <Link
+          href="/chapters/3-preprocessing"
+          className="px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-medium 
+                     hover:bg-emerald-600 transition-colors shadow-sm"
+        >
+          Next: Preprocessing →
+        </Link>
       </div>
     </div>
   )

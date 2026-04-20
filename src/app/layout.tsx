@@ -47,6 +47,9 @@ export default function RootLayout({
               <Link href="/chapters/2-distribution" className="hover:text-[#4361ee] transition-colors">
                 2 · Distribution
               </Link>
+              <Link href="/chapters/3-preprocessing" className="hover:text-[#4361ee] transition-colors">
+                3 · Preprocessing
+              </Link>
             </div>
           </div>
         </nav>

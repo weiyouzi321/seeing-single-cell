@@ -62,12 +62,11 @@ export default function Home() {
           />
           <ChapterCard
             number="03"
-            title="Normalization"
-            description="Why do we need to normalize? Explore how library size differences affect analysis and how normalization corrects them."
-            concepts={['Library size', 'Log transform', 'Scaling']}
-            href="#"
+            title="Preprocessing Trilogy"
+            description="The three essential steps before analysis: normalize library sizes, select highly variable genes, and scale to z-scores. Interactive toggles show how each step transforms the data."
+            concepts={['Normalization', 'HVG Selection', 'ScaleData']}
+            href="/chapters/3-preprocessing"
             color="from-[#10b981] to-[#34d399]"
-            comingSoon
           />
           <ChapterCard
             number="04"
