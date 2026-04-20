@@ -1,23 +1,28 @@
+'use client'
+
 import Link from 'next/link'
+import { useLang } from '@/lib/i18n/LangContext'
 
 export default function Home() {
+  const { t } = useLang()
+
   return (
     <div>
       {/* Hero */}
       <section className="pt-16 pb-12 text-center">
         <p className="text-sm font-semibold tracking-widest uppercase text-[#7c3aed] mb-4">
-          Interactive Learning
+          {t('home.tagline')}
         </p>
         <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight leading-tight mb-6">
           <span className="bg-gradient-to-r from-[#4361ee] via-[#7c3aed] to-[#4361ee] bg-clip-text text-transparent">
-            Seeing Single-Cell
+            {t('home.title')}
           </span>
         </h1>
         <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-          An interactive visual exploration of the mathematics behind{' '}
-          <strong className="text-gray-700">single-cell RNA sequencing</strong>.
+          {t('home.subtitle')}{' '}
+          <strong className="text-gray-700">{t('home.subtitleBold')}</strong>
           <br />
-          Play with the math. See what happens.
+          {t('home.subtitleEnd')}
         </p>
         <div className="flex justify-center gap-4">
           <Link
@@ -26,14 +31,14 @@ export default function Home() {
                        hover:bg-[#3651d4] transition-all shadow-md hover:shadow-lg 
                        hover:-translate-y-0.5"
           >
-            Start Learning →
+            {t('home.startBtn')}
           </Link>
           <a
             href="#chapters"
             className="px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold
                        hover:border-[#4361ee] hover:text-[#4361ee] transition-all"
           >
-            Browse Chapters
+            {t('home.browseBtn')}
           </a>
         </div>
       </section>
@@ -41,30 +46,30 @@ export default function Home() {
       {/* Chapters */}
       <section id="chapters" className="py-12">
         <h2 className="text-sm font-semibold tracking-widest uppercase text-gray-400 mb-8 text-center">
-          Chapters
+          {t('home.chaptersTitle')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ChapterCard
             number="01"
-            title="Gene Expression Matrix"
-            description="What does single-cell data actually look like? Explore the rows, columns, and values that form the foundation of every analysis."
-            concepts={['Cells × Genes', 'Sparsity', 'Expression values']}
+            title={t('ch1.title')}
+            description={t('ch1.subtitle')}
+            concepts={['Cells \u00d7 Genes', 'Sparsity', 'Expression values']}
             href="/chapters/1-matrix"
             color="from-[#4361ee] to-[#3b82f6]"
           />
           <ChapterCard
             number="02"
-            title="Data Distribution"
-            description="How are gene expression values distributed? Visualize histograms, kernel density estimates, and discover patterns in the data."
+            title={t('ch2.title')}
+            description={t('ch2.subtitle')}
             concepts={['Histogram', 'KDE', 'Gene statistics']}
             href="/chapters/2-distribution"
             color="from-[#7c3aed] to-[#a855f7]"
           />
           <ChapterCard
             number="03"
-            title="Preprocessing Trilogy"
-            description="The three essential steps before analysis: normalize library sizes, select highly variable genes, and scale to z-scores. Interactive toggles show how each step transforms the data."
-            concepts={['Normalization', 'HVG Selection', 'ScaleData']}
+            title={t('ch3.title')}
+            description={t('ch3.subtitle') + ' ' + t('ch3.subtitleNorm') + ', ' + t('ch3.subtitleHVG') + ', ' + t('ch3.subtitleScale') + '. ' + t('ch3.subtitleEnd')}
+            concepts={[t('ch3.subtitleNorm'), t('ch3.subtitleHVG'), t('ch3.subtitleScale')]}
             href="/chapters/3-preprocessing"
             color="from-[#10b981] to-[#34d399]"
           />
@@ -83,28 +88,22 @@ export default function Home() {
       {/* How It Works */}
       <section className="py-16 border-t border-gray-100 mt-8">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-bold mb-6">How to Use This Site</h2>
+          <h2 className="text-2xl font-bold mb-6">{t('home.howTitle')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
             <div>
-              <div className="text-3xl mb-3">👆</div>
-              <h3 className="font-semibold mb-1">Interact</h3>
-              <p className="text-sm text-gray-500">
-                Hover, click, and drag on visualizations. Adjust sliders and parameters in real-time.
-              </p>
+              <div className="text-3xl mb-3">{'\u{1F446}'}</div>
+              <h3 className="font-semibold mb-1">{t('home.interact')}</h3>
+              <p className="text-sm text-gray-500">{t('home.interactDesc')}</p>
             </div>
             <div>
-              <div className="text-3xl mb-3">📖</div>
-              <h3 className="font-semibold mb-1">Read & Observe</h3>
-              <p className="text-sm text-gray-500">
-                Each section explains a concept, then shows it visually. Watch the math come alive.
-              </p>
+              <div className="text-3xl mb-3">{'\u{1F4D6}'}</div>
+              <h3 className="font-semibold mb-1">{t('home.read')}</h3>
+              <p className="text-sm text-gray-500">{t('home.readDesc')}</p>
             </div>
             <div>
-              <div className="text-3xl mb-3">🧪</div>
-              <h3 className="font-semibold mb-1">Experiment</h3>
-              <p className="text-sm text-gray-500">
-                Change parameters and see the effects immediately. Build intuition through play.
-              </p>
+              <div className="text-3xl mb-3">{'\u{1F9EA}'}</div>
+              <h3 className="font-semibold mb-1">{t('home.experiment')}</h3>
+              <p className="text-sm text-gray-500">{t('home.experimentDesc')}</p>
             </div>
           </div>
         </div>

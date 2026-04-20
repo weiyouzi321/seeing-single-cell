@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo, useRef } from 'react'
+import { useLang } from '@/lib/i18n/LangContext'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
@@ -50,6 +51,7 @@ function K({ math }: { math: string }) {
 }
 
 export default function PreprocessingChapter() {
+  const { t } = useLang()
   const [data, setData] = useState<PBMCData | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeStep, setActiveStep] = useState(0)
@@ -113,9 +115,9 @@ export default function PreprocessingChapter() {
           <span>&gt;</span>
           <Link href="/chapters/2-distribution">Chapter 2</Link>
           <span>&gt;</span>
-          <span>Chapter 3</span>
+          <span>{t('nav.ch3')}</span>
         </div>
-        <h1>Preprocessing Trilogy</h1>
+        <h1>{t('ch3.title')}</h1>
         <p className="subtitle">
           Before clustering and visualization, scRNA-seq data goes through three essential preprocessing steps:
           <strong> Normalization</strong>, <strong>Highly Variable Gene selection</strong>, and <strong>Scaling</strong>.
@@ -149,9 +151,9 @@ export default function PreprocessingChapter() {
             </div>
             <span className="text-gray-400 text-lg">&#x2192;</span>
             {[
-              { label: 'Normalize', sub: 'div libsize, x 10k, log', color: '#10b981', bg: '#d1fae5', border: '#34d399' },
-              { label: 'Select HVGs', sub: 'Top variable genes', color: '#ef4444', bg: '#fee2e2', border: '#f87171' },
-              { label: 'Scale', sub: 'Z-score per gene', color: '#3b82f6', bg: '#dbeafe', border: '#60a5fa' },
+              { label: t('ch3.normLabel'), sub: t('ch3.normSub'), color: '#10b981', bg: '#d1fae5', border: '#34d399' },
+              { label: t('ch3.hvgLabel'), sub: t('ch3.hvgSub'), color: '#ef4444', bg: '#fee2e2', border: '#f87171' },
+              { label: t('ch3.scaleLabel'), sub: t('ch3.scaleSub'), color: '#3b82f6', bg: '#dbeafe', border: '#60a5fa' },
             ].map((s, i) => (
               <span key={i} className="flex items-center gap-3">
                 <div
@@ -181,11 +183,11 @@ export default function PreprocessingChapter() {
           <div className="viz-card">
             <div className="viz-card-header">
               <div className="step-number" style={{ background: '#10b981' }}>1</div>
-              <h2>Normalization</h2>
+              <h2>{t('ch3.step1Name')}</h2>
             </div>
             <div className="info-panel concept mb-6">
-              <h3>Why Normalize?</h3>
-              <p>Different cells capture different amounts of mRNA — this is a <strong>technical artifact</strong>, not biological. Cell A might have 10x more total counts than Cell B simply because it was more efficiently captured.</p>
+              <h3>{t('ch3.whyNorm')}</h3>
+              <p>Different cells capture different amounts of mRNA — this is a <strong>technical artifact</strong>, not biological. Cell A might have 10\u00d7 more total counts than Cell B simply because it was more efficiently captured.</p>
             </div>
             <div className="info-panel math mb-6">
               <h3>The Formula</h3>
@@ -213,10 +215,10 @@ export default function PreprocessingChapter() {
           <div className="viz-card">
             <div className="viz-card-header">
               <div className="step-number" style={{ background: '#ef4444' }}>2</div>
-              <h2>Highly Variable Gene (HVG) Selection</h2>
+              <h2>{t('ch3.step2Name')}</h2>
             </div>
             <div className="info-panel concept mb-6">
-              <h3>Why Select HVGs?</h3>
+              <h3>{t('ch3.whyHVG')}</h3>
               <p>Not all genes are informative. <strong>Housekeeping genes</strong> (like GAPDH) are expressed at similar levels across all cells. <strong>HVGs</strong> show high cell-to-cell variance and drive biological heterogeneity.</p>
             </div>
             <p className="text-sm text-gray-600 mb-4">Data input: <strong>normalized</strong> expression matrix. HVGs identified by mean-variance relationship.</p>
@@ -238,10 +240,10 @@ export default function PreprocessingChapter() {
           <div className="viz-card">
             <div className="viz-card-header">
               <div className="step-number" style={{ background: '#3b82f6' }}>3</div>
-              <h2>ScaleData (Z-score Normalization)</h2>
+              <h2>{t('ch3.step3Name')}</h2>
             </div>
             <div className="info-panel concept mb-6">
-              <h3>Why Scale?</h3>
+              <h3>{t('ch3.whyScale')}</h3>
               <p>After normalization, genes still have different means. <strong>Scaling</strong> z-scores each gene to mean=0, std=1, giving equal weight in PCA.</p>
             </div>
             <div className="info-panel math mb-6">
@@ -259,7 +261,7 @@ export default function PreprocessingChapter() {
 
       <section className="mb-12">
         <div className="viz-card" style={{ background: 'linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)', border: '1px solid #fde68a' }}>
-          <h3 className="text-lg font-bold text-amber-800 mb-4">The Preprocessing Pipeline</h3>
+          <h3 className="text-lg font-bold text-amber-800 mb-4">{t('ch3.summaryTitle')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-xl p-4 border border-emerald-200">
               <h4 className="font-semibold text-emerald-700 mb-1">1. Normalization</h4>

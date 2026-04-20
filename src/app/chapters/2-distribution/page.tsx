@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { useLang } from '@/lib/i18n/LangContext'
 
 const DistributionViz = dynamic(
   () => import('@/components/visualizations/DistributionViz'),
@@ -10,19 +11,14 @@ const DistributionViz = dynamic(
 )
 
 interface PBMCData {
-  metadata: {
-    n_cells: number
-    n_genes: number
-    description: string
-    cell_types: string[]
-    source: string
-  }
+  metadata: { n_cells: number; n_genes: number; description: string; cell_types: string[]; source: string }
   gene_names: string[]
   cell_types: string[]
   expression_matrix: number[][]
 }
 
 export default function DistributionChapter() {
+  const { t } = useLang()
   const [data, setData] = useState<PBMCData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -31,76 +27,45 @@ export default function DistributionChapter() {
       try {
         const basePath = process.env.NODE_ENV === 'production' ? '/seeing-single-cell' : ''
         const res = await fetch(`${basePath}/data/pbmc_data.json`)
-        if (res.ok) {
-          setData(await res.json())
-        }
-      } catch (e) {
-        console.error(e)
-      } finally {
-        setLoading(false)
-      }
+        if (res.ok) setData(await res.json())
+      } catch (e) { console.error(e) } finally { setLoading(false) }
     }
     loadData()
   }, [])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#7c3aed]" />
-      </div>
-    )
-  }
-
-  if (!data) {
-    return <p className="text-center text-red-500 py-12">Failed to load data.</p>
-  }
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#7c3aed]" /></div>
+  if (!data) return <p className="text-center text-red-500 py-12">Failed to load data.</p>
 
   return (
     <div>
       <div className="chapter-hero">
         <div className="breadcrumb">
-          <Link href="/">Home</Link>
-          <span>›</span>
-          <Link href="/chapters/1-matrix">Chapter 1</Link>
-          <span>›</span>
-          <span>Chapter 2</span>
+          <Link href="/">{t('nav.home')}</Link><span>\u003E</span>
+          <Link href="/chapters/1-matrix">{t('nav.ch1')}</Link><span>\u003E</span>
+          <span>{t('nav.ch2')}</span>
         </div>
-        <h1>Data Distribution</h1>
-        <p className="subtitle">
-          Not all genes are created equal. Explore how expression values are distributed
-          across cells, and discover what different distribution shapes tell us about biology.
-        </p>
+        <h1>{t('ch2.title')}</h1>
+        <p className="subtitle">{t('ch2.subtitle')}</p>
       </div>
 
       <section className="mb-12">
         <div className="viz-card">
           <div className="viz-card-header">
             <div className="step-number">1</div>
-            <h2>Exploring Gene Expression Distributions</h2>
+            <h2>{t('ch2.step1Title')}</h2>
           </div>
-
           <div className="info-panel concept mb-6">
-            <h3>💡 Why Distributions Matter</h3>
-            <p>
-              The distribution of a gene's expression values across all cells reveals important patterns.
-              Housekeeping genes tend to be normally distributed, while cell-type markers show bimodal
-              distributions (on or off).
-            </p>
+            <h3>{'\u{1F4A1}'} {t('ch2.tryThis')}</h3>
+            <p>{t('ch2.concept1')}</p>
           </div>
-
-          <DistributionViz
-            data={data.expression_matrix}
-            geneNames={data.gene_names}
-            cellTypes={data.cell_types}
-          />
-
+          <DistributionViz data={data.expression_matrix} geneNames={data.gene_names} cellTypes={data.cell_types} />
           <div className="info-panel tip mt-6">
-            <h3>🧪 Try This</h3>
+            <h3>{'\u{1F9EA}'} {t('ch2.tryThis')}</h3>
             <ul className="list-disc list-inside space-y-1">
-              <li>Select different genes from the dropdown — compare CD3D (T cell marker) vs B2M (housekeeping)</li>
-              <li>Adjust the bin count to see how granularity affects the histogram's shape</li>
-              <li>Toggle the KDE curve on/off to see how kernel smoothing works</li>
-              <li>Watch how the statistics panel changes with each gene</li>
+              <li>{t('ch2.try1')}</li>
+              <li>{t('ch2.try2')}</li>
+              <li>{t('ch2.try3')}</li>
+              <li>{t('ch2.try4')}</li>
             </ul>
           </div>
         </div>
@@ -110,49 +75,31 @@ export default function DistributionChapter() {
         <div className="viz-card">
           <div className="viz-card-header">
             <div className="step-number">2</div>
-            <h2>Histogram vs Kernel Density Estimation</h2>
+            <h2>{t('ch2.step2Title')}</h2>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-semibold text-lg mb-3">Histogram</h3>
+              <h3 className="font-semibold text-lg mb-3">{t('ch2.histTitle')}</h3>
               <div className="space-y-3 text-gray-600 text-sm leading-relaxed">
-                <p>
-                  A histogram divides the data range into <strong className="text-gray-800">bins</strong> and
-                  counts how many values fall into each bin. It's simple and intuitive, but the shape
-                  depends on bin width and starting position.
-                </p>
+                <p>{t('ch2.histDesc')} <strong className="text-gray-800">{t('ch2.histDescBold')}</strong> {t('ch2.histDescEnd')}</p>
                 <div className="info-panel math">
-                  <p className="font-mono text-purple-700 text-xs">
-                    height(bin) = count(bin) / (total × width(bin))
-                  </p>
+                  <p className="font-mono text-purple-700 text-xs">height(bin) = count(bin) / (total \u00d7 width(bin))</p>
                 </div>
               </div>
             </div>
-
             <div>
-              <h3 className="font-semibold text-lg mb-3">Kernel Density Estimation (KDE)</h3>
+              <h3 className="font-semibold text-lg mb-3">{t('ch2.kdeTitle')}</h3>
               <div className="space-y-3 text-gray-600 text-sm leading-relaxed">
-                <p>
-                  KDE places a smooth kernel (usually Gaussian) at each data point, then sums them up.
-                  The result is a continuous, smooth estimate of the probability density function.
-                </p>
+                <p>{t('ch2.kdeDesc')}</p>
                 <div className="info-panel math">
-                  <p className="font-mono text-purple-700 text-xs">
-                    f̂(x) = (1/nh) Σ K((x - xᵢ)/h)
-                  </p>
+                  <p className="font-mono text-purple-700 text-xs">f\u0302(x) = (1/nh) \u03a3 K((x - x\u1D62)/h)</p>
                 </div>
               </div>
             </div>
           </div>
-
           <div className="info-panel concept mt-6">
-            <h3>🔧 The Bandwidth Parameter</h3>
-            <p>
-              The bandwidth <span className="math-inline">h</span> in KDE controls the smoothness:
-              too small → noisy and spiky, too large → over-smoothed. In the visualization above,
-              try different genes to see how the optimal bandwidth changes with the data shape.
-            </p>
+            <h3>{'\u{1F527}'} {t('ch2.bandwidthTitle')}</h3>
+            <p>{t('ch2.bandwidthDesc')} <span className="math-inline">h</span> {t('ch2.bandwidthDesc2')}</p>
           </div>
         </div>
       </section>
@@ -161,57 +108,31 @@ export default function DistributionChapter() {
         <div className="viz-card">
           <div className="viz-card-header">
             <div className="step-number">3</div>
-            <h2>Common Distribution Patterns in scRNA-seq</h2>
+            <h2>{t('ch2.step3Title')}</h2>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="info-panel concept">
-              <h3>📊 Normal-like</h3>
-              <p>
-                <strong>Housekeeping genes</strong> (e.g., GAPDH, B2M) are expressed in all cells.
-                Their distribution is roughly symmetric around the mean.
-              </p>
+              <h3>{'\u{1F4CA}'} {t('ch2.normalPat')}</h3>
+              <p>{t('ch2.normalPatDesc')}</p>
             </div>
             <div className="info-panel tip">
-              <h3>📊 Bimodal</h3>
-              <p>
-                <strong>Cell-type markers</strong> (e.g., CD3D) show two peaks: one at zero (cells
-                that don't express it) and one at a higher value (cells that do).
-              </p>
+              <h3>{'\u{1F4CA}'} {t('ch2.bimodalPat')}</h3>
+              <p>{t('ch2.bimodalPatDesc')}</p>
             </div>
             <div className="info-panel math">
-              <h3>📊 Zero-inflated</h3>
-              <p>
-                <strong>Lowly expressed genes</strong> have a huge spike at zero with a long right tail.
-                This is the "dropout" problem in scRNA-seq.
-              </p>
+              <h3>{'\u{1F4CA}'} {t('ch2.zeroInfPat')}</h3>
+              <p>{t('ch2.zeroInfPatDesc')}</p>
             </div>
           </div>
-
           <div className="mt-6 text-gray-600 leading-relaxed">
-            <p>
-              In the interactive plot above, try selecting <strong className="text-gray-800">B2M</strong> (normal-like),{' '}
-              <strong className="text-gray-800">CD3D</strong> (bimodal), and{' '}
-              <strong className="text-gray-800">NKG7</strong> (zero-inflated) to see these patterns in real data.
-            </p>
+            <p>{t('ch2.concept1')}</p>
           </div>
         </div>
       </section>
 
       <div className="flex justify-between items-center py-8 border-t border-gray-100">
-        <Link
-          href="/chapters/1-matrix"
-          className="text-gray-400 hover:text-[#4361ee] transition-colors"
-        >
-          ← Gene Expression Matrix
-        </Link>
-        <Link
-          href="/chapters/3-preprocessing"
-          className="px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-medium 
-                     hover:bg-emerald-600 transition-colors shadow-sm"
-        >
-          Next: Preprocessing →
-        </Link>
+        <Link href="/chapters/1-matrix" className="text-gray-400 hover:text-[#4361ee] transition-colors">{t('ch2.prevBtn')}</Link>
+        <Link href="/chapters/3-preprocessing" className="px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-600 transition-colors shadow-sm">{t('ch3.step1Label') ? (t('nav.ch3') + ' \u2192') : 'Chapter 3 \u2192'}</Link>
       </div>
     </div>
   )
