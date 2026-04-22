@@ -55,6 +55,16 @@ function powerIterSteps(cov: number[][], nSteps: number) {
 }
 
 export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', activeStep }: PcaVizProps) {
+  // PCA matrix dimensions (shared)
+
+  const dG = Math.min(geneNames.length, 8)
+
+  const dC = Math.min(cellTypes.length, 10)
+
+  const nPC = Math.min(4, dG)
+
+
+
   const s1Ref = useRef<HTMLDivElement>(null)
   const s2Ref = useRef<HTMLDivElement>(null)
   const s3MatRef = useRef<HTMLDivElement>(null)
@@ -345,24 +355,24 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
   // ── Step 3-C: Eigendecomposition ──
   useEffect(() => {
     if (activeStep !== 2 || s3Sub !== 2 || !s3EigenRef.current) return
-    const dG = Math.min(nG, 8), cSz = 20
+    const cSz = 20
     const nPC = Math.min(4, dG)
     const piResult = powerIterSteps(pca.cov, eigenStep)
     const vec = piResult.eigenvector, lambda = piResult.eigenval
     const mX = 40, mY = 120
     const sigmaW = dG * cSz
     const vecW = cSz * 2
-    const gap1 = 20, gap2 = 14, gap3 = 12
+    const gap1 = 28, gap2 = 18, gap3 = 16
     const vecX = mX + sigmaW + gap1
     const resX = vecX + vecW + gap2
     const approxX = resX + vecW + 6
     const lambdaW = 48, lambdaH = 26
-    const lambdaX = approxX + 22
+    const lambdaX = approxX + 30
     const timesX = lambdaX + lambdaW + 6
-    const v2X = timesX + 10
-    const evGap = 35
+    const v2X = timesX + 18
+    const evGap = 50
     const evX = v2X + vecW + evGap
-    const W = evX + nPC * (cSz + 2) + 30
+    const W = evX + nPC * (cSz + 2) + 40
     const H = mY + dG * cSz + 130
 
     const sk = (p: any) => {
@@ -387,7 +397,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
           p.text('PC'+(pc+1),bx+bw/2,by+bh/2)
         }
         // spacer before matrices
-        p.fill(255);p.noStroke();p.rect(mX,by+bh+6,400,10)
+        p.fill(255);p.noStroke();p.rect(mX,70,400,10)
 
         // Iter label
         p.fill(80);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
@@ -508,12 +518,12 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     }
     mk('s3e', s3EigenRef.current, sk)
     return () => rm('s3e')
-  }, [activeStep, s3Sub, selPC, eigenStep, pca, geneNames, nG, isZh])
+  }, [activeStep, s3Sub, selPC, eigenStep, pca, geneNames, nG, dG, isZh])
 
   // ── Step 3-D: Projection ──
   useEffect(() => {
     if (activeStep !== 2 || s3Sub !== 3 || !s3ProjRef.current) return
-    const dG = Math.min(nG, 6), dC = Math.min(nC, 10), cSz = 22
+    const cSz = 22
     const nPC = Math.min(4, dG)
     const W = 720, H = 420
     const sk = (p: any) => {
@@ -633,7 +643,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     }
     mk('s3p', s3ProjRef.current, sk)
     return () => rm('s3p')
-  }, [activeStep, s3Sub, selProj, pca, geneNames, cellTypes, nC, nG, isZh])
+  }, [activeStep, s3Sub, selProj, pca, geneNames, cellTypes, nC, nG, nPC, isZh])
 
   // ── Step 4: Elbow + PC scatter (unchanged) ──
   useEffect(() => {
