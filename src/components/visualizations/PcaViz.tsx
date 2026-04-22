@@ -345,24 +345,25 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
   // ── Step 3-C: Eigendecomposition ──
   useEffect(() => {
     if (activeStep !== 2 || s3Sub !== 2 || !s3EigenRef.current) return
-    const dG = Math.min(nG, 8), cSz = 21
+    const dG = Math.min(nG, 8), cSz = 20
     const nPC = Math.min(4, dG)
     const piResult = powerIterSteps(pca.cov, eigenStep)
     const vec = piResult.eigenvector, lambda = piResult.eigenval
-    const mX = 35, mY = 75
+    const mX = 40, mY = 120
     const sigmaW = dG * cSz
     const vecW = cSz * 2
-    const gap = 14
-    const vecX = mX + sigmaW + gap + 12
-    const resX = vecX + vecW + gap + 12
+    const gap1 = 20, gap2 = 14, gap3 = 12
+    const vecX = mX + sigmaW + gap1
+    const resX = vecX + vecW + gap2
     const approxX = resX + vecW + 6
-    const lambdaW = 44
+    const lambdaW = 48, lambdaH = 26
     const lambdaX = approxX + 22
     const timesX = lambdaX + lambdaW + 6
-    const v2X = timesX + 12
-    const evX = v2X + vecW + 35
+    const v2X = timesX + 10
+    const evGap = 35
+    const evX = v2X + vecW + evGap
     const W = evX + nPC * (cSz + 2) + 30
-    const H = mY + dG * cSz + 160
+    const H = mY + dG * cSz + 130
 
     const sk = (p: any) => {
       p.setup=()=>{p.createCanvas(W,H).parent(s3EigenRef.current!);p.textFont('Inter');p.noLoop()}
@@ -373,11 +374,11 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         p.fill(130);p.textSize(10)
         p.text(isZh?'选择PC，观察迭代中 λ 与 v 的动态变化':'Select PC, watch λ and v converge dynamically',mX,26)
 
-        // PC selector
+        // PC selector with breathing room
         p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text(isZh?'主成分:':'PC:',mX,50)
+        p.text(isZh?'主成分:':'PC:',mX,52)
         for(let pc=0;pc<nPC;pc++){
-          const bx=mX+58+pc*54, by=46, bw=46, bh=22
+          const bx=mX+58+pc*54, by=48, bw=46, bh=22
           const isActive=selPC===pc
           if(isActive){p.fill(139,92,246);p.stroke(100,60,200);p.strokeWeight(2)}
           else{p.fill(245);p.stroke(200);p.strokeWeight(1)}
@@ -385,94 +386,94 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
           p.noStroke();p.fill(isActive?255:80);p.textSize(10);p.textAlign(p.CENTER,p.CENTER)
           p.text('PC'+(pc+1),bx+bw/2,by+bh/2)
         }
+        // spacer before matrices
+        p.fill(255);p.noStroke();p.rect(mX,by+bh+6,400,10)
 
-        // Iteration label
+        // Iter label
         p.fill(80);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text(isZh?'迭代:':'Iter:',mX+58+nPC*54+15,50)
+        p.text(isZh?'迭代:':'Iter:',mX+58+nPC*54+15,52)
         p.fill(60);p.textSize(10)
-        p.text(eigenStep,mX+58+nPC*54+65,50)
+        p.text(eigenStep,mX+58+nPC*54+65,52)
 
-        // ── Σ ──
+        // column labels (genes)
+        p.textSize(6);p.textAlign(p.CENTER,p.TOP)
+        for(let j=0;j<dG;j++){p.push();p.translate(mX+j*cSz+cSz/2,mY-3);p.rotate(-Math.PI/4);p.text(geneNames[j],0,0);p.pop()}
+
+        // Σ
         p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('\u03A3',mX,mY-16)
         const cMx=Math.max(...pca.cov.slice(0,dG).map((r: number[])=>r.slice(0,dG).map(Math.abs)).flat())||1
         for(let i=0;i<dG;i++){for(let j=0;j<dG;j++){
-          const v=pca.cov[i][j],n=v/cMx
-          if(n>=0)p.fill(66,133,244,n*180+55);else p.fill(234,67,53,-n*180+55)
-          p.stroke(255);p.strokeWeight(0.5);p.rect(mX+j*cSz,mY+i*cSz,cSz,cSz)
+          const v=pca.cov[i][j],n=Math.abs(v)/cMx
+          p.fill(n>=0?[66,133,244,n*0.75+0.25]:[234,67,53,n*0.75+0.25]);p.stroke(255);p.strokeWeight(0.5)
+          p.rect(mX+j*cSz,mY+i*cSz,cSz,cSz)
         }}
-        p.noStroke();p.textSize(6);p.textAlign(p.CENTER,p.TOP)
-        for(let j=0;j<dG;j++){p.push();p.translate(mX+j*cSz+cSz/2,mY+dG*cSz+2);p.rotate(-Math.PI/4);p.text(geneNames[j],0,0);p.pop()}
-        p.textAlign(p.RIGHT,p.CENTER);p.fill(80);p.textSize(7)
+        p.noStroke();p.textSize(7);p.textAlign(p.RIGHT,p.CENTER)
         for(let i=0;i<dG;i++)p.text(geneNames[i],mX-3,mY+i*cSz+cSz/2)
 
         // ×
-        p.fill(100);p.textSize(16);p.textAlign(p.CENTER,p.CENTER);p.text('\u00D7',mX+sigmaW+gap/2+5,mY+dG*cSz/2)
+        p.fill(120);p.textSize(16);p.textAlign(p.CENTER,p.CENTER);p.text('\u00D7',mX+sigmaW+gap1/2+5,mY+dG*cSz/2)
 
-        // ── v ──
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text('v (iter '+eigenStep+')',vecX,mY-16)
+        // v
+        p.fill(139,92,246);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('v',vecX,mY-16)
         const vecMx = Math.max(...vec.map(Math.abs))||1
         for(let i=0;i<dG;i++){
-          const val=vec[i],norm=val/vecMx
-          if(norm>=0)p.fill(139,92,246,Math.abs(norm)*200+55);else p.fill(234,67,53,Math.abs(norm)*200+55)
-          p.stroke(255);p.strokeWeight(0.5);p.rect(vecX,mY+i*cSz,vecW,cSz)
-          p.noStroke();p.fill(Math.abs(norm)>0.3?255:100);p.textSize(8);p.textAlign(p.CENTER,p.CENTER)
+          const val=vec[i],n=Math.abs(val)/vecMx
+          p.fill(n>=0?[139,92,246,n*0.75+0.25]:[234,67,53,n*0.75+0.25]);p.stroke(255);p.strokeWeight(0.5)
+          p.rect(vecX,mY+i*cSz,vecW,cSz)
+          p.noStroke();p.fill(n>0.3?255:100);p.textSize(8);p.textAlign(p.CENTER,p.CENTER)
           p.text(val.toFixed(3),vecX+vecW/2,mY+i*cSz+cSz/2)
         }
 
         // =
-        p.fill(100);p.textSize(16);p.textAlign(p.CENTER,p.CENTER);p.text('=',vecX+vecW+gap/2+5,mY+dG*cSz/2)
+        p.fill(120);p.textSize(16);p.textAlign(p.CENTER,p.CENTER);p.text('=',vecX+vecW+gap2/2+5,mY+dG*cSz/2)
 
-        // ── Σv ──
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text('\u03A3v',resX,mY-16)
+        // Σv
+        p.fill(16,185,129);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('\u03A3v',resX,mY-16)
         const sigmaV = Array(dG).fill(0)
         for(let i=0;i<dG;i++) for(let j=0;j<dG;j++) sigmaV[i] += pca.cov[i][j]*vec[j]
         const svMx = Math.max(...sigmaV.map(Math.abs))||1
         for(let i=0;i<dG;i++){
-          const val=sigmaV[i],norm=val/svMx
-          if(norm>=0)p.fill(16,185,129,Math.abs(norm)*200+55);else p.fill(234,67,53,Math.abs(norm)*200+55)
-          p.stroke(255);p.strokeWeight(0.5);p.rect(resX,mY+i*cSz,vecW,cSz)
-          p.noStroke();p.fill(Math.abs(norm)>0.3?255:100);p.textSize(8);p.textAlign(p.CENTER,p.CENTER)
+          const val=sigmaV[i],n=Math.abs(val)/svMx
+          p.fill(n>=0?[16,185,129,n*0.75+0.25]:[234,67,53,n*0.75+0.25]);p.stroke(255);p.strokeWeight(0.5)
+          p.rect(resX,mY+i*cSz,vecW,cSz)
+          p.noStroke();p.fill(n>0.3?255:100);p.textSize(8);p.textAlign(p.CENTER,p.CENTER)
           p.text(val.toFixed(3),resX+vecW/2,mY+i*cSz+cSz/2)
         }
 
         // ≈
-        p.fill(100);p.textSize(16);p.textAlign(p.CENTER,p.CENTER);p.text('\u2248',approxX,mY+dG*cSz/2)
+        p.fill(120);p.textSize(16);p.textAlign(p.CENTER,p.CENTER);p.text('\u2248',approxX,mY+dG*cSz/2)
 
-        // ── λ ──
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text(isZh?'\u03BB:':'λ:',lambdaX,mY-16)
-        p.fill(245,158,11);p.stroke(200,120,0);p.strokeWeight(1.5);p.rect(lambdaX+22,mY,lambdaW,24,4)
+        // λ badge (centered vertically among matrix rows)
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text(isZh?'\u03BB:':'λ:',lambdaX,mY-16)
+        const lambdaY = mY + (dG*cSz - lambdaH)/2
+        p.fill(245,158,11,245);p.stroke(200,120,0);p.strokeWeight(1.5);p.rect(lambdaX+22,lambdaY,lambdaW,lambdaH,5)
         p.noStroke();p.fill(255);p.textSize(12);p.textAlign(p.CENTER,p.CENTER)
-        p.text(lambda.toFixed(4),lambdaX+22+lambdaW/2,mY+12)
+        p.text(lambda.toFixed(4),lambdaX+22+lambdaW/2,lambdaY+lambdaH/2)
 
         // ×
-        p.fill(100);p.textSize(16);p.textAlign(p.CENTER,p.CENTER);p.text('\u00D7',timesX,mY+dG*cSz/2)
+        p.fill(120);p.textSize(16);p.textAlign(p.CENTER,p.CENTER);p.text('\u00D7',timesX,mY+dG*cSz/2)
 
-        // ── v (from λ) ──
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text('v',v2X,mY-16)
+        // v (from λ)
+        p.fill(245,158,11);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('v',v2X,mY-16)
         for(let i=0;i<dG;i++){
-          const val=vec[i],norm=val/vecMx
-          if(norm>=0)p.fill(245,158,11,Math.abs(norm)*200+55);else p.fill(234,67,53,Math.abs(norm)*200+55)
-          p.stroke(255);p.strokeWeight(0.5);p.rect(v2X,mY+i*cSz,vecW,cSz)
-          p.noStroke();p.fill(Math.abs(norm)>0.3?255:100);p.textSize(8);p.textAlign(p.CENTER,p.CENTER)
+          const val=vec[i],n=Math.abs(val)/vecMx
+          p.fill(n>=0?[245,158,11,n*0.75+0.25]:[234,67,53,n*0.75+0.25]);p.stroke(255);p.strokeWeight(0.5)
+          p.rect(v2X,mY+i*cSz,vecW,cSz)
+          p.noStroke();p.fill(n>0.3?255:100);p.textSize(8);p.textAlign(p.CENTER,p.CENTER)
           p.text(val.toFixed(3),v2X+vecW/2,mY+i*cSz+cSz/2)
         }
 
-        // ── Eigenvectors V ──
+        // Eigenvectors V
         p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
         p.text(isZh?'特征向量 V (前'+nPC+'个)':'Eigenvectors V (top '+nPC+')',evX,mY-16)
         const evecs = pca.evecs
         const evMx = Math.max(...evecs.slice(0,nPC).map((r: number[])=>r.map(Math.abs)).flat())||1
         for(let pc=0;pc<nPC;pc++){
           for(let i=0;i<dG;i++){
-            const v=evecs[pc][i],n=v/evMx
+            const v=evecs[pc][i],n=Math.abs(v)/evMx
             const isSel=pc===selPC
             if(isSel){p.fill(139,92,246,n>0.3?255:100);p.stroke(100,60,200);p.strokeWeight(1.5)}
-            else if(n>=0){p.fill(66,133,244,n*120+55);p.stroke(255);p.strokeWeight(0.5)}
-            else{p.fill(234,67,53,-n*120+55);p.stroke(255);p.strokeWeight(0.5)}
+            else{p.fill(n>=0?[66,133,244,n*0.6+0.4]:[234,67,53,n*0.6+0.4]);p.stroke(255);p.strokeWeight(0.5)}
             p.rect(evX+pc*(cSz+2),mY+i*cSz,cSz,cSz)
           }
         }
@@ -485,16 +486,19 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         p.textAlign(p.RIGHT,p.CENTER);p.fill(80);p.textSize(7)
         for(let i=0;i<dG;i++)p.text(geneNames[i],evX-5,mY+i*cSz+cSz/2)
 
-        // Convergence bar (moved below eigenvector matrix)
-        const fy = mY + dG*cSz + 20
-        p.fill(245,248,255);p.stroke(200,215,255);p.strokeWeight(1);p.rect(mX,fy,W-mX-10,28,4)
+        // Convergence bar
+        const fy = mY + dG*cSz + 22
+        p.fill(245,248,255);p.stroke(200,215,255);p.strokeWeight(1);p.rect(mX,fy,W-mX-10,26,4)
         p.noStroke();p.fill(60,80,140);p.textSize(10);p.textAlign(p.LEFT,p.TOP)
-        p.text(isZh ? 'PC'+(selPC+1)+': λ = '+lambda.toFixed(5)+' | Σv'+(selPC+1)+' ≈ λ·v'+(selPC+1)+' ('+eigenStep+' iter)' : 'PC'+(selPC+1)+': λ = '+lambda.toFixed(5)+' | Σv'+(selPC+1)+' ≈ λ·v'+(selPC+1)+' ('+eigenStep+' iter)', mX+8, fy+4)
+        p.text(isZh?
+          'PC'+(selPC+1)+': λ = '+lambda.toFixed(5)+' | Σv'+(selPC+1)+' ≈ λ·v'+(selPC+1)+' ('+eigenStep+' iter)':
+          'PC'+(selPC+1)+': λ = '+lambda.toFixed(5)+' | Σv'+(selPC+1)+' ≈ λ·v'+(selPC+1)+' ('+eigenStep+' iter)',
+          mX+8,fy+4)
       }
 
       p.mousePressed=()=>{
         for(let pc=0;pc<nPC;pc++){
-          const bx=mX+58+pc*54, by=46, bw=46, bh=22
+          const bx=mX+58+pc*54, by=48, bw=46, bh=22
           if(p.mouseX>=bx&&p.mouseX<=bx+bw&&p.mouseY>=by&&p.mouseY<=by+bh){setSelPC(pc);p.redraw();return}
         }
         const evCol=Math.floor((p.mouseX-evX)/(cSz+2))
