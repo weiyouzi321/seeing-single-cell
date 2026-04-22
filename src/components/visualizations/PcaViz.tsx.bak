@@ -74,8 +74,6 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
   const [selCov, setSelCov] = useState<{j:number;k:number} | null>(null)
   const [selGeneCol, setSelGeneCol] = useState<number | null>(null)
   const [eigenStep, setEigenStep] = useState(5)
-  const [selPC, setSelPC] = useState(0)
-  const [selProj, setSelProj] = useState<{i:number;j:number} | null>(null)
 
   const pca = useMemo(() => computePCA(data, Math.min(10, nG)), [data, nG])
   const varexp = useMemo(() => { const t = pca.evals.reduce((s: number,v: number)=>s+v,0); return t>0 ? pca.evals.map((v: number)=>v/t) : pca.evals.map(()=>0) }, [pca])
@@ -105,7 +103,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         p.push();p.translate(12,M.t+ph/2);p.rotate(-Math.PI/2);p.text(geneNames[yG],0,0);p.pop()
         p.fill(120);p.textSize(8);p.textAlign(p.CENTER,p.TOP);for(let i=0;i<=5;i++)p.text((mnX+(mxX-mnX)*i/5).toFixed(1),M.l+pw*i/5,M.t+ph+2)
         p.textAlign(p.RIGHT,p.CENTER);for(let i=0;i<=5;i++)p.text((mnY+(mxY-mnY)*i/5).toFixed(1),M.l-4,M.t+ph-ph*i/5)
-        const ut=Array.from(new Set(cellTypes));p.textSize(9);p.textAlign(p.LEFT,p.CENTER);ut.forEach((t,i)=>{const[r,g,b]=gc(t);p.fill(r,g,b);p.noStroke();p.ellipse(W-85,M.t+10+i*16,8,8);p.fill(80);p.text(t,W-77,M.t+10+i*16)})
+        const ut=[...new Set(cellTypes)];p.textSize(9);p.textAlign(p.LEFT,p.CENTER);ut.forEach((t,i)=>{const[r,g,b]=gc(t);p.fill(r,g,b);p.noStroke();p.ellipse(W-85,M.t+10+i*16,8,8);p.fill(80);p.text(t,W-77,M.t+10+i*16)})
         if(hov>=0&&hov<nC){const bx=M.l+10,by=M.t+8;p.fill(255,255,255,230);p.stroke(180);p.strokeWeight(1);p.rect(bx,by,155,62,5);p.noStroke();p.fill(50);p.textSize(10);p.textAlign(p.LEFT,p.TOP);p.text((isZh?'细胞':'Cell')+' #'+(hov+1),bx+8,by+6);p.fill(80);p.textSize(9);p.text((isZh?'类型':'Type')+': '+cellTypes[hov],bx+8,by+22);p.text(geneNames[xG]+': '+xs[hov].toFixed(3),bx+8,by+36);p.text(geneNames[yG]+': '+ys[hov].toFixed(3),bx+8,by+50)}
         if(zm!==1){p.fill(150);p.noStroke();p.textSize(9);p.textAlign(p.RIGHT,p.BOTTOM);p.text((zm*100).toFixed(0)+'%',W-10,H-5)}
         p.fill(180);p.noStroke();p.textSize(9);p.textAlign(p.LEFT,p.BOTTOM);p.text(isZh?'悬停查看 · 滚轮缩放 · 拖拽平移':'Hover · Scroll zoom · Drag pan',M.l,H-3)
@@ -142,7 +140,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         p.push();p.translate(12,M.t+ph/2);p.rotate(-Math.PI/2);p.text(geneNames[1],0,0);p.pop()
         p.fill(120);p.textSize(8);p.textAlign(p.CENTER,p.TOP);for(let i=0;i<=5;i++)p.text(((i/5)*2-1).toFixed(1),M.l+pw*i/5,M.t+ph+2)
         p.textAlign(p.RIGHT,p.CENTER);for(let i=0;i<=5;i++)p.text(((i/5)*2-1).toFixed(1),M.l-4,M.t+ph-ph*i/5)
-        const ut=Array.from(new Set(cellTypes));p.textSize(9);p.textAlign(p.LEFT,p.CENTER);ut.forEach((t,i)=>{const[cr,cg,cb]=gc(t);p.fill(cr,cg,cb);p.noStroke();p.ellipse(W-85,M.t+10+i*16,8,8);p.fill(80);p.text(t,W-77,M.t+10+i*16)})
+        const ut=[...new Set(cellTypes)];p.textSize(9);p.textAlign(p.LEFT,p.CENTER);ut.forEach((t,i)=>{const[cr,cg,cb]=gc(t);p.fill(cr,cg,cb);p.noStroke();p.ellipse(W-85,M.t+10+i*16,8,8);p.fill(80);p.text(t,W-77,M.t+10+i*16)})
         // Variance + angle BELOW scatter, not overlapping
         const barX=M.l+10, barY=M.t+ph+22, barW=140, barH=12
         p.fill(240);p.noStroke();p.rect(barX,barY,barW,barH,3)
@@ -223,65 +221,38 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
   useEffect(() => {
     if (activeStep !== 2 || s3Sub !== 1 || !s3CovRef.current) return
     const centered = pca.centered, cov = pca.cov
-    const dG = Math.min(nG, 7), dC = Math.min(nC, 10), cSz = 20
-    const mX = 60, topY = 80
-    const xctLabelH = 22, xctH = dG * cSz + 15
-    const xcLabelH = 22
-    const gap = 30
-    const xcStartY = topY + xctLabelH + xctH + gap
-    const sigmaX = mX + dC * cSz + 70
-    const W = Math.max(sigmaX + dG * cSz + 30, mX + 500)
-    const detailY = xcStartY + xcLabelH + dC * cSz + 15
-    const H = detailY + 110
-    
+    const dG = Math.min(nG, 7), dC = Math.min(nC, 12), cSz = 20
+    const mX = 55, mY = 90
+    const W = mX + dG*cSz*2 + 160, H = mY + Math.max(dC, dG)*cSz + 100
     const sk = (p: any) => {
       p.setup=()=>{p.createCanvas(W,H).parent(s3CovRef.current!);p.textFont('Inter');p.noLoop()}
       p.draw=()=>{
         p.background(255)
-        p.fill(50);p.noStroke();p.textSize(13);p.textAlign(p.LEFT,p.TOP)
-        p.text(isZh?'协方差计算':'Covariance Computation',mX,8)
+        // Title
+        p.fill(50);p.noStroke();p.textSize(12);p.textAlign(p.LEFT,p.TOP)
+        p.text(isZh?'协方差计算: Σ = (1/(n−1)) · Xcᵀ · Xc':'Covariance: Σ = (1/(n−1)) · Xcᵀ · Xc',mX,8)
         p.fill(130);p.textSize(10)
-        p.text(isZh?'点击右侧 \u03A3 矩阵元素查看对应计算过程':'Click \u03A3 matrix element to see computation',mX,30)
-        p.fill(245,248,255);p.stroke(200,215,255);p.strokeWeight(1);p.rect(mX,52,W-mX-10,22,4)
-        p.noStroke();p.fill(60,80,140);p.textSize(11);p.textAlign(p.LEFT,p.TOP)
-        p.text('\u03A3 = 1/(n\u22121) \u00B7 Xc\u1D40 \u00B7 Xc',mX+8,56)
+        p.text(isZh?'点击右侧 Σ 矩阵查看计算过程':'Click Σ matrix to see computation',mX,28)
 
+        // ── Left: Xc ──
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Xc ('+dC+'×'+dG+')',mX,50)
         const mxA=Math.max(...centered.slice(0,dC).map((r: number[])=>r.slice(0,dG).map(Math.abs)).flat())||1
-
-        // ── Xc\u1D40 (top-left) ──
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Xc\u1D40 ('+dG+'\u00D7'+dC+')',mX,topY)
-        for(let i=0;i<dG;i++){for(let j=0;j<dC;j++){
-          const v=centered[j][i],n=v/mxA
-          const isRowJ=selCov&&i===selCov.j, isRowK=selCov&&i===selCov.k
-          if(isRowJ){p.fill(255,165,0,200);p.stroke(200,120,0);p.strokeWeight(1.5)}
-          else if(isRowK){p.fill(0,200,100,200);p.stroke(0,150,80);p.strokeWeight(1.5)}
-          else if(n>=0){p.fill(66,133,244,n*150+55);p.stroke(255);p.strokeWeight(0.5)}
-          else{p.fill(234,67,53,-n*150+55);p.stroke(255);p.strokeWeight(0.5)}
-          p.rect(mX+j*cSz,topY+xctLabelH+i*cSz,cSz,cSz)
-        }}
-        p.noStroke();p.textSize(7);p.textAlign(p.RIGHT,p.CENTER)
-        for(let i=0;i<dG;i++){const hi=selCov&&(i===selCov.j||i===selCov.k);p.fill(hi?(i===selCov?.j?[255,165,0]:[0,200,100]):[80,80,80]);p.text(geneNames[i],mX-3,topY+xctLabelH+i*cSz+cSz/2)}
-        p.textAlign(p.CENTER,p.TOP);p.fill(120);p.textSize(6)
-        for(let j=0;j<dC;j++)p.text('c'+j,mX+j*cSz+cSz/2,topY+xctLabelH+dG*cSz+2)
-
-        // ── Xc (bottom-left) ──
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Xc ('+dC+'\u00D7'+dG+')',mX,xcStartY)
         for(let i=0;i<dC;i++){for(let j=0;j<dG;j++){
           const v=centered[i][j],n=v/mxA
-          const isColJ=selCov&&j===selCov.j, isColK=selCov&&j===selCov.k
-          if(isColJ){p.fill(255,165,0,200);p.stroke(200,120,0);p.strokeWeight(1.5)}
-          else if(isColK){p.fill(0,200,100,200);p.stroke(0,150,80);p.strokeWeight(1.5)}
-          else if(n>=0){p.fill(66,133,244,n*150+55);p.stroke(255);p.strokeWeight(0.5)}
-          else{p.fill(234,67,53,-n*150+55);p.stroke(255);p.strokeWeight(0.5)}
-          p.rect(mX+j*cSz,xcStartY+xcLabelH+i*cSz,cSz,cSz)
+          const hi=selCov&&(j===selCov.j||j===selCov.k)
+          if(hi){p.fill(j===selCov?.j?[255,165,0,200]:[0,200,100,200])}
+          else if(n>=0)p.fill(66,133,244,n*150+55)
+          else p.fill(234,67,53,-n*150+55)
+          p.stroke(255);p.strokeWeight(0.5);p.rect(mX+j*cSz,mY+i*cSz,cSz,cSz)
         }}
-        p.noStroke();p.textSize(7);p.textAlign(p.RIGHT,p.CENTER)
-        for(let i=0;i<dC;i++){const[r,g,b]=gc(cellTypes[i]);p.fill(r,g,b);p.text(cellTypes[i].substring(0,3),mX-3,xcStartY+xcLabelH+i*cSz+cSz/2)}
-        p.textAlign(p.CENTER,p.TOP)
-        for(let j=0;j<dG;j++){const hi=selCov&&(j===selCov.j||j===selCov.k);p.fill(hi?(j===selCov?.j?[255,165,0]:[0,200,100]):[60,60,60]);p.push();p.translate(mX+j*cSz+cSz/2,xcStartY+xcLabelH+dC*cSz+2);p.rotate(-Math.PI/4);p.text(geneNames[j],0,0);p.pop()}
+        p.noStroke();p.fill(80);p.textSize(7);p.textAlign(p.RIGHT,p.CENTER)
+        for(let i=0;i<dC;i++){const[r,g,b]=gc(cellTypes[i]);p.fill(r,g,b);p.text(cellTypes[i].substring(0,3),mX-2,mY+i*cSz+cSz/2)}
+        p.fill(60);p.textSize(7);p.textAlign(p.CENTER,p.TOP)
+        for(let j=0;j<dG;j++){const hi=selCov&&(j===selCov.j||j===selCov.k);p.fill(hi?(j===selCov?.j?[255,165,0]:[0,200,100]):[60,60,60]);p.push();p.translate(mX+j*cSz+cSz/2,mY+dC*cSz+2);p.rotate(-Math.PI/4);p.text(geneNames[j],0,0);p.pop()}
 
-        // ── \u03A3 matrix (right) ──
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('\u03A3 ('+dG+'\u00D7'+dG+')',sigmaX,topY)
+        // ── Right: Σ ──
+        const cX = mX + dG*cSz + 50
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Σ ('+dG+'×'+dG+')',cX,50)
         const cMx=Math.max(...cov.slice(0,dG).map((r: number[])=>r.slice(0,dG).map(Math.abs)).flat())||1
         for(let i=0;i<dG;i++){for(let j=0;j<dG;j++){
           const v=cov[i][j],n=v/cMx
@@ -289,54 +260,35 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
           if(isSel){p.fill(255,165,0,255);p.stroke(200,120,0);p.strokeWeight(2)}
           else if(n>=0){p.fill(66,133,244,n*180+55);p.stroke(255);p.strokeWeight(0.5)}
           else{p.fill(234,67,53,-n*180+55);p.stroke(255);p.strokeWeight(0.5)}
-          p.rect(sigmaX+j*cSz,topY+xctLabelH+i*cSz,cSz,cSz)
+          p.rect(cX+j*cSz,mY+i*cSz,cSz,cSz)
         }}
-        p.noStroke();p.textSize(7)
-        p.textAlign(p.RIGHT,p.CENTER);for(let i=0;i<dG;i++)p.text(geneNames[i],sigmaX-3,topY+xctLabelH+i*cSz+cSz/2)
-        p.textAlign(p.CENTER,p.TOP);for(let j=0;j<dG;j++){p.push();p.translate(sigmaX+j*cSz+cSz/2,topY+xctLabelH+dG*cSz+2);p.rotate(-Math.PI/4);p.text(geneNames[j],0,0);p.pop()}
+        p.noStroke();p.fill(60);p.textSize(7)
+        p.textAlign(p.RIGHT,p.CENTER);for(let i=0;i<dG;i++)p.text(geneNames[i],cX-2,mY+i*cSz+cSz/2)
+        p.textAlign(p.CENTER,p.TOP);for(let j=0;j<dG;j++){p.push();p.translate(cX+j*cSz+cSz/2,mY+dG*cSz+2);p.rotate(-Math.PI/4);p.text(geneNames[j],0,0);p.pop()}
 
-        // Connection labels
-        p.fill(150);p.textSize(12);p.textAlign(p.CENTER,p.CENTER)
-        const midXct = topY + xctLabelH + dG*cSz/2
-        const midXc = xcStartY + xcLabelH + dC*cSz/2
-        p.text('\u00D7',mX+dC*cSz+20,midXct)
-        p.text('+',mX+dC*cSz+20,midXc)
-
-        // ── Detail panel ──
+        // ── Computation detail ──
         if(selCov){
           const{j,k}=selCov
           const colJ=centered.map((r: number[])=>r[j]), colK=centered.map((r: number[])=>r[k])
           const dp=colJ.reduce((s: number,v: number,i: number)=>s+v*colK[i],0)
           const cv=dp/(nC-1)
-          const by = detailY
-          p.fill(255,248,240);p.stroke(255,165,0,150);p.strokeWeight(1.5);p.rect(mX,by,W-mX-10,85,6)
-          p.noStroke()
-          p.fill(180,100,0);p.textSize(11);p.textAlign(p.LEFT,p.TOP)
-          p.text('\u03A3['+geneNames[j]+','+geneNames[k]+'] \u7684\u8BA1\u7B97\u8FC7\u7A0B',mX+10,by+5)
-          p.fill(60);p.textSize(11)
-          p.text('= 1/(n\u22121) \u00D7 Xc[:,'+j+']\u1D40 \u00D7 Xc[:,'+k+']',mX+10,by+22)
-          const maxT = Math.min(5, colJ.length)
-          let terms = colJ.slice(0,maxT).map((v: number,i: number)=>v.toFixed(2)+'\u00D7'+colK[i].toFixed(2)).join(' + ')
-          if(colJ.length > maxT) terms += ' + ...'
-          p.fill(100);p.textSize(9)
-          p.text('= 1/'+(nC-1)+' \u00D7 ('+terms+')',mX+10,by+40)
-          p.fill(50);p.textSize(11)
-          p.text('= '+dp.toFixed(3)+' / '+(nC-1)+' = '+cv.toFixed(4),mX+10,by+58)
-          // Legend
-          p.fill(255,165,0);p.rect(W-130,by+8,10,10,2)
-          p.fill(80);p.textSize(8);p.textAlign(p.LEFT,p.TOP)
-          p.text(geneNames[j]+' (\u6A59)',W-116,by+9)
-          p.fill(0,200,100);p.rect(W-130,by+28,10,10,2)
-          p.fill(80);p.text(geneNames[k]+' (\u7EFF)',W-116,by+29)
+          const by=mY+Math.max(dC,dG)*cSz+20
+          p.fill(255,248,240);p.stroke(255,165,0,120);p.strokeWeight(1);p.rect(mX,by,W-mX-10,55,5)
+          p.noStroke();p.fill(50);p.textSize(10);p.textAlign(p.LEFT,p.TOP)
+          p.text('Σ['+geneNames[j]+','+geneNames[k]+'] = 1/(n-1) · Xc[:,'+j+']ᵀ · Xc[:,'+k+']',mX+8,by+5)
+          p.fill(80);p.textSize(9)
+          const terms=colJ.map((v: number,i: number)=>v.toFixed(2)+'×'+colK[i].toFixed(2)).join(' + ')
+          p.text('= 1/'+(nC-1)+' · ('+terms.substring(0,90)+(terms.length>90?'...':'')+')',mX+8,by+22)
+          p.text('= 1/'+(nC-1)+' · '+dp.toFixed(3)+' = '+cv.toFixed(4),mX+8,by+38)
         }
       }
       p.mousePressed=()=>{
-        const gx=Math.floor((p.mouseX-sigmaX)/cSz),gy=Math.floor((p.mouseY-(topY+xctLabelH))/cSz)
+        const cX=mX+dG*cSz+50
+        const gx=Math.floor((p.mouseX-cX)/cSz),gy=Math.floor((p.mouseY-mY)/cSz)
         if(gx>=0&&gx<dG&&gy>=0&&gy<dG){setSelCov({j:gy,k:gx});p.redraw()}
       }
     }
     mk('s3c', s3CovRef.current, sk)
-    return () => rm('s3c')
     return () => rm('s3c')
   }, [activeStep, s3Sub, selCov, pca, geneNames, cellTypes, nC, nG, isZh])
 
@@ -344,134 +296,86 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
   useEffect(() => {
     if (activeStep !== 2 || s3Sub !== 2 || !s3EigenRef.current) return
     const dG = Math.min(nG, 8), cSz = 24
-    const mX = 50, mY = 100
-    const nPC = Math.min(4, dG)
+    const mX = 50, mY = 90
     const piResult = powerIterSteps(pca.cov, eigenStep)
-    const W = 700, H = mY + dG*cSz + 140
+    const W = 600, H = mY + dG*cSz + 120
     const sk = (p: any) => {
       p.setup=()=>{p.createCanvas(W,H).parent(s3EigenRef.current!);p.textFont('Inter');p.noLoop()}
       p.draw=()=>{
         p.background(255)
-        p.fill(50);p.noStroke();p.textSize(13);p.textAlign(p.LEFT,p.TOP)
-        p.text(isZh?'特征值分解: 幂迭代法':'Eigendecomposition: Power Iteration',mX,8)
+        p.fill(50);p.noStroke();p.textSize(12);p.textAlign(p.LEFT,p.TOP)
+        p.text(isZh?'特征值分解: 通过幂迭代找到主成分方向':'Eigendecomposition: Power iteration finds PC directions',mX,8)
         p.fill(130);p.textSize(10)
-        p.text(isZh?'协方差矩阵反复与向量相乘，收敛到最大方差方向':'Repeatedly multiply \u03A3 by vector, converge to max variance',mX,28)
-
-        // PC selector
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text(isZh?'选择主成分:':'Select PC:',mX,52)
-        for(let pc=0;pc<nPC;pc++){
-          const bx=mX+70+pc*55, by=48, bw=48, bh=22
-          const isActive=selPC===pc
-          if(isActive){p.fill(139,92,246);p.stroke(100,60,200);p.strokeWeight(1.5)}
-          else{p.fill(240);p.stroke(200);p.strokeWeight(1)}
-          p.rect(bx,by,bw,bh,4)
-          p.noStroke();p.fill(isActive?255:80);p.textSize(10);p.textAlign(p.CENTER,p.CENTER)
-          p.text('PC'+(pc+1),bx+bw/2,by+bh/2)
-        }
-
-        // Iteration slider label
-        p.fill(80);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text(isZh?'迭代次数:':'Iterations:',mX+350,52)
-        p.fill(50);p.textSize(10);p.text(eigenStep.toString(),mX+430,52)
+        p.text(isZh?'协方差矩阵 Σ 反复与向量相乘，收敛到最大方差方向':'Σ multiplies vector repeatedly, converges to max variance direction',mX,28)
 
         // Show covariance matrix
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('\u03A3',mX,mY-18)
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Σ',mX,55)
         const cMx=Math.max(...pca.cov.slice(0,dG).map((r: number[])=>r.slice(0,dG).map(Math.abs)).flat())||1
         for(let i=0;i<dG;i++){for(let j=0;j<dG;j++){
           const v=pca.cov[i][j],n=v/cMx
           if(n>=0)p.fill(66,133,244,n*180+55);else p.fill(234,67,53,-n*180+55)
           p.stroke(255);p.strokeWeight(0.5);p.rect(mX+j*cSz,mY+i*cSz,cSz,cSz)
         }}
-        p.noStroke();p.textSize(7);p.textAlign(p.CENTER,p.TOP)
+        p.noStroke();p.fill(60);p.textSize(7);p.textAlign(p.CENTER,p.TOP)
         for(let j=0;j<dG;j++){p.push();p.translate(mX+j*cSz+cSz/2,mY+dG*cSz+2);p.rotate(-Math.PI/4);p.text(geneNames[j],0,0);p.pop()}
 
-        // × symbol
-        const ax1 = mX+dG*cSz+12, ay1 = mY+dG*cSz/2
-        p.fill(100);p.textSize(18);p.textAlign(p.CENTER,p.CENTER);p.text('\u00D7',ax1,ay1)
+        // Arrow
+        const ax = mX+dG*cSz+15, ay = mY+dG*cSz/2
+        p.fill(100);p.textSize(16);p.textAlign(p.CENTER,p.CENTER);p.text('×',ax+8,ay)
 
-        // Input vector v
-        const vecX = ax1+20
+        // Show current vector (last step of power iteration)
+        const vecX = ax+25
         p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text('v\u2080 (iter '+eigenStep+')',vecX,mY-18)
+        p.text('v (iter '+eigenStep+')',vecX,55)
         const vec = piResult.eigenvector
         const vecMx = Math.max(...vec.map(Math.abs))||1
         for(let i=0;i<dG;i++){
           const val=vec[i],norm=val/vecMx
-          if(norm>=0)p.fill(139,92,246,norm*200+55);else p.fill(234,67,53,-norm*200+55)
+          if(norm>=0)p.fill(66,133,244,norm*200+55);else p.fill(234,67,53,-norm*200+55)
           p.stroke(255);p.strokeWeight(0.5);p.rect(vecX,mY+i*cSz,cSz*2,cSz)
           p.noStroke();p.fill(norm>0.3||norm<-0.3?255:100);p.textSize(8);p.textAlign(p.CENTER,p.CENTER)
           p.text(val.toFixed(3),vecX+cSz,mY+i*cSz+cSz/2)
         }
 
-        // = symbol
-        const ax2 = vecX+cSz*2+15
-        p.fill(100);p.textSize(18);p.textAlign(p.CENTER,p.CENTER);p.text('=',ax2,ay1)
+        // = sign
+        p.fill(100);p.textSize(16);p.textAlign(p.CENTER,p.CENTER);p.text('=',vecX+cSz*2+12,mY+dG*cSz/2)
 
-        // Result vector \u03A3v
-        const resX = ax2+18
+        // Result vector
+        const resX = vecX+cSz*2+25
         p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text('\u03A3v\u2080 (result)',resX,mY-18)
-        // Compute \u03A3v
-        const sigmaV = Array(dG).fill(0)
-        for(let i=0;i<dG;i++) for(let j=0;j<dG;j++) sigmaV[i] += pca.cov[i][j]*vec[j]
-        const svMx = Math.max(...sigmaV.map(Math.abs))||1
-        for(let i=0;i<dG;i++){
-          const val=sigmaV[i],norm=val/svMx
-          if(norm>=0)p.fill(16,185,129,norm*200+55);else p.fill(234,67,53,-norm*200+55)
-          p.stroke(255);p.strokeWeight(0.5);p.rect(resX,mY+i*cSz,cSz*2,cSz)
-          p.noStroke();p.fill(norm>0.3||norm<-0.3?255:100);p.textSize(8);p.textAlign(p.CENTER,p.CENTER)
-          p.text(val.toFixed(3),resX+cSz,mY+i*cSz+cSz/2)
+        p.text('λ · v',resX,55)
+        // Show converged eigenvalue
+        p.fill(239,68,68);p.textSize(11)
+        p.text('λ₁ = '+piResult.eigenval.toFixed(3),resX,72)
+        // Variance explained
+        const totalVar = pca.evals.reduce((s: number,v: number)=>s+v,0)
+        p.fill(100);p.textSize(9)
+        p.text((isZh?'解释率':'Explained')+': '+(piResult.eigenval/totalVar*100).toFixed(1)+'%',resX,88)
+
+        // Convergence bar chart
+        const barX = resX + cSz*2 + 20, barY = mY
+        p.fill(60);p.textSize(10);p.textAlign(p.LEFT,p.TOP)
+        p.text(isZh?'前4个特征值':'Top 4 eigenvalues',barX,55)
+        const evals4 = pca.evals.slice(0, 4)
+        const mxEv = Math.max(...evals4)||1
+        const colors = [[16,185,129],[245,158,11],[239,68,68],[59,130,246]]
+        for(let i=0;i<evals4.length;i++){
+          const barW = (evals4[i]/mxEv)*120
+          p.fill(colors[i][0],colors[i][1],colors[i][2],180);p.noStroke()
+          p.rect(barX,barY+i*22,barW,16,3)
+          p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.CENTER)
+          p.text('PC'+(i+1)+': '+evals4[i].toFixed(2),barX+barW+5,barY+i*22+8)
         }
 
-        // \u2248 \u03BBv label
-        const ax3 = resX+cSz*2+15
-        p.fill(100);p.textSize(14);p.textAlign(p.CENTER,p.CENTER);p.text('\u2248',ax3,ay1)
-        const lvX = ax3+15
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text('\u03BB\u00B7v (\u03BB='+piResult.eigenval.toFixed(3)+')',lvX,mY-18)
-        for(let i=0;i<dG;i++){
-          const val=vec[i]*piResult.eigenval,norm=vec[i]
-          if(norm>=0)p.fill(245,158,11,Math.abs(norm)*200+55);else p.fill(234,67,53,Math.abs(norm)*200+55)
-          p.stroke(255);p.strokeWeight(0.5);p.rect(lvX,mY+i*cSz,cSz*2,cSz)
-          p.noStroke();p.fill(Math.abs(norm)>0.3?255:100);p.textSize(8);p.textAlign(p.CENTER,p.CENTER)
-          p.text((val).toFixed(3),lvX+cSz,mY+i*cSz+cSz/2)
-        }
-
-        // Convergence info
-        const fy = mY + dG*cSz + 20
-        p.fill(245,248,255);p.stroke(200,215,255);p.strokeWeight(1);p.rect(mX,fy,W-mX-10,30,4)
-        p.noStroke();p.fill(60,80,140);p.textSize(10);p.textAlign(p.LEFT,p.TOP)
-        p.text(isZh?
-          'PC'+(selPC+1)+': \u03BB = '+piResult.eigenval.toFixed(4)+' | \u03A3v \u2248 \u03BBv (\u8FED\u4EE3'+eigenStep+'\u6B21\u540E\u6536\u655B)':
-          'PC'+(selPC+1)+': \u03BB = '+piResult.eigenval.toFixed(4)+' | \u03A3v \u2248 \u03BBv (converged after '+eigenStep+' iterations)',
-          mX+8,fy+6)
-
-        // Eigenvectors matrix preview
-        const evX = mX, evY = fy + 40
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP)
-        p.text(isZh?'特征向量矩阵 V (前'+nPC+'个):':'Eigenvector matrix V (top '+nPC+'):',evX,evY)
-        const evecs = pca.evecs
-        const evMx = Math.max(...evecs.slice(0,nPC).map((r: number[])=>r.map(Math.abs)).flat())||1
-        for(let pc=0;pc<nPC;pc++){
-          for(let i=0;i<dG;i++){
-            const v=evecs[pc][i],n=v/evMx
-            const isSel=pc===selPC
-            if(isSel){p.fill(139,92,246,Math.abs(n)*200+55);p.stroke(100,60,200);p.strokeWeight(1)}
-            else if(n>=0){p.fill(66,133,244,n*100+55);p.stroke(255);p.strokeWeight(0.5)}
-            else{p.fill(234,67,53,-n*100+55);p.stroke(255);p.strokeWeight(0.5)}
-            p.rect(evX+pc*(cSz+2),evY+18+i*cSz,cSz,cSz)
-          }
-          p.noStroke();p.fill(pc===selPC?139:120,pc===selPC?92:120,pc===selPC?246:120);p.textSize(7);p.textAlign(p.CENTER,p.TOP)
-          p.text('PC'+(pc+1),evX+pc*(cSz+2)+cSz/2,evY+18+dG*cSz+2)
-        }
-        // Gene labels
-        p.textAlign(p.RIGHT,p.CENTER);p.fill(80);p.textSize(7)
-        for(let i=0;i<dG;i++)p.text(geneNames[i],evX-3,evY+18+i*cSz+cSz/2)
+        // Eigendecomposition formula
+        p.fill(50);p.textSize(10);p.textAlign(p.LEFT,p.TOP)
+        p.text(isZh?'特征值分解公式':'Eigendecomposition',barX,barY+100)
+        p.fill(80);p.textSize(9)
+        p.text('Σ = VΛVᵀ',barX,barY+115)
+        p.text(isZh?'V=特征向量, Λ=特征值对角阵':'V=eigenvectors, Λ=eigenvalue diag',barX,barY+130)
       }
     }
     mk('s3e', s3EigenRef.current, sk)
-    return () => rm('s3e')
     return () => rm('s3e')
   }, [activeStep, s3Sub, eigenStep, pca, geneNames, nG, isZh])
 
@@ -479,121 +383,73 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
   useEffect(() => {
     if (activeStep !== 2 || s3Sub !== 3 || !s3ProjRef.current) return
     const dG = Math.min(nG, 6), dC = Math.min(nC, 10), cSz = 22
-    const nPC = Math.min(4, dG)
-    const W = 720, H = 420
+    const W = 620, H = 320
     const sk = (p: any) => {
       p.setup=()=>{p.createCanvas(W,H).parent(s3ProjRef.current!);p.textFont('Inter');p.noLoop()}
       p.draw=()=>{
         p.background(255)
-        p.fill(50);p.noStroke();p.textSize(13);p.textAlign(p.LEFT,p.TOP)
-        p.text(isZh?'投影: Y = Xc \u00B7 W':'Projection: Y = Xc \u00B7 W',20,8)
+        p.fill(50);p.noStroke();p.textSize(12);p.textAlign(p.LEFT,p.TOP)
+        p.text(isZh?'投影: Y = Xc · W (前k个特征向量)':'Projection: Y = Xc · W (top k eigenvectors)',20,8)
         p.fill(130);p.textSize(10)
-        p.text(isZh?'点击 Y 矩阵元素查看向量相乘过程':'Click Y matrix element to see vector multiplication',20,28)
+        p.text(isZh?'每个细胞的新坐标 = 中心化数据 × 特征向量矩阵':'New coords for each cell = centered data × eigenvector matrix',20,28)
 
         // ── Xc matrix ──
         const m1x=20, m1y=60
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Xc ('+dC+'\u00D7'+dG+')',m1x,48)
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Xc ('+dC+'×'+dG+')',m1x,48)
         const mxA=Math.max(...pca.centered.slice(0,dC).map((r: number[])=>r.slice(0,dG).map(Math.abs)).flat())||1
         for(let i=0;i<dC;i++){for(let j=0;j<dG;j++){
           const v=pca.centered[i][j],n=v/mxA
-          const hiRow=selProj&&i===selProj.i
-          if(hiRow){p.fill(255,165,0,200);p.stroke(200,120,0);p.strokeWeight(1.5)}
-          else if(n>=0){p.fill(66,133,244,n*150+55);p.stroke(255);p.strokeWeight(0.5)}
-          else{p.fill(234,67,53,-n*150+55);p.stroke(255);p.strokeWeight(0.5)}
-          p.rect(m1x+j*cSz,m1y+i*cSz,cSz,cSz)
+          if(n>=0)p.fill(66,133,244,n*150+55);else p.fill(234,67,53,-n*150+55)
+          p.stroke(255);p.strokeWeight(0.5);p.rect(m1x+j*cSz,m1y+i*cSz,cSz,cSz)
         }}
-        p.noStroke();p.textSize(7);p.textAlign(p.RIGHT,p.CENTER)
-        for(let i=0;i<dC;i++){const[r,g,b]=gc(cellTypes[i]);p.fill(r,g,b);p.text(cellTypes[i].substring(0,3),m1x-3,m1y+i*cSz+cSz/2)}
-        p.textAlign(p.CENTER,p.TOP);p.fill(120);p.textSize(6)
-        for(let j=0;j<dG;j++){p.push();p.translate(m1x+j*cSz+cSz/2,m1y+dC*cSz+2);p.rotate(-Math.PI/4);p.text(geneNames[j],0,0);p.pop()}
 
-        // \u00D7 sign
-        const gap1 = m1x+dG*cSz+12
+        // × sign
         p.fill(100);p.noStroke();p.textSize(18);p.textAlign(p.CENTER,p.CENTER)
-        p.text('\u00D7',gap1,m1y+dC*cSz/2)
+        p.text('×',m1x+dG*cSz+12,m1y+dC*cSz/2)
 
         // ── W matrix (eigenvectors) ──
-        const m2x = gap1+15
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('W ('+dG+'\u00D7'+nPC+')',m2x,48)
+        const m2x = m1x+dG*cSz+25, nPC = Math.min(3, dG)
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('W ('+dG+'×'+nPC+')',m2x,48)
         const evMx = Math.max(...pca.evecs.slice(0,nPC).map((r: number[])=>r.map(Math.abs)).flat())||1
         for(let i=0;i<dG;i++){for(let j=0;j<nPC;j++){
           const v=pca.evecs[j][i],n=v/evMx
-          const hiCol=selProj&&j===selProj.j
-          if(hiCol){p.fill(139,92,246,220);p.stroke(100,60,200);p.strokeWeight(1.5)}
-          else if(n>=0){p.fill(139,92,246,n*150+55);p.stroke(255);p.strokeWeight(0.5)}
-          else{p.fill(234,67,53,-n*150+55);p.stroke(255);p.strokeWeight(0.5)}
-          p.rect(m2x+j*cSz,m1y+i*cSz,cSz,cSz)
+          if(n>=0)p.fill(139,92,246,n*200+55);else p.fill(234,67,53,-n*200+55)
+          p.stroke(255);p.strokeWeight(0.5);p.rect(m2x+j*cSz,m1y+i*cSz,cSz,cSz)
         }}
-        p.noStroke();p.textSize(7);p.textAlign(p.CENTER,p.TOP)
+        p.noStroke();p.fill(80);p.textSize(7);p.textAlign(p.CENTER,p.TOP)
         for(let j=0;j<nPC;j++)p.text('PC'+(j+1),m2x+j*cSz+cSz/2,m1y+dG*cSz+2)
-        p.textAlign(p.RIGHT,p.CENTER);p.fill(80)
-        for(let i=0;i<dG;i++)p.text(geneNames[i],m2x-3,m1y+i*cSz+cSz/2)
+        p.textAlign(p.RIGHT,p.CENTER)
+        for(let i=0;i<dG;i++)p.text(geneNames[i],m1x-2,m1y+i*cSz+cSz/2)
 
         // = sign
-        const gap2 = m2x+nPC*cSz+12
         p.fill(100);p.noStroke();p.textSize(18);p.textAlign(p.CENTER,p.CENTER)
-        p.text('=',gap2,m1y+dC*cSz/2)
+        p.text('=',m2x+nPC*cSz+12,m1y+dC*cSz/2)
 
         // ── Y matrix (result) ──
-        const m3x = gap2+15
-        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Y ('+dC+'\u00D7'+nPC+')',m3x,48)
+        const m3x = m2x+nPC*cSz+25
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Y ('+dC+'×'+nPC+')',m3x,48)
         const yMx=Math.max(...pca.projected.slice(0,dC).map((r: number[])=>r.slice(0,nPC).map(Math.abs)).flat())||1
         for(let i=0;i<dC;i++){for(let j=0;j<nPC;j++){
           const v=pca.projected[i][j],n=v/yMx
-          const isSel=selProj&&i===selProj.i&&j===selProj.j
-          if(isSel){p.fill(245,158,11,255);p.stroke(200,120,0);p.strokeWeight(2)}
-          else if(n>=0){p.fill(16,185,129,n*200+55);p.stroke(255);p.strokeWeight(0.5)}
-          else{p.fill(234,67,53,-n*200+55);p.stroke(255);p.strokeWeight(0.5)}
-          p.rect(m3x+j*cSz,m1y+i*cSz,cSz,cSz)
+          if(n>=0)p.fill(16,185,129,n*200+55);else p.fill(234,67,53,-n*200+55)
+          p.stroke(255);p.strokeWeight(0.5);p.rect(m3x+j*cSz,m1y+i*cSz,cSz,cSz)
         }}
-        p.noStroke();p.textSize(7);p.textAlign(p.CENTER,p.TOP)
+        p.noStroke();p.fill(80);p.textSize(7);p.textAlign(p.CENTER,p.TOP)
         for(let j=0;j<nPC;j++)p.text('PC'+(j+1),m3x+j*cSz+cSz/2,m1y+dC*cSz+2)
+
+        // Cell labels on Y
         p.textAlign(p.RIGHT,p.CENTER)
-        for(let i=0;i<dC;i++){const[r,g,b]=gc(cellTypes[i]);p.fill(r,g,b);p.text(cellTypes[i].substring(0,3),m3x-3,m1y+i*cSz+cSz/2)}
+        for(let i=0;i<dC;i++){const[r,g,b]=gc(cellTypes[i]);p.fill(r,g,b);p.text(cellTypes[i].substring(0,3),m3x-2,m1y+i*cSz+cSz/2)}
 
-        // Formula reference at top-right
-        const fx = m3x + nPC*cSz + 30
-        p.fill(245,248,255);p.stroke(200,215,255);p.strokeWeight(1);p.rect(fx,48,160,22,4)
-        p.noStroke();p.fill(60,80,140);p.textSize(10);p.textAlign(p.LEFT,p.TOP)
-        p.text('Y[i,j] = Xc[i,:] \u00B7 W[:,j]',fx+8,52)
-
-        // ── Detail panel ──
-        if(selProj){
-          const{i:si,j:sj}=selProj
-          const rowI=pca.centered[si]
-          const colJ=pca.evecs[sj]
-          const dp=rowI.reduce((s: number,v: number,k: number)=>s+v*colJ[k],0)
-          const by = m1y + Math.max(dC,dG)*cSz + 20
-          
-          p.fill(255,248,240);p.stroke(245,158,11,150);p.strokeWeight(1.5);p.rect(m1x,by,W-m1x-10,85,6)
-          p.noStroke()
-          p.fill(180,100,0);p.textSize(11);p.textAlign(p.LEFT,p.TOP)
-          const cellLabel = cellTypes[si]+'\u00B7'+(si+1)
-          p.text('Y['+cellLabel+',PC'+(sj+1)+'] \u7684\u8BA1\u7B97\u8FC7\u7A0B',m1x+10,by+5)
-          p.fill(60);p.textSize(11)
-          p.text('= Xc[' + cellLabel + ',:] \u00B7 W[:,PC' + (sj+1) + ']',m1x+10,by+22)
-          // Show dot product terms
-          const maxT = Math.min(5, rowI.length)
-          let terms = rowI.slice(0,maxT).map((v: number,k: number)=>v.toFixed(2)+'\u00D7'+colJ[k].toFixed(2)).join(' + ')
-          if(rowI.length > maxT) terms += ' + ...'
-          p.fill(100);p.textSize(9)
-          p.text('= '+terms,m1x+10,by+40)
-          p.fill(50);p.textSize(11)
-          p.text('= '+dp.toFixed(4),m1x+10,by+58)
-          // Legend
-          p.fill(255,165,0);p.rect(W-150,by+8,10,10,2)
-          p.fill(80);p.textSize(8);p.textAlign(p.LEFT,p.TOP)
-          p.text('Xc[' + cellLabel + ',:] (\u6A59)',W-136,by+9)
-          p.fill(139,92,246);p.rect(W-150,by+28,10,10,2)
-          p.fill(80);p.text('W[:,PC' + (sj+1) + '] (\u7D2B)',W-136,by+29)
-        }
-      }
-      p.mousePressed=()=>{
-        const m1x=20, m1y=60
-        const m2x = m1x+dG*cSz+27
-        const m3x = m2x+nPC*cSz+27
-        const gx=Math.floor((p.mouseX-m3x)/cSz),gy=Math.floor((p.mouseY-m1y)/cSz)
-        if(gx>=0&&gx<nPC&&gy>=0&&gy<dC){setSelProj({i:gy,j:gx});p.redraw()}
+        // Formula at bottom
+        const fy = m1y + Math.max(dC,dG)*cSz + 15
+        p.fill(50);p.textSize(10);p.textAlign(p.LEFT,p.TOP)
+        p.text(isZh?'计算公式':'Formula',20,fy)
+        p.fill(80);p.textSize(9)
+        p.text('Y = Xc · W',20,fy+16)
+        p.text(isZh?'Xc: 中心化数据 (n×p)':'Xc: centered data (n×p)',20,fy+32)
+        p.text(isZh?'W: 前k个特征向量 (p×k)':'W: top k eigenvectors (p×k)',20,fy+46)
+        p.text(isZh?'Y: PC坐标 (n×k)':'Y: PC scores (n×k)',20,fy+60)
       }
     }
     mk('s3p', s3ProjRef.current, sk)
@@ -633,7 +489,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         p.stroke(150);p.strokeWeight(1);p.line(M.l,M.t+ph,M.l+pw,M.t+ph);p.line(M.l,M.t,M.l,M.t+ph)
         p.noStroke();p.fill(80);p.textSize(10);p.textAlign(p.CENTER,p.TOP);p.text('PC1 ('+(varexp[0]*100).toFixed(1)+'%)',M.l+pw/2,M.t+ph+6)
         p.push();p.translate(10,M.t+ph/2);p.rotate(-Math.PI/2);p.text('PC2 ('+(varexp[1]*100).toFixed(1)+'%)',0,0);p.pop()
-        const ut=Array.from(new Set(cellTypes));p.textSize(8);p.textAlign(p.LEFT,p.CENTER);ut.forEach((t,i)=>{const[r,g,b]=gc(t);p.fill(r,g,b);p.noStroke();p.ellipse(W-72,M.t+8+i*14,7,7);p.fill(80);p.text(t,W-65,M.t+8+i*14)})
+        const ut=[...new Set(cellTypes)];p.textSize(8);p.textAlign(p.LEFT,p.CENTER);ut.forEach((t,i)=>{const[r,g,b]=gc(t);p.fill(r,g,b);p.noStroke();p.ellipse(W-72,M.t+8+i*14,7,7);p.fill(80);p.text(t,W-65,M.t+8+i*14)})
       }
     }
     mk('s4s', s4SRef.current, sk)
