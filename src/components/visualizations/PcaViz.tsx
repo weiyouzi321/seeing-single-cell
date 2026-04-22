@@ -244,8 +244,8 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     const dG = Math.min(nG, 7), dC = Math.min(nC, 10), cSz = 20
     const topY = 70, xctLabelH = 20
     const xctX = 45
-    const xcX = xctX + dC * cSz + 50
-    const sigmaX = xcX + dG * cSz + 50
+    const xcX = xctX + dC * cSz + 70
+    const sigmaX = xcX + dG * cSz + 70
     const xcY = topY + xctLabelH + 8
     const detailY = xcY + dC * cSz + 25
     const W = sigmaX + dG * cSz + 20
@@ -362,17 +362,17 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     const mX = 40, mY = 120
     const sigmaW = dG * cSz
     const vecW = cSz * 2
-    const gap1 = 28, gap2 = 18, gap3 = 16
+    const gap1 = 38, gap2 = 25, gap3 = 20
     const vecX = mX + sigmaW + gap1
     const resX = vecX + vecW + gap2
     const approxX = resX + vecW + 6
     const lambdaW = 48, lambdaH = 26
-    const lambdaX = approxX + 30
+    const lambdaX = approxX + 42
     const timesX = lambdaX + lambdaW + 6
-    const v2X = timesX + 18
-    const evGap = 50
+    const v2X = timesX + 30
+    const evGap = 70
     const evX = v2X + vecW + evGap
-    const W = evX + nPC * (cSz + 2) + 40
+    const W = evX + nPC * (cSz + 2) + 50
     const H = mY + dG * cSz + 130
 
     const sk = (p: any) => {
