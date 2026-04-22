@@ -26,9 +26,9 @@ export default function ScaleDataViz({ data, geneNames, cellTypes, lang = 'en' }
   const L = {
     inputTitle: isZh ? '输入数据' : 'Input Data',
     inputDesc: isZh ? '来自log归一化数据的' + FIXED_HVG_COUNT + '个高变基因（按方差排序）。本演示使用固定数量。' : FIXED_HVG_COUNT + ' HVGs from log-normalized data. Fixed set by variance for this demo.',
-    toggleLabel: isZh ? '应用标准化（Z-score）' : 'Apply ScaleData (Z-score)',
-    before: isZh ? '标准化前' : 'Before Scaling',
-    after: isZh ? '标准化后' : 'After Scaling',
+    toggleLabel: isZh ? '应用中心化（Z-score）' : 'Apply Centering (Z-score)',
+    before: isZh ? '中心化前' : 'Before Centering',
+    after: isZh ? '中心化后' : 'After Centering',
     hvgGene: isZh ? '高变基因' : 'HVG Gene',
     normMean: isZh ? '对数标准化均值' : 'Log-Norm Mean',
     normStd: isZh ? '对数标准化标准差' : 'Log-Norm Std',

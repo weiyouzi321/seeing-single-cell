@@ -154,6 +154,36 @@ export default function RawDataChapter() {
     return Math.max(...data.expression_matrix.flat())
   }, [data])
 
+  // Synthetic distribution data for pattern examples (integer counts)
+  const normalData = useMemo(() => {
+    const d: number[] = []
+    for (let i = 0; i < 200; i++) {
+      const u1 = Math.random(), u2 = Math.random()
+      d.push(Math.round(Math.max(0, 5 + 1.5 * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2))))
+    }
+    return d
+  }, [])
+  const bimodalData = useMemo(() => {
+    const d: number[] = []
+    for (let i = 0; i < 200; i++) {
+      const u1 = Math.random(), u2 = Math.random()
+      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+      d.push(Math.round(Math.max(0, i < 100 ? 0.3 + 0.3 * z : 4 + 1 * z)))
+    }
+    return d
+  }, [])
+  const zeroInflatedData = useMemo(() => {
+    const d: number[] = []
+    for (let i = 0; i < 200; i++) {
+      if (Math.random() < 0.7) { d.push(0) }
+      else {
+        const u1 = Math.random(), u2 = Math.random()
+        d.push(Math.round(Math.max(0, 3 + 2 * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2))))
+      }
+    }
+    return d
+  }, [])
+
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#4361ee]" /></div>
   if (!data) return <p className="text-center text-red-500 py-12">Failed to load data.</p>
 
@@ -200,7 +230,7 @@ export default function RawDataChapter() {
           </div>
           <div className="info-panel concept mb-6">
             <h3>{t('ch1.keyConcept')}</h3>
-            <p>{t('ch1.conceptText1')} <strong>{t('ch1.conceptText2')}</strong> {t('ch1.conceptText3')} <strong>{t('ch1.conceptText4')}</strong>{t('ch1.conceptText5')}<strong>{data.metadata.n_cells}{t('ch1.conceptCellsGenes')}{data.metadata.n_genes}{t('ch1.conceptGenesEnd')}</strong></p>
+            <p>{t('ch1.conceptText1')}{t('ch1.conceptText5')}</p>
           </div>
 
           {/* Library size and expressed features definitions */}
@@ -249,6 +279,12 @@ export default function RawDataChapter() {
           </div>
         </div>
       </section>
+
+      <div className="flex justify-end mt-6">
+        <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors shadow-sm">
+          {lang === 'zh' ? '下一步：数据分布 →' : 'Next Step: Data Distribution →'}
+        </button>
+      </div>
 
       </>
       )}
@@ -308,23 +344,54 @@ export default function RawDataChapter() {
         <div className="viz-card">
           <div className="viz-card-header"><div className="step-number" style={{ background: '#7c3aed' }}>5</div><h2>{t('ch2.step3Title')}</h2></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="info-panel concept"><h3>{'📊'} {t('ch2.normalPat')}</h3><p>{t('ch2.normalPatDesc')}</p></div>
-            <div className="info-panel tip"><h3>{'📊'} {t('ch2.bimodalPat')}</h3><p>{t('ch2.bimodalPatDesc')}</p></div>
-            <div className="info-panel math"><h3>{'📊'} {t('ch2.zeroInfPat')}</h3><p>{t('ch2.zeroInfPatDesc')}</p></div>
+            <div className="info-panel concept">
+              <h3>{'📊'} {t('ch2.normalPat')}</h3>
+              <p>{t('ch2.normalPatDesc')}</p>
+            </div>
+            <div className="info-panel tip">
+              <h3>{'📊'} {t('ch2.bimodalPat')}</h3>
+              <p>{t('ch2.bimodalPatDesc')}</p>
+            </div>
+            <div className="info-panel math">
+              <h3>{'📊'} {t('ch2.zeroInfPat')}</h3>
+              <p>{t('ch2.zeroInfPatDesc')}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div className="text-center">
+              <PatternHist values={normalData} color="#10b981" label="GAPDH" kdeColor="#059669" />
+              <p className="text-xs text-gray-500 mt-1">{lang === 'zh' ? '示例：GAPDH（管家基因）' : 'Example: GAPDH (housekeeping)'}</p>
+            </div>
+            <div className="text-center">
+              <PatternHist values={bimodalData} color="#f59e0b" label="CD3D" kdeColor="#d97706" />
+              <p className="text-xs text-gray-500 mt-1">{lang === 'zh' ? '示例：CD3D（T细胞标记）' : 'Example: CD3D (T cell marker)'}</p>
+            </div>
+            <div className="text-center">
+              <PatternHist values={zeroInflatedData} color="#8b5cf6" label="MS4A1" kdeColor="#7c3aed" />
+              <p className="text-xs text-gray-500 mt-1">{lang === 'zh' ? '示例：MS4A1（低表达基因）' : 'Example: MS4A1 (low expression)'}</p>
+            </div>
           </div>
         </div>
       </section>
+
+      <div className="flex justify-start mt-6">
+        <button onClick={() => setActiveStep(0)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-gray-400 transition-colors">
+          {lang === 'zh' ? '← 上一步' : '← Back'}
+        </button>
+      </div>
 
       </>
       )}
 
       {/* Navigation */}
-      <div className="flex justify-between items-center py-8 border-t border-gray-100">
-        <span />
-        <Link href="/chapters/2-distribution" className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#ef4444' }}>
-          {lang === 'zh' ? '下一步：质控与过滤 →' : 'Next: Quality Control →'}
-        </Link>
-      </div>
-    </div>
-  )
+<div className="flex justify-between items-center py-8 border-t border-gray-100">
+<Link href="/" className="text-gray-400 hover:text-[#4361ee] transition-colors">
+{lang === 'zh' ? '← 首页' : '← Home'}
+</Link>
+<Link href="/chapters/2-distribution" className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#ef4444' }}>
+{lang === 'zh' ? '下一章：质控与过滤 →' : 'Next Chapter: Quality Control →'}
+</Link>
+</div>
+</div>
+)
 }

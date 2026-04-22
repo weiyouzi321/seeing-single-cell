@@ -220,27 +220,8 @@ export default function PreprocessingChapter() {
               </div>
               <p className="text-sm text-gray-600">{t('ch3.whyLogConclusion')}</p>
             </div>
-
-            {/* Three key concepts in a row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="info-panel math">
-                <h3>{'⚠️ ' + t('ch3.compBias')}</h3>
-                <p className="text-sm">{t('ch3.compBiasDesc')}</p>
-                <p className="text-xs text-gray-500 mt-2">{t('ch3.compBiasWhy')}</p>
-              </div>
-              <div className="info-panel concept">
-                <h3>{'📐 ' + t('ch3.logFC')}</h3>
-                <div className="text-center my-2"><K math="\log_2\!\left(\dfrac{x_2}{x_1}\right) = \log_2(x_2) - \log_2(x_1)" /></div>
-                <p className="text-xs text-gray-500">{t('ch3.logFCDesc')}</p>
-              </div>
-              <div className="info-panel tip">
-                <h3>{'⚖️ ' + t('ch3.sizeFactor')}</h3>
-                <div className="text-center my-2"><K math="s_i = \dfrac{\text{LibSize}_i}{\overline{\text{LibSize}}}" /></div>
-                <p className="text-xs text-gray-500">{t('ch3.sizeFactorDesc')}</p>
-              </div>
-            </div>
-
             <NormalizationViz data={data.expression_matrix} geneNames={data.gene_names} cellTypes={data.cell_types} lang={lang} />
+
             <div className="info-panel tip mt-6">
               <h3>{t('ch3.tryThisTitle')}</h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
@@ -249,6 +230,27 @@ export default function PreprocessingChapter() {
                 <li>{t('ch3.tryNorm3')}</li>
               </ul>
             </div>
+
+
+            {/* Three key concepts in a row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="info-panel math" style={{lineHeight: '1.7'}}>
+                <h3>{'⚠️ ' + t('ch3.compBias')}</h3>
+                <p className="text-sm">{t('ch3.compBiasDesc')}</p>
+                <p className="text-xs text-gray-500 mt-2">{t('ch3.compBiasWhy')}</p>
+              </div>
+              <div className="info-panel concept" style={{lineHeight: '1.7'}}>
+                <h3>{'📐 ' + t('ch3.logFC')}</h3>
+                <div className="text-center my-2"><K math="\log_2\!\left(\dfrac{x_2}{x_1}\right) = \log_2(x_2) - \log_2(x_1)" /></div>
+                <p className="text-xs text-gray-500">{t('ch3.logFCDesc')}</p>
+              </div>
+              <div className="info-panel tip" style={{lineHeight: '1.7'}}>
+                <h3>{'⚖️ ' + t('ch3.sizeFactor')}</h3>
+                <div className="text-center my-2"><K math="s_i = \dfrac{\text{LibSize}_i}{\overline{\text{LibSize}}}" /></div>
+                <p className="text-xs text-gray-500">{t('ch3.sizeFactorDesc')}</p>
+              </div>
+            </div>
+
             <div className="flex justify-end mt-6">
               <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#ef4444' }}>{t('ch3.nextHVG')} →</button>
             </div>
@@ -352,7 +354,9 @@ export default function PreprocessingChapter() {
 
       <div className="flex justify-between items-center py-8 border-t border-gray-100">
         <Link href="/chapters/2-distribution" className="text-gray-400 hover:text-blue-600 transition-colors">← {t('ch3.prevDist')}</Link>
-        <span className="text-sm text-gray-300">{t('ch3.ch4Soon')} →</span>
+        <Link href="/chapters/4-pca" className="px-5 py-2.5 rounded-xl bg-amber-500 text-white font-medium hover:bg-amber-600 transition-colors shadow-sm">
+{t('ch3.nextCh4')}
+</Link>
       </div>
     </div>
   )

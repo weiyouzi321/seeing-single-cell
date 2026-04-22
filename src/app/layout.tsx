@@ -71,8 +71,6 @@ function FooterText() {
 }
 
 function FooterInner() {
-  // This is a server component workaround - we render static text
-  // The actual i18n footer is handled by client-side NavLinks
   return (
     <>
       Inspired by{' '}
@@ -85,6 +83,17 @@ function FooterInner() {
       </a>
       {' · '}
       Built with Next.js + p5.js
+      <br />
+      Developed by{' '}
+      <a href="https://github.com/anthropics/claude-code" className="text-[#4361ee] hover:underline" target="_blank" rel="noopener noreferrer">
+        Hermes
+      </a>{' '}
+      and{' '}
+      <a href="https://huggingface.co/Xiaomi" className="text-[#4361ee] hover:underline" target="_blank" rel="noopener noreferrer">
+        MiMo V2 Pro
+      </a>
+      {' · '}
+      Encouraged by liuliu and instructed by qiliu
     </>
   )
 }
