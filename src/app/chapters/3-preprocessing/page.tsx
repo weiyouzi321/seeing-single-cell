@@ -66,7 +66,7 @@ export default function PreprocessingChapter() {
     }
     async function loadData() {
       try {
-        const basePath = process.env.NODE_ENV === 'production' ? '/seeing-single-cell' : ''
+        const basePath = ''
         const res = await fetch(`${basePath}/data/pbmc_data.json`)
         if (res.ok) {
           setData(await res.json())

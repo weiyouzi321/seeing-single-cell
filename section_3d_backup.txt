@@ -1,0 +1,126 @@
+// ── Step 3-D: Projection ──
+  useEffect(() => {
+    if (activeStep !== 2 || s3Sub !== 3 || !s3ProjRef.current) return
+    const cSz = 22
+    const nPC = Math.min(4, dG)
+    const W = 720, H = 420
+    const sk = (p: any) => {
+      p.setup=()=>{p.createCanvas(W,H).parent(s3ProjRef.current!);p.textFont('Inter');p.noLoop()}
+      p.draw=()=>{
+        p.background(255)
+        p.fill(50);p.noStroke();p.textSize(13);p.textAlign(p.LEFT,p.TOP)
+        p.text(isZh?'投影: Y = Xc \u00B7 W':'Projection: Y = Xc \u00B7 W',20,8)
+        p.fill(130);p.textSize(10)
+        p.text(isZh?'点击 Y 矩阵元素查看向量相乘过程':'Click Y matrix element to see vector multiplication',20,28)
+
+        // ── Xc matrix ──
+        const m1x=20, m1y=60
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Xc ('+dC+'\u00D7'+dG+')',m1x,48)
+        const mxA=Math.max(...pca.centered.slice(0,dC).map((r: number[])=>r.slice(0,dG).map(Math.abs)).flat())||1
+        for(let i=0;i<dC;i++){for(let j=0;j<dG;j++){
+          const v=pca.centered[i][j],n=v/mxA
+          const hiRow=selProj&&i===selProj.i
+          if(hiRow){p.fill(255,165,0,200);p.stroke(200,120,0);p.strokeWeight(1.5)}
+          else if(n>=0){p.fill(66,133,244,n*150+55);p.stroke(255);p.strokeWeight(0.5)}
+          else{p.fill(234,67,53,-n*150+55);p.stroke(255);p.strokeWeight(0.5)}
+          p.rect(m1x+j*cSz,m1y+i*cSz,cSz,cSz)
+        }}
+        p.noStroke();p.textSize(7);p.textAlign(p.RIGHT,p.CENTER)
+        for(let i=0;i<dC;i++){const[r,g,b]=gc(cellTypes[i]);p.fill(r,g,b);p.text(cellTypes[i].substring(0,3),m1x-3,m1y+i*cSz+cSz/2)}
+        p.textAlign(p.CENTER,p.TOP);p.fill(120);p.textSize(6)
+        for(let j=0;j<dG;j++){p.push();p.translate(m1x+j*cSz+cSz/2,m1y+dC*cSz+2);p.rotate(-Math.PI/4);p.text(geneNames[j],0,0);p.pop()}
+
+        // \u00D7 sign
+        const gap1 = m1x+dG*cSz+12
+        p.fill(100);p.noStroke();p.textSize(18);p.textAlign(p.CENTER,p.CENTER)
+        p.text('\u00D7',gap1,m1y+dC*cSz/2)
+
+        // ── W matrix (eigenvectors) ──
+        const m2x = gap1+15
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('W ('+dG+'\u00D7'+nPC+')',m2x,48)
+        const evMx = Math.max(...pca.evecs.slice(0,nPC).map((r: number[])=>r.map(Math.abs)).flat())||1
+        for(let i=0;i<dG;i++){for(let j=0;j<nPC;j++){
+          const v=pca.evecs[j][i],n=v/evMx
+          const hiCol=selProj&&j===selProj.j
+          if(hiCol){p.fill(139,92,246,220);p.stroke(100,60,200);p.strokeWeight(1.5)}
+          else if(n>=0){p.fill(139,92,246,n*150+55);p.stroke(255);p.strokeWeight(0.5)}
+          else{p.fill(234,67,53,-n*150+55);p.stroke(255);p.strokeWeight(0.5)}
+          p.rect(m2x+j*cSz,m1y+i*cSz,cSz,cSz)
+        }}
+        p.noStroke();p.textSize(7);p.textAlign(p.CENTER,p.TOP)
+        for(let j=0;j<nPC;j++)p.text('PC'+(j+1),m2x+j*cSz+cSz/2,m1y+dG*cSz+2)
+        p.textAlign(p.RIGHT,p.CENTER);p.fill(80)
+        for(let i=0;i<dG;i++)p.text(geneNames[i],m2x-3,m1y+i*cSz+cSz/2)
+
+        // = sign
+        const gap2 = m2x+nPC*cSz+12
+        p.fill(100);p.noStroke();p.textSize(18);p.textAlign(p.CENTER,p.CENTER)
+        p.text('=',gap2,m1y+dC*cSz/2)
+
+        // ── Y matrix (result) ──
+        const m3x = gap2+15
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Y ('+dC+'\u00D7'+nPC+')',m3x,48)
+        const yMx=Math.max(...pca.projected.slice(0,dC).map((r: number[])=>r.slice(0,nPC).map(Math.abs)).flat())||1
+        for(let i=0;i<dC;i++){for(let j=0;j<nPC;j++){
+          const v=pca.projected[i][j],n=v/yMx
+          const isSel=selProj&&i===selProj.i&&j===selProj.j
+          if(isSel){p.fill(245,158,11,255);p.stroke(200,120,0);p.strokeWeight(2)}
+          else if(n>=0){p.fill(16,185,129,n*200+55);p.stroke(255);p.strokeWeight(0.5)}
+          else{p.fill(234,67,53,-n*200+55);p.stroke(255);p.strokeWeight(0.5)}
+          p.rect(m3x+j*cSz,m1y+i*cSz,cSz,cSz)
+        }}
+        p.noStroke();p.textSize(7);p.textAlign(p.CENTER,p.TOP)
+        for(let j=0;j<nPC;j++)p.text('PC'+(j+1),m3x+j*cSz+cSz/2,m1y+dC*cSz+2)
+        p.textAlign(p.RIGHT,p.CENTER)
+        for(let i=0;i<dC;i++){const[r,g,b]=gc(cellTypes[i]);p.fill(r,g,b);p.text(cellTypes[i].substring(0,3),m3x-3,m1y+i*cSz+cSz/2)}
+
+        // Formula reference at top-right
+        const fx = m3x + nPC*cSz + 30
+        p.fill(245,248,255);p.stroke(200,215,255);p.strokeWeight(1);p.rect(fx,48,160,22,4)
+        p.noStroke();p.fill(60,80,140);p.textSize(10);p.textAlign(p.LEFT,p.TOP)
+        p.text('Y[i,j] = Xc[i,:] \u00B7 W[:,j]',fx+8,52)
+
+        // ── Detail panel ──
+        if(selProj){
+          const{i:si,j:sj}=selProj
+          const rowI=pca.centered[si]
+          const colJ=pca.evecs[sj]
+          const dp=rowI.reduce((s: number,v: number,k: number)=>s+v*colJ[k],0)
+          const by = m1y + Math.max(dC,dG)*cSz + 20
+          
+          p.fill(255,248,240);p.stroke(245,158,11,150);p.strokeWeight(1.5);p.rect(m1x,by,W-m1x-10,85,6)
+          p.noStroke()
+          p.fill(180,100,0);p.textSize(11);p.textAlign(p.LEFT,p.TOP)
+          const cellLabel = cellTypes[si]+'\u00B7'+(si+1)
+          p.text('Y['+cellLabel+',PC'+(sj+1)+'] \u7684\u8BA1\u7B97\u8FC7\u7A0B',m1x+10,by+5)
+          p.fill(60);p.textSize(11)
+          p.text('= Xc[' + cellLabel + ',:] \u00B7 W[:,PC' + (sj+1) + ']',m1x+10,by+22)
+          // Show dot product terms
+          const maxT = Math.min(5, rowI.length)
+          let terms = rowI.slice(0,maxT).map((v: number,k: number)=>'('+v.toFixed(2)+'\u00D7'+colJ[k].toFixed(2)+')').join(' + ')
+          if(rowI.length > maxT) terms += ' + ...'
+          p.fill(100);p.textSize(9)
+          p.text('= '+terms,m1x+10,by+40)
+          p.fill(50);p.textSize(11)
+          p.text('= '+dp.toFixed(4),m1x+10,by+58)
+          // Legend
+          p.fill(255,165,0);p.rect(W-150,by+8,10,10,2)
+          p.fill(80);p.textSize(8);p.textAlign(p.LEFT,p.TOP)
+          p.text('Xc[' + cellLabel + ',:] (\u6A59)',W-136,by+9)
+          p.fill(139,92,246);p.rect(W-150,by+28,10,10,2)
+          p.fill(80);p.text('W[:,PC' + (sj+1) + '] (\u7D2B)',W-136,by+29)
+        }
+      }
+      p.mousePressed=()=>{
+        const m1x=20, m1y=60
+        const m2x = m1x+dG*cSz+27
+        const m3x = m2x+nPC*cSz+27
+        const gx=Math.floor((p.mouseX-m3x)/cSz),gy=Math.floor((p.mouseY-m1y)/cSz)
+        if(gx>=0&&gx<nPC&&gy>=0&&gy<dC){setSelProj({i:gy,j:gx});p.redraw()}
+      }
+    }
+    mk('s3p', s3ProjRef.current, sk)
+    return () => rm('s3p')
+  }, [activeStep, s3Sub, selProj, pca, geneNames, cellTypes, nC, nG, nPC, isZh])
+
+  

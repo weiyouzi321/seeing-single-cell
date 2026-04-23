@@ -1,0 +1,116 @@
+// ── Step 3-B: Covariance computation (Xc^T × Xc) ──
+  useEffect(() => {
+    if (activeStep !== 2 || s3Sub !== 1 || !s3CovRef.current) return
+    const centered = pca.centered, cov = pca.cov
+    const dG = Math.min(nG, 7), dC = Math.min(nC, 10), cSz = 20
+    const topY = 70, xctLabelH = 20
+    const xctX = 45
+    const xcX = xctX + dC * cSz + 70
+    const sigmaX = xcX + dG * cSz + 70
+    const xcY = topY + xctLabelH + 8
+    const detailY = xcY + dC * cSz + 25
+    const W = sigmaX + dG * cSz + 20
+    const H = detailY + 105
+
+    const sk = (p: any) => {
+      p.setup=()=>{p.createCanvas(W,H).parent(s3CovRef.current!);p.textFont('Inter');p.noLoop()}
+      p.draw=()=>{
+        p.background(255)
+        p.fill(50);p.noStroke();p.textSize(13);p.textAlign(p.LEFT,p.TOP)
+        p.text(isZh?'协方差计算':'Covariance Computation',xctX,8)
+        p.fill(130);p.textSize(10)
+        p.text(isZh?'点击 Σ 元素，观察对应行/列的计算关系':'Click Σ element to see row/column relationship',xctX,28)
+        p.fill(245,248,255);p.stroke(200,215,255);p.strokeWeight(1);p.rect(xctX,48,W-xctX-10,22,4)
+        p.noStroke();p.fill(60,80,140);p.textSize(11);p.textAlign(p.LEFT,p.TOP)
+        p.text('\u03A3 = 1/(n\u22121) \u00B7 Xc\u1D40 \u00B7 Xc',xctX+8,51)
+
+        const mxA=Math.max(...centered.slice(0,dC).map((r: number[])=>r.slice(0,dG).map(Math.abs)).flat())||1
+
+        // ── Xcᵀ ──
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Xc\u1D40 ('+dG+'\u00D7'+dC+')',xctX,topY)
+        for(let i=0;i<dG;i++){for(let j=0;j<dC;j++){
+          const v=centered[j][i],n=v/mxA
+          const hiRow=selCov&&i===selCov.j
+          if(hiRow){p.fill(255,165,0,220);p.stroke(200,120,0);p.strokeWeight(1.5)}
+          else if(n>=0){p.fill(66,133,244,n*150+55);p.stroke(255);p.strokeWeight(0.5)}
+          else{p.fill(234,67,53,-n*150+55);p.stroke(255);p.strokeWeight(0.5)}
+          p.rect(xctX+j*cSz,topY+xctLabelH+8+i*cSz,cSz,cSz)
+        }}
+        p.noStroke();p.textSize(7);p.textAlign(p.RIGHT,p.CENTER)
+        for(let i=0;i<dG;i++){const hi=selCov&&i===selCov.j;p.fill(hi?[255,165,0]:[80,80,80]);p.text(geneNames[i],xctX-3,topY+xctLabelH+8+i*cSz+cSz/2)}
+        p.textAlign(p.CENTER,p.TOP);p.fill(120);p.textSize(6)
+        for(let j=0;j<dC;j++)p.text('c'+j,xctX+j*cSz+cSz/2,topY+xctLabelH+8+dG*cSz+2)
+
+        // ── Xc ──
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('Xc ('+dC+'\u00D7'+dG+')',xcX,topY)
+        for(let i=0;i<dC;i++){for(let j=0;j<dG;j++){
+          const v=centered[i][j],n=v/mxA
+          const hiCol=selCov&&j===selCov.k
+          if(hiCol){p.fill(0,200,100,220);p.stroke(0,150,80);p.strokeWeight(1.5)}
+          else if(n>=0){p.fill(66,133,244,n*150+55);p.stroke(255);p.strokeWeight(0.5)}
+          else{p.fill(234,67,53,-n*150+55);p.stroke(255);p.strokeWeight(0.5)}
+          p.rect(xcX+j*cSz,xcY+i*cSz,cSz,cSz)
+        }}
+        p.noStroke();p.textSize(7);p.textAlign(p.RIGHT,p.CENTER)
+        for(let i=0;i<dC;i++){const[r,g,b]=gc(cellTypes[i]);p.fill(r,g,b);p.text(cellTypes[i].substring(0,3),xcX-3,xcY+i*cSz+cSz/2)}
+        p.textAlign(p.CENTER,p.TOP)
+        for(let j=0;j<dG;j++){const hi=selCov&&j===selCov.k;p.fill(hi?[0,200,100]:[60,60,60]);p.push();p.translate(xcX+j*cSz+cSz/2,xcY+dC*cSz+2);p.rotate(-Math.PI/4);p.text(geneNames[j],0,0);p.pop()}
+
+        // ── Σ ──
+        p.fill(60);p.textSize(9);p.textAlign(p.LEFT,p.TOP);p.text('\u03A3 ('+dG+'\u00D7'+dG+')',sigmaX,topY)
+        const cMx=Math.max(...cov.slice(0,dG).map((r: number[])=>r.slice(0,dG).map(Math.abs)).flat())||1
+        for(let i=0;i<dG;i++){for(let j=0;j<dG;j++){
+          const v=cov[i][j],n=v/cMx
+          const isSel=selCov&&i===selCov.j&&j===selCov.k
+          if(isSel){p.fill(255,165,0,255);p.stroke(200,120,0);p.strokeWeight(2)}
+          else if(n>=0){p.fill(66,133,244,n*180+55);p.stroke(255);p.strokeWeight(0.5)}
+          else{p.fill(234,67,53,-n*180+55);p.stroke(255);p.strokeWeight(0.5)}
+          p.rect(sigmaX+j*cSz,topY+xctLabelH+8+i*cSz,cSz,cSz)
+        }}
+        p.noStroke();p.textSize(7)
+        p.textAlign(p.RIGHT,p.CENTER);for(let i=0;i<dG;i++)p.text(geneNames[i],sigmaX-3,topY+xctLabelH+8+i*cSz+cSz/2)
+        p.textAlign(p.CENTER,p.TOP);for(let j=0;j<dG;j++){p.push();p.translate(sigmaX+j*cSz+cSz/2,topY+xctLabelH+8+dG*cSz+2);p.rotate(-Math.PI/4);p.text(geneNames[j],0,0);p.pop()}
+
+        // Multiplication arrows
+        const midY = topY+xctLabelH+8+Math.min(dG,dC)*cSz/2
+        p.fill(150);p.textSize(16);p.textAlign(p.CENTER,p.CENTER)
+        p.text('\u00D7',xcX-25,midY)
+        p.text('=',sigmaX-25,midY)
+
+        // ── Detail panel ──
+        if(selCov){
+          const{j,k}=selCov
+          const colJ=centered.map((r: number[])=>r[j]), colK=centered.map((r: number[])=>r[k])
+          const dp=colJ.reduce((s: number,v: number,i: number)=>s+v*colK[i],0)
+          const cv=dp/(nC-1)
+          const by=detailY
+          p.fill(255,248,240);p.stroke(255,165,0,150);p.strokeWeight(1.5);p.rect(xctX,by,W-xctX-10,78,6)
+          p.noStroke()
+          p.fill(180,100,0);p.textSize(11);p.textAlign(p.LEFT,p.TOP)
+          p.text('\u03A3['+geneNames[j]+','+geneNames[k]+'] \u7684\u8BA1\u7B97\u8FC7\u7A0B',xctX+10,by+5)
+          p.fill(60);p.textSize(11)
+          p.text('= 1/(n\u22121) \u00B7 Xc\u1D40['+geneNames[j]+',:] \u00B7 Xc[:,'+geneNames[k]+']',xctX+10,by+22)
+          const maxT=Math.min(5,colJ.length)
+          let terms=colJ.slice(0,maxT).map((v: number,i: number)=>'('+v.toFixed(2)+'\u00D7'+colK[i].toFixed(2)+')').join(' + ')
+          if(colJ.length>maxT) terms+=' + ...'
+          p.fill(100);p.textSize(9)
+          p.text('= 1/'+(nC-1)+' \u00D7 ('+terms+')',xctX+10,by+38)
+          p.fill(50);p.textSize(11)
+          p.text('= '+dp.toFixed(3)+' / '+(nC-1)+' = '+cv.toFixed(4),xctX+10,by+54)
+          p.fill(255,165,0);p.rect(W-130,by+8,10,10,2)
+          p.fill(80);p.textSize(8);p.textAlign(p.LEFT,p.TOP)
+          p.text(geneNames[j]+' row (\u6A59)',W-116,by+9)
+          p.fill(0,200,100);p.rect(W-130,by+28,10,10,2)
+          p.fill(80);p.text(geneNames[k]+' col (\u7EFF)',W-116,by+29)
+        }
+      }
+      p.mousePressed=()=>{
+        const gy=Math.floor((p.mouseY-(topY+xctLabelH+8))/cSz)
+        const gx=Math.floor((p.mouseX-sigmaX)/cSz)
+        if(gx>=0&&gx<dG&&gy>=0&&gy<dG){setSelCov({j:gy,k:gx});p.redraw()}
+      }
+    }
+    mk('s3c', s3CovRef.current, sk)
+    return () => rm('s3c') }, [activeStep, s3Sub, selCov, pca, geneNames, cellTypes, nC, nG, isZh])
+
+  

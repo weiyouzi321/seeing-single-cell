@@ -117,6 +117,111 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Prerequisites */}
+      <section className="py-12 bg-gray-50/50">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-sm font-semibold tracking-widest uppercase text-gray-400 mb-2 text-center">
+            {lang === 'zh' ? '先修章节' : 'Prerequisites'}
+          </h2>
+          <p className="text-center text-gray-500 mb-8 text-sm">
+            {lang === 'zh'
+              ? '开始单细胞分析之前，建议先掌握以下基础'
+              : 'Recommended foundations before diving into single-cell analysis'}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Linear Algebra */}
+            <Link
+              href="/chapters/0-linear-algebra"
+              className="group block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 overflow-hidden"
+            >
+              <div className="h-2 bg-gradient-to-r from-indigo-500 to-indigo-600"></div>
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                    {lang === 'zh' ? '内置' : 'Built-in'}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                  {lang === 'zh' ? '线性代数基础' : 'Linear Algebra Fundamentals'}
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  {lang === 'zh'
+                    ? '矩阵运算、向量乘法、特征值分解与 SVD —— PCA 和降维的数学基础。'
+                    : 'Matrix operations, vector products, eigendecomposition & SVD — the math behind PCA and dimensionality reduction.'}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {['Matrix', 'Vector', 'PCA', 'SVD'].map((kw) => (
+                    <span key={kw} className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">{kw}</span>
+                  ))}
+                </div>
+              </div>
+            </Link>
+
+            {/* Probability & Statistics */}
+            <a
+              href="https://seeing-theory.brown.edu/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 overflow-hidden"
+            >
+              <div className="h-2 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+                    {lang === 'zh' ? '外部' : 'External'}
+                  </span>
+                  <span className="text-xs text-gray-400">↗</span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-800 mb-2 group-hover:text-amber-600 transition-colors">
+                  {lang === 'zh' ? '概率论与数理统计' : 'Probability & Statistics'}
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  {lang === 'zh'
+                    ? '交互式可视化理解概率分布、贝叶斯推断和统计检验 —— 单细胞数据分析的统计基础。'
+                    : 'Interactive visualizations of probability distributions, Bayesian inference, and statistical testing.'}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {['Distribution', 'Bayesian', 'Hypothesis Testing'].map((kw) => (
+                    <span key={kw} className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">{kw}</span>
+                  ))}
+                </div>
+              </div>
+            </a>
+
+            {/* Seurat Tutorial */}
+            <a
+              href="https://satijalab.org/seurat/articles/pbmc3k_tutorial.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 overflow-hidden"
+            >
+              <div className="h-2 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                    {lang === 'zh' ? '外部' : 'External'}
+                  </span>
+                  <span className="text-xs text-gray-400">↗</span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-800 mb-2 group-hover:text-emerald-600 transition-colors">
+                  {lang === 'zh' ? 'Seurat 教程' : 'Seurat Tutorial'}
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  {lang === 'zh'
+                    ? 'R 语言单细胞 RNA-seq 数据分析的标准流程：质控、归一化、聚类与可视化。'
+                    : 'The standard R workflow for scRNA-seq analysis: QC, normalization, clustering, and visualization.'}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {['R', 'Seurat', 'scRNA-seq'].map((kw) => (
+                    <span key={kw} className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">{kw}</span>
+                  ))}
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works */}
       <section className="py-16 border-t border-gray-100 mt-8">
         <div className="max-w-3xl mx-auto text-center">

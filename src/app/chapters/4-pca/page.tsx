@@ -52,8 +52,8 @@ export default function PcaChapter() {
     }
     async function loadData() {
       try {
-        const basePath = process.env.NODE_ENV === 'production' ? '/seeing-single-cell' : ''
-        const res = await fetch(`${basePath}/data/pbmc_data.json`)
+        const basePath = ''
+        const res = await fetch(`${basePath}/data/pbmc_scaled.json`)
         if (res.ok) setData(await res.json())
       } catch (e) { console.error(e) }
       finally { setLoading(false) }
@@ -62,37 +62,10 @@ export default function PcaChapter() {
   }, [])
 
   // Preprocess: normalize + select HVGs (top 20 by variance) + scale
+  // Data already scaled from pbmc_scaled.json
   const processedData = useMemo(() => {
     if (!data) return null
-    const raw = data.expression_matrix
-    // Normalize
-    const norm = raw.map(row => {
-      const libSize = row.reduce((a: number, b: number) => a + b, 0)
-      return libSize > 0 ? row.map(v => Math.log1p((v / libSize) * 10000)) : row
-    })
-    // Select top 20 HVGs
-    const nGenes = norm[0].length
-    const geneVariances: { idx: number; var: number }[] = []
-    for (let j = 0; j < nGenes; j++) {
-      const vals = norm.map(r => r[j])
-      const mean = vals.reduce((a: number, b: number) => a + b, 0) / vals.length
-      const variance = vals.reduce((s: number, v: number) => s + (v - mean) ** 2, 0) / vals.length
-      geneVariances.push({ idx: j, var: variance })
-    }
-    geneVariances.sort((a, b) => b.var - a.var)
-    const hvgIndices = geneVariances.slice(0, 20).map(g => g.idx).sort((a, b) => a - b)
-    const hvgData = norm.map(row => hvgIndices.map(j => row[j]))
-    const hvgNames = hvgIndices.map(j => data.gene_names[j])
-    // Scale (z-score)
-    const n = hvgData.length, p = hvgData[0].length
-    const scaled = hvgData.map(row => [...row])
-    for (let j = 0; j < p; j++) {
-      const vals = scaled.map(r => r[j])
-      const mean = vals.reduce((a: number, b: number) => a + b, 0) / n
-      const std = Math.sqrt(vals.reduce((s: number, v: number) => s + (v - mean) ** 2, 0) / n) || 1
-      for (let i = 0; i < n; i++) scaled[i][j] = (scaled[i][j] - mean) / std
-    }
-    return { scaled, hvgNames }
+    return { scaled: data.expression_matrix, hvgNames: data.gene_names }
   }, [data])
 
   if (loading) {

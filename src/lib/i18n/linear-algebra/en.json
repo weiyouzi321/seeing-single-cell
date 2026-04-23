@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "home": "Home",
+    "ch0": "0 · Linear Algebra",
+    "ch0_1": "0.1 · Matrix Views",
+    "ch0_2": "0.2 · Vector Products",
+    "ch0_3": "0.3 · Matrix × Vector",
+    "ch0_4": "0.4 · Matrix × Matrix",
+    "ch0_5": "0.5 · Patterns",
+    "ch0_6": "0.6 · Factorizations",
+    "ch0_6_1": "0.6.1 · CR",
+    "ch0_6_2": "0.6.2 · LU",
+    "ch0_6_3": "0.6.3 · QR",
+    "ch0_6_4": "0.6.4 · Eigendecomp",
+    "ch0_6_5": "0.6.5 · SVD"
+  },
+  "home": {
+    "title": "Linear Algebra Fundamentals",
+    "subtitle": "Interactive visualizations to understand matrix algebra",
+    "tagline": "Prerequisite for Seeing Single-Cell",
+    "description": "Master the mathematics behind PCA, SVD, and matrix factorizations through interactive p5.js visualizations. Click elements to see row/column vectors and step-by-step calculations.",
+    "startBtn": "Start Learning",
+    "browseBtn": "Browse All Topics"
+  },
+  "chapters": {
+    "title": "Linear Algebra Chapters",
+    "ch1": {
+      "title": "Matrix Views",
+      "desc": "4 ways to look at a matrix: table, columns, rows, and elements"
+    },
+    "ch2": {
+      "title": "Vector Products",
+      "desc": "Dot product and outer product — two fundamental ways to multiply vectors"
+    },
+    "ch3": {
+      "title": "Matrix × Vector",
+      "desc": "Two perspectives: row-wise dot products vs column-wise linear combinations"
+    },
+    "ch4": {
+      "title": "Matrix × Matrix",
+      "desc": "Four ways to understand matrix multiplication with interactive element-level exploration"
+    },
+    "ch5": {
+      "title": "Practical Patterns",
+      "desc": "Diagonal scaling, eigenvalue patterns, and other useful tricks"
+    },
+    "ch6": {
+      "title": "Matrix Factorizations",
+      "desc": "Five fundamental decompositions: CR, LU, QR, Eigendecomposition, and SVD"
+    }
+  },
+  "common": {
+    "clickToExplore": "Click to explore",
+    "step": "Step",
+    "interactHint": "Interact with the visualization to understand the concept",
+    "matrix": "Matrix",
+    "vector": "Vector",
+    "result": "Result",
+    "calculation": "Calculation",
+    "loading": "Loading visualization..."
+  },
+  "matrix_views": {
+    "title": "4 Ways to View a Matrix",
+    "subtitle": "A = [aᵢⱼ] can be seen in four equivalent perspectives",
+    "view1": "As a Table",
+    "view2": "As Column Vectors",
+    "view3": "As Row Vectors",
+    "view4": "As Individual Elements",
+    "geneCols": "Genes (columns)",
+    "cellRows": "Cells (rows)"
+  },
+  "vector_products": {
+    "title": "Vector × Vector",
+    "desc": "Two ways: dot product (scalar) and outer product (matrix)",
+    "dotProduct": "Dot Product vᵀ·w",
+    "outerProduct": "Outer Product v·wᵀ",
+    "dotResult": "Projection length",
+    "outerRank1": "Rank-1 matrix"
+  },
+  "matrix_vector": {
+    "title": "Matrix × Vector",
+    "desc": "Mv as row-wise dot products OR column-wise linear combination",
+    "viewMv1": "Mv₁ (dot products)",
+    "viewMv2": "Mv₂ (linear combination)",
+    "clickElement": "Click an element of Mv to see its computation",
+    "row": "Row",
+    "col": "Column",
+    "sum": "Sum",
+    "of": "of"
+  },
+  "matrix_matrix": {
+    "title": "Matrix × Matrix",
+    "desc": "C = AB: Click any C[i,j] to see C[i,j] = Σₖ A[i,k]·B[k,j]",
+    "clickToCompute": "Click to compute step by step",
+    "highlightRow": "Highlighted row of A",
+    "highlightCol": "Highlighted column of B",
+    "stepByStep": "Step-by-step multiplication"
+  },
+  "eigendecomp": {
+    "title": "Eigendecomposition",
+    "desc": "A = QΛQᵀ: Power iteration finds eigenvectors",
+    "powerIter": "Power Iteration",
+    "eigenvalue": "Eigenvalue λ",
+    "eigenvector": "Eigenvector v",
+    "sigmaV": "Σv",
+    "approximates": "≈",
+    "iterations": "Iterations",
+    "selectPC": "Select PC",
+    "lambdaEquals": "λ ="
+  },
+  "factorizations": {
+    "title": "Matrix Factorizations",
+    "desc": "Five ways to break down a matrix",
+    "cr": {
+      "title": "CR Decomposition",
+      "desc": "A = C·R (Column-Row factorization)"
+    },
+    "lu": {
+      "title": "LU Decomposition",
+      "desc": "A = L·U (Gaussian elimination)"
+    },
+    "qr": {
+      "title": "QR Decomposition",
+      "desc": "A = Q·R (Gram-Schmidt orthogonalization)"
+    },
+    "evd": {
+      "title": "Eigendecomposition",
+      "desc": "A = QΛQᵀ (for symmetric matrices)"
+    },
+    "svd": {
+      "title": "Singular Value Decomposition",
+      "desc": "A = UΣVᵀ (for any matrix)"
+    }
+  }
+}

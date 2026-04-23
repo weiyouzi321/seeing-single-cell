@@ -37,25 +37,14 @@ export default function DimRedChapter() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !(window as any).katex) { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js'; s.async = true; document.head.appendChild(s) }
-    async function load() { try { const b = process.env.NODE_ENV === 'production' ? '/seeing-single-cell' : ''; const r = await fetch(`${b}/data/pbmc_data.json`); if (r.ok) setData(await r.json()) } catch(e) { console.error(e) } finally { setLoading(false) } }
+    async function load() { try { const b = ''; const r = await fetch(`${b}/data/pbmc_scaled.json`); if (r.ok) setData(await r.json()) } catch(e) { console.error(e) } finally { setLoading(false) } }
     load()
   }, [])
 
+  // Data already scaled from pbmc_scaled.json
   const processed = useMemo(() => {
     if (!data) return null
-    const raw = data.expression_matrix
-    const norm = raw.map(row => { const ls = row.reduce((a: number, b: number) => a + b, 0); return ls > 0 ? row.map(v => Math.log1p((v / ls) * 10000)) : row })
-    const ng = norm[0].length
-    const gv: { i: number; v: number }[] = []
-    for (let j = 0; j < ng; j++) { const vals = norm.map(r => r[j]); const m = vals.reduce((a: number, b: number) => a + b, 0) / vals.length; gv.push({ i: j, v: vals.reduce((s: number, v: number) => s + (v - m) ** 2, 0) / vals.length }) }
-    gv.sort((a, b) => b.v - a.v)
-    const hvg = gv.slice(0, 20).map(g => g.i).sort((a, b) => a - b)
-    const hvgData = norm.map(row => hvg.map(j => row[j]))
-    const hvgNames = hvg.map(j => data.gene_names[j])
-    const n = hvgData.length, p = hvgData[0].length
-    const scaled = hvgData.map(row => [...row])
-    for (let j = 0; j < p; j++) { const vals = scaled.map(r => r[j]); const m = vals.reduce((a: number, b: number) => a + b, 0) / n; const std = Math.sqrt(vals.reduce((s: number, v: number) => s + (v - m) ** 2, 0) / n) || 1; for (let i = 0; i < n; i++) scaled[i][j] = (scaled[i][j] - m) / std }
-    return { scaled, hvgNames }
+    return { scaled: data.expression_matrix, hvgNames: data.gene_names }
   }, [data])
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500" /></div>

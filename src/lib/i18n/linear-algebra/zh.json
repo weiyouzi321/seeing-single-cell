@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "home": "首页",
+    "ch0": "0 · 线性代数",
+    "ch0_1": "0.1 · 矩阵视角",
+    "ch0_2": "0.2 · 向量乘法",
+    "ch0_3": "0.3 · 矩阵×向量",
+    "ch0_4": "0.4 · 矩阵×矩阵",
+    "ch0_5": "0.5 · 实用模式",
+    "ch0_6": "0.6 · 矩阵分解",
+    "ch0_6_1": "0.6.1 · CR 分解",
+    "ch0_6_2": "0.6.2 · LU 分解",
+    "ch0_6_3": "0.6.3 · QR 分解",
+    "ch0_6_4": "0.6.4 · 特征值分解",
+    "ch0_6_5": "0.6.5 · 奇异值分解"
+  },
+  "home": {
+    "title": "线性代数基础",
+    "subtitle": "交互式可视化理解矩阵代数",
+    "tagline": "Seeing Single-Cell 先修课程",
+    "description": "通过交互式 p5.js 可视化掌握 PCA、SVD 和矩阵分解背后的数学。点击元素查看行/列向量和逐步计算过程。",
+    "startBtn": "开始学习",
+    "browseBtn": "浏览所有主题"
+  },
+  "chapters": {
+    "title": "线性代数章节",
+    "ch1": {
+      "title": "矩阵的视角",
+      "desc": "四种看待矩阵的方式：表格、列向量、行向量和单个元素"
+    },
+    "ch2": {
+      "title": "向量乘法",
+      "desc": "点积和外积 —— 向量乘法的两种基本形式"
+    },
+    "ch3": {
+      "title": "矩阵×向量",
+      "desc": "两种视角：行点积 vs 列线性组合"
+    },
+    "ch4": {
+      "title": "矩阵×矩阵",
+      "desc": "四种理解矩阵乘法的方式，支持元素级点击交互计算"
+    },
+    "ch5": {
+      "title": "实用模式",
+      "desc": "对角缩放、特征值模式和其他实用技巧"
+    },
+    "ch6": {
+      "title": "矩阵分解",
+      "desc": "五种基本分解：CR、LU、QR、特征值分解、奇异值分解"
+    }
+  },
+  "common": {
+    "clickToExplore": "点击探索",
+    "step": "步骤",
+    "interactHint": "与可视化交互以理解概念",
+    "matrix": "矩阵",
+    "vector": "向量",
+    "result": "结果",
+    "calculation": "计算",
+    "loading": "加载可视化..."
+  },
+  "matrix_views": {
+    "title": "矩阵的四种视角",
+    "subtitle": "矩阵 A = [aᵢⱼ] 可以从四个等价视角理解",
+    "view1": "作为表格",
+    "view2": "作为列向量集合",
+    "view3": "作为行向量集合",
+    "view4": "作为单个元素",
+    "geneCols": "基因（列）",
+    "cellRows": "细胞（行）"
+  },
+  "vector_products": {
+    "title": "向量 × 向量",
+    "desc": "两种方式：点积（标量）和外积（矩阵）",
+    "dotProduct": "点积 vᵀ·w",
+    "outerProduct": "外积 v·wᵀ",
+    "dotResult": "投影长度",
+    "outerRank1": "秩-1 矩阵"
+  },
+  "matrix_vector": {
+    "title": "矩阵 × 向量",
+    "desc": "Mv 作为行点积 或 列的线性组合",
+    "viewMv1": "Mv₁（点积形式）",
+    "viewMv2": "Mv₂（线性组合）",
+    "clickElement": "点击 Mv 的元素查看计算过程",
+    "row": "行",
+    "col": "列",
+    "sum": "求和",
+    "of": "的"
+  },
+  "matrix_matrix": {
+    "title": "矩阵 × 矩阵",
+    "desc": "C = AB：点击任一 C[i,j] 查看逐步计算 C[i,j] = Σₖ A[i,k]·B[k,j]",
+    "clickToCompute": "点击查看逐步计算",
+    "highlightRow": "高亮 A 的第 i 行",
+    "highlightCol": "高亮 B 的第 j 列",
+    "stepByStep": "逐步乘法"
+  },
+  "eigendecomp": {
+    "title": "特征值分解",
+    "desc": "A = QΛQᵀ：幂迭代法寻找特征向量",
+    "powerIter": "幂迭代",
+    "eigenvalue": "特征值 λ",
+    "eigenvector": "特征向量 v",
+    "sigmaV": "Σv",
+    "approximates": "≈",
+    "iterations": "迭代次数",
+    "selectPC": "选择主成分",
+    "lambdaEquals": "λ ="
+  },
+  "factorizations": {
+    "title": "矩阵分解",
+    "desc": "五种分解矩阵的基本方法",
+    "cr": {
+      "title": "CR 分解",
+      "desc": "A = C·R（列行分解）"
+    },
+    "lu": {
+      "title": "LU 分解",
+      "desc": "A = L·U（高斯消去法）"
+    },
+    "qr": {
+      "title": "QR 分解",
+      "desc": "A = Q·R（格拉姆-施密特正交化）"
+    },
+    "evd": {
+      "title": "特征值分解",
+      "desc": "A = QΛQᵀ（对称矩阵）"
+    },
+    "svd": {
+      "title": "奇异值分解",
+      "desc": "A = UΣVᵀ（任意矩阵）"
+    }
+  }
+}

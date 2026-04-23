@@ -45,8 +45,8 @@ export default function KnnChapter() {
     }
     async function load() {
       try {
-        const base = process.env.NODE_ENV === 'production' ? '/seeing-single-cell' : ''
-        const res = await fetch(`${base}/data/pbmc_data.json`)
+        const base = ''
+        const res = await fetch(`${base}/data/pbmc_scaled.json`)
         if (res.ok) setData(await res.json())
       } catch (e) { console.error(e) } finally { setLoading(false) }
     }
@@ -54,33 +54,10 @@ export default function KnnChapter() {
   }, [])
 
   // Preprocess: normalize + HVG + scale (same pipeline as Ch3/Ch4)
+  // Data already scaled from pbmc_scaled.json
   const processed = useMemo(() => {
     if (!data) return null
-    const raw = data.expression_matrix
-    const norm = raw.map(row => {
-      const ls = row.reduce((a: number, b: number) => a + b, 0)
-      return ls > 0 ? row.map(v => Math.log1p((v / ls) * 10000)) : row
-    })
-    const ng = norm[0].length
-    const gv: { idx: number; v: number }[] = []
-    for (let j = 0; j < ng; j++) {
-      const vals = norm.map(r => r[j])
-      const mean = vals.reduce((a: number, b: number) => a + b, 0) / vals.length
-      gv.push({ idx: j, v: vals.reduce((s: number, v: number) => s + (v - mean) ** 2, 0) / vals.length })
-    }
-    gv.sort((a, b) => b.v - a.v)
-    const hvg = gv.slice(0, 20).map(g => g.idx).sort((a, b) => a - b)
-    const hvgData = norm.map(row => hvg.map(j => row[j]))
-    const hvgNames = hvg.map(j => data.gene_names[j])
-    const n = hvgData.length, p = hvgData[0].length
-    const scaled = hvgData.map(row => [...row])
-    for (let j = 0; j < p; j++) {
-      const vals = scaled.map(r => r[j])
-      const mean = vals.reduce((a: number, b: number) => a + b, 0) / n
-      const std = Math.sqrt(vals.reduce((s: number, v: number) => s + (v - mean) ** 2, 0) / n) || 1
-      for (let i = 0; i < n; i++) scaled[i][j] = (scaled[i][j] - mean) / std
-    }
-    return { scaled, hvgNames }
+    return { scaled: data.expression_matrix, hvgNames: data.gene_names }
   }, [data])
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500" /></div>

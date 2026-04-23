@@ -33,3 +33,8 @@ yarn-error.log*
 next-env.d.ts
 
 *.bak
+
+# Large intermediate data files
+scripts/*.npy
+scripts/*.tar.gz
+scripts/filtered_gene_bc_matrices/
