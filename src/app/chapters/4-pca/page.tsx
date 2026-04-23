@@ -40,6 +40,7 @@ export default function PcaChapter() {
   const { t, lang } = useLang()
   const isZh = lang === 'zh'
   const [data, setData] = useState<PBMCData | null>(null)
+  const [pcaData, setPcaData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeStep, setActiveStep] = useState(0)
 
@@ -53,8 +54,12 @@ export default function PcaChapter() {
     async function loadData() {
       try {
         const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
-        const res = await fetch(`${basePath}/data/pbmc_scaled.json`)
-        if (res.ok) setData(await res.json())
+        const [res1, res2] = await Promise.all([
+          fetch(`${basePath}/data/pbmc_scaled.json`),
+          fetch(`${basePath}/data/pbmc_pca.json`),
+        ])
+        if (res1.ok) setData(await res1.json())
+        if (res2.ok) setPcaData(await res2.json())
       } catch (e) { console.error(e) }
       finally { setLoading(false) }
     }
@@ -154,7 +159,7 @@ export default function PcaChapter() {
               <p>{t('ch4.step1TryDesc')}</p>
             </div>
 
-            <PcaViz data={processedData.scaled} geneNames={processedData.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={0} />
+            <PcaViz data={processedData.scaled} geneNames={processedData.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={0} projected={pcaData?.projected} varianceRatio={pcaData?.variance_ratio} />
 
             <div className="flex justify-end mt-6">
               <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#f59e0b' }}>
@@ -190,7 +195,7 @@ export default function PcaChapter() {
               <p>{t('ch4.step2TryDesc')}</p>
             </div>
 
-            <PcaViz data={processedData.scaled} geneNames={processedData.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={1} />
+            <PcaViz data={processedData.scaled} geneNames={processedData.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={1} projected={pcaData?.projected} varianceRatio={pcaData?.variance_ratio} />
 
             <div className="flex justify-between mt-6">
               <button onClick={() => setActiveStep(0)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-purple-500 hover:text-purple-600 transition-colors">
@@ -242,7 +247,7 @@ export default function PcaChapter() {
               <p>{t('ch4.step3TryDesc')}</p>
             </div>
 
-            <PcaViz data={processedData.scaled} geneNames={processedData.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={2} />
+            <PcaViz data={processedData.scaled} geneNames={processedData.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={2} projected={pcaData?.projected} varianceRatio={pcaData?.variance_ratio} />
             <div className="flex justify-between mt-6">
               <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-amber-500 hover:text-amber-600 transition-colors">
                 {t('ch4.step3Back')}
@@ -275,7 +280,7 @@ export default function PcaChapter() {
               </div>
             </div>
 
-            <PcaViz data={processedData.scaled} geneNames={processedData.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={3} />
+            <PcaViz data={processedData.scaled} geneNames={processedData.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={3} projected={pcaData?.projected} varianceRatio={pcaData?.variance_ratio} />
 
             <div className="info-panel tip mt-6">
               <h3>{t('ch4.step4TryTitle')}</h3>

@@ -32,12 +32,23 @@ export default function DimRedChapter() {
   const { t, lang } = useLang()
   const isZh = lang === 'zh'
   const [data, setData] = useState<PBMCData | null>(null)
+  const [dimredData, setDimredData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeStep, setActiveStep] = useState(0)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !(window as any).katex) { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js'; s.async = true; document.head.appendChild(s) }
-    async function load() { try { const b = process.env.NEXT_PUBLIC_BASE_PATH || ''; const r = await fetch(`${b}/data/pbmc_scaled.json`); if (r.ok) setData(await r.json()) } catch(e) { console.error(e) } finally { setLoading(false) } }
+    async function load() { 
+      try { 
+        const b = process.env.NEXT_PUBLIC_BASE_PATH || ''
+        const [r1, r2] = await Promise.all([
+          fetch(`${b}/data/pbmc_scaled.json`),
+          fetch(`${b}/data/pbmc_dimred.json`),
+        ])
+        if (r1.ok) setData(await r1.json())
+        if (r2.ok) setDimredData(await r2.json())
+      } catch(e) { console.error(e) } finally { setLoading(false) } 
+    }
     load()
   }, [])
 
@@ -105,7 +116,7 @@ export default function DimRedChapter() {
             <div className="viz-card-header"><div className="step-number" style={{ background: '#8b5cf6' }}>1</div><h2>{t('ch6.step1Name')}</h2></div>
             <div className="info-panel concept mb-4"><h3>{t('ch6.step1Why')}</h3><p>{t('ch6.step1WhyDesc')}</p></div>
             <div className="info-panel tip mb-4"><h3>{t('ch6.step1TryTitle')}</h3><p>{t('ch6.step1TryDesc')}</p></div>
-            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={0} />
+            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={0} precomputedTsne={dimredData?.tsne} precomputedUmap={dimredData?.umap} />
             <div className="flex justify-end mt-6">
               <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#ef4444' }}>{t('ch6.step1Next')}</button>
             </div>
@@ -123,7 +134,7 @@ export default function DimRedChapter() {
               <div className="text-center my-1"><K math="P(j|i) = \frac{\exp(-\|x_i - x_j\|^2 / 2\sigma^2)}{\sum_{k \neq i} \exp(-\|x_i - x_k\|^2 / 2\sigma^2)}" /></div>
             </div>
             <div className="info-panel tip mb-4"><h3>{t('ch6.step2TryTitle')}</h3><p>{t('ch6.step2TryDesc')}</p></div>
-            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={1} />
+            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={1} precomputedTsne={dimredData?.tsne} precomputedUmap={dimredData?.umap} />
             <div className="flex justify-between mt-6">
               <button onClick={() => setActiveStep(0)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-purple-500 hover:text-purple-600 transition-colors">{t('ch6.step2Back')}</button>
               <button onClick={() => setActiveStep(2)} className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#3b82f6' }}>{t('ch6.step2Next')}</button>
@@ -152,7 +163,7 @@ export default function DimRedChapter() {
               </div>
             </div>
             <div className="info-panel tip mb-4"><h3>{t('ch6.step3TryTitle')}</h3><p>{t('ch6.step3TryDesc')}</p></div>
-            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={2} />
+            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={2} precomputedTsne={dimredData?.tsne} precomputedUmap={dimredData?.umap} />
             <div className="flex justify-between mt-6">
               <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-red-500 hover:text-red-600 transition-colors">{t('ch6.step3Back')}</button>
               <button onClick={() => setActiveStep(3)} className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#10b981' }}>{t('ch6.step3Next')}</button>
@@ -166,7 +177,7 @@ export default function DimRedChapter() {
           <div className="viz-card">
             <div className="viz-card-header"><div className="step-number" style={{ background: '#10b981' }}>4</div><h2>{t('ch6.step4Name')}</h2></div>
             <div className="info-panel concept mb-4"><h3>{t('ch6.step4Compare')}</h3><p>{t('ch6.step4CompareDesc')}</p></div>
-            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={3} />
+            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={3} precomputedTsne={dimredData?.tsne} precomputedUmap={dimredData?.umap} />
             <div className="info-panel tip mt-6">
               <h3>{'\u26a0\ufe0f ' + t('ch6.step4Pitfalls')}</h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">

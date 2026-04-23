@@ -8,6 +8,8 @@ interface PcaVizProps {
   cellTypes: string[]
   lang?: 'en' | 'zh'
   activeStep: number
+  projected?: number[][]
+  varianceRatio?: number[]
 }
 
 const TC: Record<string, [number, number, number]> = {
@@ -54,7 +56,7 @@ function powerIterSteps(cov: number[][], nSteps: number) {
   return { steps, eigenval: Math.max(0, eigenval), eigenvector: vec }
 }
 
-export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', activeStep }: PcaVizProps) {
+export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', activeStep, projected, varianceRatio }: PcaVizProps) {
   // PCA matrix dimensions (shared)
 
   const dG = Math.min(geneNames.length, 8)
@@ -96,7 +98,9 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
 
 
   const pca = useMemo(() => computePCA(data, Math.min(10, nG)), [data, nG])
-  const varexp = useMemo(() => { const t = pca.evals.reduce((s: number,v: number)=>s+v,0); return t>0 ? pca.evals.map((v: number)=>v/t) : pca.evals.map(()=>0) }, [pca])
+  const computedVarexp = useMemo(() => { const t = pca.evals.reduce((s: number,v: number)=>s+v,0); return t>0 ? pca.evals.map((v: number)=>v/t) : pca.evals.map(()=>0) }, [pca])
+  const varexp = varianceRatio || computedVarexp
+  const pcaProjected = projected || pca.projected
 
   const rm = (k: string) => { if(refs.current[k]) { refs.current[k]!.remove(); refs.current[k] = null } }
   const mk = (k: string, el: HTMLDivElement | null, sk: any) => { if(!el) return; rm(k); refs.current[k] = new p5(sk) }
@@ -734,10 +738,10 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         for (let i = 0; i < dG; i++) p.text(geneNames[i], m2x - 4, m2y + i * cSz + cSz / 2)
 
         // 5) Y matrix
-        const yMx = Math.max(...pca.projected.slice(0, dC).map((r: number[]) => r.slice(0, nPC2).map(Math.abs)).flat()) || 1
+        const yMx = Math.max(...pcaProjected.slice(0, dC).map((r: number[]) => r.slice(0, nPC2).map(Math.abs)).flat()) || 1
         for (let i = 0; i < dC; i++) {
           for (let j = 0; j < nPC2; j++) {
-            const v = pca.projected[i][j], n = v / yMx
+            const v = pcaProjected[i][j], n = v / yMx
             const isSel = selProj && i === selProj.i && j === selProj.j
             if (isSel) { p.fill(245, 158, 11, 255); p.stroke(200, 120, 0); p.strokeWeight(2) }
             else if (n >= 0) { p.fill(16, 185, 129, n * 200 + 55); p.stroke(255); p.strokeWeight(0.5) }
@@ -927,8 +931,8 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
       let hov: number | null = null
       let zm_local = 1, px2 = 0, py2 = 0, pan = false, psx = 0, psy = 0, ppx_ = 0, ppy_ = 0
 
-      const xs = pca.projected.map((row: number[]) => row[xPC])
-      const ys = pca.projected.map((row: number[]) => row[yPC])
+      const xs = pcaProjected.map((row: number[]) => row[xPC])
+      const ys = pcaProjected.map((row: number[]) => row[yPC])
       let mnX = Math.min(...xs), mxX = Math.max(...xs) || 1
       let mnY = Math.min(...ys), mxY = Math.max(...ys) || 1
       const pdX = (mxX - mnX) * 0.05 || 0.5, pdY = (mxY - mnY) * 0.05 || 0.5
@@ -1336,13 +1340,13 @@ function PCProjectionTable({ data, geneNames, pca, xPC, yPC, isZh }: PCProjectio
               <td className="px-3 py-2 text-right font-mono font-bold text-indigo-700">
                 {fmt(sumX)}
                 <div className="text-[10px] font-normal text-indigo-500">
-                  {isZh ? '(实际' : '(actual'} {pca.projected[cellIdx]?.[xPC]?.toFixed(2) ?? '?'}{')'}
+                  {isZh ? '(实际' : '(actual'} {pcaProjected[cellIdx]?.[xPC]?.toFixed(2) ?? '?'}{')'}
                 </div>
               </td>
               <td className="px-3 py-2 text-right font-mono font-bold text-indigo-700">
                 {fmt(sumY)}
                 <div className="text-[10px] font-normal text-indigo-500">
-                  {isZh ? '(实际' : '(actual'} {pca.projected[cellIdx]?.[yPC]?.toFixed(2) ?? '?'}{')'}
+                  {isZh ? '(实际' : '(actual'} {pcaProjected[cellIdx]?.[yPC]?.toFixed(2) ?? '?'}{')'}
                 </div>
               </td>
             </tr>

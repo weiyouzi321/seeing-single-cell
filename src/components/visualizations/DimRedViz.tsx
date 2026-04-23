@@ -8,6 +8,8 @@ interface DimRedVizProps {
   cellTypes: string[]
   lang?: 'en' | 'zh'
   activeStep: number
+  precomputedTsne?: number[][]
+  precomputedUmap?: number[][]
 }
 
 const TYPE_COLORS: Record<string, [number, number, number]> = {
@@ -164,7 +166,7 @@ function drawCellScatter(p: any, coords: number[][], cellTypes: string[], W: num
 
 const SYNTH_PALETTE: Record<string, [number, number, number]> = { 'Inner': [66, 133, 244], 'Outer': [234, 67, 53], 'Moon1': [66, 133, 244], 'Moon2': [234, 67, 53] }
 
-export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', activeStep }: DimRedVizProps) {
+export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', activeStep, precomputedTsne, precomputedUmap }: DimRedVizProps) {
   const isZh = lang === 'zh'
   const nCells = data.length
   const pca = useMemo(() => computePCA(data, 10), [data])
@@ -191,6 +193,12 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
   const [tsneResult4, setTsneResult4] = useState<number[][] | null>(null)
   const step4AllRef = useRef<HTMLDivElement>(null)
   const step4AllP5 = useRef<p5 | null>(null)
+
+  // Use precomputed results if provided
+  useEffect(() => {
+    if (precomputedTsne) setTsneResult4(precomputedTsne)
+    if (precomputedUmap) setUmapResult(precomputedUmap)
+  }, [precomputedTsne, precomputedUmap])
 
   useEffect(() => {
     if (activeStep !== 1) return
