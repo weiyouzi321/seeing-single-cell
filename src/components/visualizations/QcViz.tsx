@@ -197,12 +197,18 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
           }
           p.drawingContext.setLineDash([])
 
-          // Y-axis labels
+          // Y-axis labels (independent per violin)
+          const axisX = margin.left + colW * mi
+          p.stroke(180); p.strokeWeight(1)
+          p.line(axisX, margin.top, axisX, margin.top + plotH)
           p.noStroke(); p.fill(120); p.textSize(9); p.textAlign(p.RIGHT, p.CENTER)
           for (let i = 0; i <= 4; i++) {
             const val = minVal + range * (i / 4)
             const y = margin.top + plotH - (i / 4) * plotH
-            p.text(val < 10 ? val.toFixed(1) : Math.round(val).toString(), margin.left - 8, y)
+            p.text(val < 10 ? val.toFixed(2) : Math.round(val).toString(), axisX + 18, y)
+            p.stroke(180); p.strokeWeight(1)
+            p.line(axisX, y, axisX + 4, y)
+            p.noStroke()
           }
 
           // X-axis label
@@ -406,9 +412,9 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
   }, [qcMetrics, filterResult, hoveredCell, lang])
 
   const metricOptions = [
-    { key: 'nCount' as const, label: L.nCount, color: '#10b981' },
-    { key: 'nFeature' as const, label: L.nFeature, color: '#7c3aed' },
-    { key: 'pct_mito' as const, label: L.pctMito, color: '#f59e0b' },
+    { key: 'nCount' as const, label: L.nCount, color: '#10b981', maxVal: Math.max(...qcMetrics.nCount) },
+    { key: 'nFeature' as const, label: L.nFeature, color: '#7c3aed', maxVal: Math.max(...qcMetrics.nFeature) },
+    { key: 'pct_mito' as const, label: L.pctMito, color: '#f59e0b', maxVal: Math.max(...qcMetrics.pct_mito) },
   ]
 
   return (

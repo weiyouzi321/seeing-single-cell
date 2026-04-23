@@ -10,6 +10,9 @@ interface PcaVizProps {
   activeStep: number
   projected?: number[][]
   varianceRatio?: number[]
+  covariance?: number[][]
+  loadings?: number[][]
+  evals?: number[]
 }
 
 const TC: Record<string, [number, number, number]> = {
@@ -56,7 +59,7 @@ function powerIterSteps(cov: number[][], nSteps: number) {
   return { steps, eigenval: Math.max(0, eigenval), eigenvector: vec }
 }
 
-export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', activeStep, projected, varianceRatio }: PcaVizProps) {
+export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', activeStep, projected, varianceRatio, covariance, loadings: preLoadings, evals: preEvals }: PcaVizProps) {
   // PCA matrix dimensions (shared)
 
   const dG = Math.min(geneNames.length, 8)
@@ -434,8 +437,11 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     if (activeStep !== 2 || s3Sub !== 2 || !s3EigenRef.current) return
     const cSz = 20
     const nPC2 = Math.min(4, dG)
-    const piResult = powerIterSteps(pca.cov, eigenStep)
-    const vec = piResult.eigenvector, lambda = piResult.eigenval
+    const covMat = covariance || pca.cov
+    const usePrecomputed = !!(preLoadings && preEvals && preLoadings[selPC] !== undefined)
+    const piResult = usePrecomputed ? null : powerIterSteps(covMat, eigenStep)
+    const vec = usePrecomputed ? preLoadings[selPC] : piResult!.eigenvector
+    const lambda = usePrecomputed ? preEvals[selPC] : piResult!.eigenval
     const innerGap = 42
     const marginTop = 55
     const marginLeft = 40
@@ -528,7 +534,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         const cMx = Math.max(...pca.cov.slice(0, dG).map((r: number[]) => r.slice(0, dG).map(Math.abs)).flat()) || 1
         for (let i = 0; i < dG; i++) {
           for (let j = 0; j < dG; j++) {
-            const v = pca.cov[i][j], n = Math.abs(v) / cMx
+            const v = covMat[i][j], n = Math.abs(v) / cMx
             if (n >= 0) { p.fill(66, 133, 244, n * 150 + 55); p.stroke(255); p.strokeWeight(0.5) }
             else { p.fill(234, 67, 53, -n * 150 + 55); p.stroke(255); p.strokeWeight(0.5) }
             p.rect(sigmaX + j * cSz, sigmaY + i * cSz, cSz, cSz)
@@ -550,7 +556,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
 
         // 6) Σv vector
         const sigmaV = Array(dG).fill(0)
-        for (let i = 0; i < dG; i++) for (let j = 0; j < dG; j++) sigmaV[i] += pca.cov[i][j] * vec[j]
+        for (let i = 0; i < dG; i++) for (let j = 0; j < dG; j++) sigmaV[i] += covMat[i][j] * vec[j]
         const svMx = Math.max(...sigmaV.map(Math.abs)) || 1
         for (let i = 0; i < dG; i++) {
           const val = sigmaV[i], n = Math.abs(val) / svMx
@@ -577,7 +583,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         }
 
         // 9) Eigenvectors V
-        const evecs = pca.evecs
+        const evecs = preLoadings || pca.evecs
         const evMx = Math.max(...evecs.slice(0, nPC2).map((r: number[]) => r.map(Math.abs)).flat()) || 1
         for (let pc = 0; pc < nPC2; pc++) {
           for (let i = 0; i < dG; i++) {
@@ -650,7 +656,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     }
     mk('s3e', s3EigenRef.current, sk)
     return () => rm('s3e')
-  }, [activeStep, s3Sub, selPC, eigenStep, pca, geneNames, nG, dG, isZh])
+  }, [activeStep, s3Sub, selPC, eigenStep, pca, geneNames, nG, dG, isZh, covariance, preLoadings, preEvals])
   // ── Step 3-D: Projection ──
   useEffect(() => {
     if (activeStep !== 2 || s3Sub !== 3 || !s3ProjRef.current) return
@@ -1201,6 +1207,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
           xPC={xPC}
           yPC={yPC}
           isZh={isZh}
+          projected={pcaProjected}
         />
       </div>
 
@@ -1236,10 +1243,12 @@ interface PCProjectionTableProps {
   xPC: number
   yPC: number
   isZh: boolean
+  projected?: number[][]
 }
 
-function PCProjectionTable({ data, geneNames, pca, xPC, yPC, isZh }: PCProjectionTableProps) {
+function PCProjectionTable({ data, geneNames, pca, xPC, yPC, isZh, projected }: PCProjectionTableProps) {
   const cellIdx = 0
+  const pcaProjected = projected || pca.projected
   const cellExpr = data[cellIdx]
   const nShow = Math.min(6, geneNames.length)
 
