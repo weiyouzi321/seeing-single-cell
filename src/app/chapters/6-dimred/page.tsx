@@ -37,7 +37,7 @@ export default function DimRedChapter() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !(window as any).katex) { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js'; s.async = true; document.head.appendChild(s) }
-    async function load() { try { const b = ''; const r = await fetch(`${b}/data/pbmc_scaled.json`); if (r.ok) setData(await r.json()) } catch(e) { console.error(e) } finally { setLoading(false) } }
+    async function load() { try { const b = process.env.NEXT_PUBLIC_BASE_PATH || ''; const r = await fetch(`${b}/data/pbmc_scaled.json`); if (r.ok) setData(await r.json()) } catch(e) { console.error(e) } finally { setLoading(false) } }
     load()
   }, [])
 

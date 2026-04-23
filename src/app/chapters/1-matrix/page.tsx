@@ -134,7 +134,7 @@ export default function RawDataChapter() {
   useEffect(() => {
     async function loadData() {
       try {
-        const basePath = ''
+        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
         const res = await fetch(`${basePath}/data/pbmc_data.json`)
         if (res.ok) setData(await res.json())
       } catch (e) { console.error(e) }

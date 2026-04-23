@@ -45,7 +45,7 @@ export default function KnnChapter() {
     }
     async function load() {
       try {
-        const base = ''
+        const base = process.env.NEXT_PUBLIC_BASE_PATH || ''
         const res = await fetch(`${base}/data/pbmc_scaled.json`)
         if (res.ok) setData(await res.json())
       } catch (e) { console.error(e) } finally { setLoading(false) }
