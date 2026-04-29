@@ -135,7 +135,7 @@ export default function RawDataChapter() {
     async function loadData() {
       try {
         const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
-        const res = await fetch(`${basePath}/data/pbmc_data.json`)
+        const res = await fetch(`${basePath}/data/pbmc_data_small.json`)  // 使用小矩阵数据以便展示
         if (res.ok) setData(await res.json())
       } catch (e) { console.error(e) }
       finally { setLoading(false) }

@@ -16,6 +16,7 @@ interface PBMCData {
 function K({ math }: { math: string }) {
   const ref = useRef<HTMLSpanElement>(null)
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null
     const render = () => {
       if (ref.current && (window as any).katex) {
         try { (window as any).katex.render(math, ref.current, { throwOnError: false }) } catch(e) {}
@@ -23,7 +24,12 @@ function K({ math }: { math: string }) {
         ref.current.textContent = math
       }
     }
-    if ((window as any).katex) { render() } else { setTimeout(render, 500) }
+    if ((window as any).katex) {
+      render()
+    } else {
+      timer = setTimeout(render, 500)
+    }
+    return () => { if (timer) clearTimeout(timer) }
   }, [math])
   return <span ref={ref} className="inline-block" />
 }

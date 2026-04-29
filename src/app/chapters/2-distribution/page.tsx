@@ -174,6 +174,7 @@ export default function QCChapter() {
 
       {/* Step 2: QC分布 */}
       {activeStep === 1 && (
+        <>
         <section className="mb-12">
           <div className="viz-card">
             <div className="viz-card-header">
@@ -206,10 +207,20 @@ export default function QCChapter() {
             />
           </div>
         </section>
+        <div className="flex justify-between mt-6">
+          <button onClick={() => setActiveStep(0)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-gray-400 transition-colors">
+            {isZh ? '← 认识QC指标' : '← QC Metrics'}
+          </button>
+          <button onClick={() => setActiveStep(2)} className="px-5 py-2.5 rounded-xl bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors shadow-sm">
+            {isZh ? '下一步：设置阈值 →' : 'Next Step: Set Thresholds →'}
+          </button>
+        </div>
+        </>
       )}
 
       {/* Step 3: 设置过滤阈值 */}
       {activeStep === 2 && (
+        <>
         <section className="mb-12">
           <div className="viz-card">
             <div className="viz-card-header">
@@ -251,22 +262,6 @@ export default function QCChapter() {
             />
           </div>
         </section>
-      )}
-
-      {/* Step 2 nav buttons */}
-      {activeStep === 1 && (
-        <div className="flex justify-between mt-6">
-          <button onClick={() => setActiveStep(0)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-gray-400 transition-colors">
-            {isZh ? '← 认识QC指标' : '← QC Metrics'}
-          </button>
-          <button onClick={() => setActiveStep(2)} className="px-5 py-2.5 rounded-xl bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors shadow-sm">
-            {isZh ? '下一步：设置阈值 →' : 'Next Step: Set Thresholds →'}
-          </button>
-        </div>
-      )}
-
-      {/* Step 3 nav buttons */}
-      {activeStep === 2 && (
         <div className="flex justify-between mt-6">
           <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-gray-400 transition-colors">
             {isZh ? '← QC分布' : '← QC Distribution'}
@@ -275,6 +270,7 @@ export default function QCChapter() {
             {isZh ? '下一步：过滤对比 →' : 'Next Step: Filter Comparison →'}
           </button>
         </div>
+        </>
       )}
 
       {/* Step 4: 过滤前后对比 */}

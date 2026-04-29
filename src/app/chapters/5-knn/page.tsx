@@ -20,12 +20,14 @@ interface PBMCData {
 function K({ math }: { math: string }) {
   const ref = useRef<HTMLSpanElement>(null)
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null
     const render = () => {
       if (ref.current && typeof window !== 'undefined' && (window as any).katex) {
         try { (window as any).katex.render(math, ref.current, { throwOnError: false }) } catch(e) {}
       } else if (ref.current) { ref.current.textContent = math }
     }
-    if ((window as any).katex) { render() } else { setTimeout(render, 500) }
+    if ((window as any).katex) { render() } else { timer = setTimeout(render, 500) }
+    return () => { if (timer) clearTimeout(timer) }
   }, [math])
   return <span ref={ref} className="inline-block" />
 }
@@ -34,6 +36,7 @@ export default function KnnChapter() {
   const { t, lang } = useLang()
   const isZh = lang === 'zh'
   const [data, setData] = useState<PBMCData | null>(null)
+  const [knnData, setKnnData] = useState<{ projected: number[][]; knn_adj: number[][]; cell_types: string[] } | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeStep, setActiveStep] = useState(0)
 
@@ -46,8 +49,15 @@ export default function KnnChapter() {
     async function load() {
       try {
         const base = process.env.NEXT_PUBLIC_BASE_PATH || ''
-        const res = await fetch(`${base}/data/pbmc_scaled.json`)
-        if (res.ok) setData(await res.json())
+        const [resHvg, resKnn] = await Promise.all([
+          fetch(`${base}/data/pbmc_hvg_scaled.json`),
+          fetch(`${base}/data/pbmc_knn.json`)
+        ])
+        if (resHvg.ok && resKnn.ok) {
+          const [hvgData, knnRaw] = await Promise.all([resHvg.json(), resKnn.json()])
+          setData(hvgData)
+          setKnnData(knnRaw)
+        }
       } catch (e) { console.error(e) } finally { setLoading(false) }
     }
     load()
@@ -135,7 +145,7 @@ export default function KnnChapter() {
               </div>
             </div>
             <div className="info-panel concept mb-4"><h3>{t('ch5.step1TryTitle')}</h3><p>{t('ch5.step1TryDesc')}</p></div>
-            <KnnViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={0} />
+            <KnnViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={0} precomputedProjected={knnData?.projected} precomputedKnnAdj={knnData?.knn_adj} />
             <div className="flex justify-end mt-6">
               <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#f59e0b' }}>{t('ch5.step1Next')}</button>
             </div>
@@ -149,7 +159,7 @@ export default function KnnChapter() {
             <div className="viz-card-header"><div className="step-number" style={{ background: '#f59e0b' }}>2</div><h2>{t('ch5.step2Name')}</h2></div>
             <div className="info-panel concept mb-4"><h3>{t('ch5.step2What')}</h3><p>{t('ch5.step2WhatDesc')}</p></div>
             <div className="info-panel tip mb-4"><h3>{t('ch5.step2TryTitle')}</h3><p>{t('ch5.step2TryDesc')}</p></div>
-            <KnnViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={1} />
+            <KnnViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={1} precomputedProjected={knnData?.projected} precomputedKnnAdj={knnData?.knn_adj} />
             <div className="flex justify-between mt-6">
               <button onClick={() => setActiveStep(0)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-purple-500 hover:text-purple-600 transition-colors">{t('ch5.step2Back')}</button>
               <button onClick={() => setActiveStep(2)} className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#ef4444' }}>{t('ch5.step2Next')}</button>
@@ -171,7 +181,7 @@ export default function KnnChapter() {
               </div>
             </div>
             <div className="info-panel concept mb-4"><h3>{t('ch5.step3TryTitle')}</h3><p>{t('ch5.step3TryDesc')}</p></div>
-            <KnnViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={2} />
+            <KnnViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={2} precomputedProjected={knnData?.projected} precomputedKnnAdj={knnData?.knn_adj} />
             <div className="flex justify-between mt-6">
               <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-amber-500 hover:text-amber-600 transition-colors">{t('ch5.step3Back')}</button>
               <button onClick={() => setActiveStep(3)} className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#10b981' }}>{t('ch5.step3Next')}</button>
@@ -191,7 +201,7 @@ export default function KnnChapter() {
                 <p className="text-sm"><strong>ARI</strong> / <strong>NMI</strong>: {isZh ? '\u8861\u91cf\u805a\u7c7b\u4e0e\u771f\u5b9e\u6807\u7b7e\u7684\u4e00\u81f4\u6027' : 'Measures agreement between clustering and truth'}</p>
               </div>
             </div>
-            <KnnViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={3} />
+            <KnnViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={3} precomputedProjected={knnData?.projected} precomputedKnnAdj={knnData?.knn_adj} />
             <div className="info-panel tip mt-6">
               <h3>{t('ch5.step4TryTitle')}</h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">

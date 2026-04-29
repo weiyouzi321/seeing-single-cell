@@ -55,7 +55,7 @@ export default function PcaChapter() {
       try {
         const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
         const [res1, res2] = await Promise.all([
-          fetch(`${basePath}/data/pbmc_scaled.json`),
+          fetch(`${basePath}/data/pbmc_hvg_scaled.json`),
           fetch(`${basePath}/data/pbmc_pca.json`),
         ])
         if (res1.ok) setData(await res1.json())
@@ -66,7 +66,7 @@ export default function PcaChapter() {
     loadData()
   }, [])
 
-  // Preprocess: normalize + select HVGs (top 20 by variance) + scale
+  // Preprocess: normalize + select HVGs (top 24 marker genes) + scale
   // Data already scaled from pbmc_scaled.json
   const processedData = useMemo(() => {
     if (!data) return null

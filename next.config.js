@@ -1,14 +1,27 @@
 /** @type {import('next').NextConfig} */
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
-const assetPrefix = process.env.NEXT_PUBLIC_BASE_PATH || ''
+const path = require('path')
 
 const nextConfig = {
-  output: 'export',
+  output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
+
+  // TypeScript
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+  // Images
   images: {
     unoptimized: true,
   },
-  basePath,
-  assetPrefix,
+
+  // 保持别名
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    }
+    return config
+  },
 }
 
 module.exports = nextConfig

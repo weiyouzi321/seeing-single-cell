@@ -114,6 +114,36 @@ export default function Home() {
             color="from-[#ec4899] to-[#f472b6]"
             lang={lang} t={t}
           />
+          {/* Advanced Analysis Entry Card */}
+          <div className="group relative block p-6 bg-gradient-to-br from-slate-50 via-gray-50 to-teal-50 rounded-2xl border-2 border-dashed border-gray-300 hover:border-teal-400 hover:shadow-xl transition-all duration-200 overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-200 to-emerald-200 rounded-full blur-2xl opacity-30 -mr-8 -mt-8"></div>
+            <div className="flex items-center gap-2 mb-3 relative">
+              <span className="text-2xl">🚀</span>
+              <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded">
+                {lang === 'zh' ? '新增' : 'New'}
+              </span>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-teal-600 transition-colors">
+              {lang === 'zh' ? '高级分析' : 'Advanced Analysis'}
+            </h3>
+            <p className="text-sm text-gray-500 mb-4 leading-relaxed">
+              {lang === 'zh'
+                ? '批次整合、差异表达分析等进阶单细胞分析方法。'
+                : 'Advanced scRNA-seq methods: integration, differential expression, and more.'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {['Integration', 'DE', 'Trajectory'].map((kw, i) => (
+                <span key={i} className="text-xs font-medium text-gray-400 bg-gray-50 px-2.5 py-1 rounded-full">
+                  {lang === 'zh' ? {'Integration':'批次整合','DE':'差异表达','Trajectory':'轨迹推断'}[kw] : kw}
+                </span>
+              ))}
+            </div>
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <span className="text-sm text-teal-600 font-medium group-hover:underline">
+                {lang === 'zh' ? '使用上方导航 →' : 'Explore in navigation above →'}
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
