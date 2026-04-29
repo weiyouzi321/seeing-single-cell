@@ -54,6 +54,15 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
     cellType: isZh ? '细胞类型' : 'Cell Type',
   }
 
+  // 动态计算数据范围，用于滑块范围
+  const dataRanges = useMemo(() => {
+    return {
+      nCountMax: Math.max(...qcMetrics.nCount),
+      nFeatureMax: Math.max(...qcMetrics.nFeature),
+      pctMitoMax: Math.max(...qcMetrics.pct_mito),
+    }
+  }, [qcMetrics])
+
   // Compute MAD-based thresholds
   const madThresholds = useMemo(() => {
     const mad = (arr: number[]) => {
@@ -451,7 +460,7 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
                 {m.key !== 'pct_mito' && (
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-400 w-8">Min</span>
-                    <input type="range" min="0" max={m.key === 'nCount' ? 500 : 50} step="1"
+                    <input type="range" min="0" max={m.key === 'nCount' ? dataRanges.nCountMax : dataRanges.nFeatureMax} step="1"
                       value={m.key === 'nCount' ? thresholds.nCountMin : thresholds.nFeatureMin}
                       onChange={e => setThresholds(prev => ({
                         ...prev,
@@ -466,10 +475,10 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
                 {m.key !== 'pct_mito' && (
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-400 w-8">Max</span>
-                    <input type="range" min={m.key === 'nCount' ? 100 : 20} max={m.key === 'nCount' ? 500 : 52} step="1"
+                    <input type="range" min={m.key === 'nCount' ? 100 : 20} max={m.key === 'nCount' ? dataRanges.nCountMax : dataRanges.nFeatureMax} step="1"
                       value={m.key === 'nCount' ?
-                        (thresholds.nCountMax === Infinity ? 500 : thresholds.nCountMax) :
-                        (thresholds.nFeatureMax === Infinity ? 52 : thresholds.nFeatureMax)}
+                        (thresholds.nCountMax === Infinity ? dataRanges.nCountMax : thresholds.nCountMax) :
+                        (thresholds.nFeatureMax === Infinity ? dataRanges.nFeatureMax : thresholds.nFeatureMax)}
                       onChange={e => setThresholds(prev => ({
                         ...prev,
                         [m.key === 'nCount' ? 'nCountMax' : 'nFeatureMax']: parseInt(e.target.value)
@@ -485,8 +494,8 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
                 {m.key === 'pct_mito' && (
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-400 w-8">Max</span>
-                    <input type="range" min="2" max="30" step="0.5"
-                      value={thresholds.pctMitoMax === Infinity ? 30 : thresholds.pctMitoMax}
+                    <input type="range" min="2" max={Math.min(100, dataRanges.pctMitoMax * 1.5)} step="0.5"
+                      value={thresholds.pctMitoMax === Infinity ? dataRanges.pctMitoMax : thresholds.pctMitoMax}
                       onChange={e => setThresholds(prev => ({ ...prev, pctMitoMax: parseFloat(e.target.value) }))}
                       className="flex-1" />
                     <span className="font-mono text-xs w-10 text-right">

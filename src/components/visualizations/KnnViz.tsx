@@ -9,6 +9,10 @@ interface KnnVizProps {
   cellTypes: string[]
   lang?: 'en' | 'zh'
   activeStep: number
+  /** @deprecated 预计算PCA投影 (若提供则跳过实时PCA计算) */
+  precomputedProjected?: number[][]
+  /** @deprecated 预计算KNN邻接表 (若提供则跳过实时KNN计算) */
+  precomputedKnnAdj?: number[][]
 }
 
 const TYPE_COLORS: Record<string, [number, number, number]> = {
@@ -19,33 +23,7 @@ function getTypeColor(type: string): [number, number, number] {
   return TYPE_COLORS[type] || [150, 150, 150]
 }
 
-// PCA
-function computePCA(data: number[][], nComp: number = 10) {
-  const n = data.length, p = data[0].length
-  const means = Array(p).fill(0)
-  for (let j = 0; j < p; j++) { for (let i = 0; i < n; i++) means[j] += data[i][j]; means[j] /= n }
-  const centered = data.map(row => row.map((v, j) => v - means[j]))
-  const cov: number[][] = Array.from({ length: p }, () => Array(p).fill(0))
-  for (let i = 0; i < p; i++) for (let j = i; j < p; j++) {
-    let s = 0; for (let k = 0; k < n; k++) s += centered[k][i] * centered[k][j]
-    cov[i][j] = s / (n - 1); cov[j][i] = cov[i][j]
-  }
-  const evecs: number[][] = [], evals: number[] = [], mat = cov.map(r => [...r])
-  for (let c = 0; c < Math.min(nComp, p); c++) {
-    let vec = Array(p).fill(0).map(() => Math.random() - 0.5)
-    let nm = Math.sqrt(vec.reduce((s, v) => s + v * v, 0)); vec = vec.map(v => v / nm)
-    for (let it = 0; it < 500; it++) {
-      const nv = Array(p).fill(0)
-      for (let i = 0; i < p; i++) for (let j = 0; j < p; j++) nv[i] += mat[i][j] * vec[j]
-      nm = Math.sqrt(nv.reduce((s, v) => s + v * v, 0)); if (nm < 1e-12) break; vec = nv.map(v => v / nm)
-    }
-    let ev = 0; for (let i = 0; i < p; i++) { let mv = 0; for (let j = 0; j < p; j++) mv += mat[i][j] * vec[j]; ev += vec[i] * mv }
-    evecs.push(vec); evals.push(Math.max(0, ev))
-    for (let i = 0; i < p; i++) for (let j = 0; j < p; j++) mat[i][j] -= ev * vec[i] * vec[j]
-  }
-  const projected = centered.map(row => evecs.map(ev => ev.reduce((s, v, j) => s + v * row[j], 0)))
-  return { projected }
-}
+import { computePCA } from '@/lib/math'
 
 // Distance
 function euclidean(a: number[], b: number[]): number {
@@ -88,6 +66,12 @@ function louvain(adj: number[][], resolution: number = 1.0): number[] {
   let improved = true; let rounds = 0
   while (improved && rounds < 20) {
     improved = false; rounds++
+    // Precompute community total degrees
+    const commDeg = new Map<number, number>()
+    for (let i = 0; i < n; i++) {
+      const c = comm[i]
+      commDeg.set(c, (commDeg.get(c) || 0) + deg[i])
+    }
     for (let i = 0; i < n; i++) {
       const nbrComms = new Map<number, number>()
       for (const j of adj[i]) { const c = comm[j]; nbrComms.set(c, (nbrComms.get(c) || 0) + 1) }
@@ -96,7 +80,9 @@ function louvain(adj: number[][], resolution: number = 1.0): number[] {
       for (let ei = 0; ei < entries.length; ei++) {
         const c = entries[ei][0], kij = entries[ei][1]
         if (c === comm[i]) continue
-        if (kij > bestGain) { bestGain = kij; bestComm = c }
+        // Modularity-based gain with resolution parameter
+        const gain = kij - resolution * (deg[i] * (commDeg.get(c) || 0)) / (2 * m)
+        if (gain > bestGain) { bestGain = gain; bestComm = c }
       }
       if (bestComm !== comm[i]) { comm[i] = bestComm; improved = true }
     }
@@ -150,9 +136,17 @@ function computeNMI(labels: number[], truth: string[]): number {
 function louvainFrames(coords: number[][], adj: number[][], resolution: number = 1.0): number[][] {
   const n = coords.length
   let comm = Array.from({ length: n }, (_, i) => i)
+  const deg = adj.map(neighbors => neighbors.length)
+  const m = adj.reduce((s, neighbors) => s + neighbors.length, 0) / 2 || 1
   const frames: number[][] = [[...comm]]
   for (let round = 0; round < 8; round++) {
     let improved = false
+    // Precompute community total degrees
+    const commDeg = new Map<number, number>()
+    for (let i = 0; i < n; i++) {
+      const c = comm[i]
+      commDeg.set(c, (commDeg.get(c) || 0) + deg[i])
+    }
     for (let i = 0; i < n; i++) {
       const nbrComms = new Map<number, number>()
       for (const j of adj[i]) { const c = comm[j]; nbrComms.set(c, (nbrComms.get(c) || 0) + 1) }
@@ -160,7 +154,10 @@ function louvainFrames(coords: number[][], adj: number[][], resolution: number =
       const entries2 = Array.from(nbrComms.entries())
       for (let ei = 0; ei < entries2.length; ei++) {
         const c = entries2[ei][0], ki = entries2[ei][1]
-        if (c !== comm[i] && ki > bestGain) { bestGain = ki; bestComm = c }
+        if (c !== comm[i]) {
+          const gain = ki - resolution * (deg[i] * (commDeg.get(c) || 0)) / (2 * m)
+          if (gain > bestGain) { bestGain = gain; bestComm = c }
+        }
       }
       if (bestComm !== comm[i]) { comm[i] = bestComm; improved = true }
     }
@@ -175,20 +172,27 @@ function louvainFrames(coords: number[][], adj: number[][], resolution: number =
 }
 
 // Confusion matrix
-function confusionMatrix(labels: number[], truth: string[]): { matrix: number[][]; types: string[]; clusters: number } {
+function confusionMatrix(labels: number[], truth: string[]): { matrix: number[][]; types: string[]; clusters: number; maxVal: number } {
   const types = Array.from(new Set(truth))
   const k = Math.max(...labels) + 1
   const matrix = Array.from({ length: types.length }, () => Array(k).fill(0))
   for (let i = 0; i < labels.length; i++) {
     const ti = types.indexOf(truth[i]); matrix[ti][labels[i]]++
   }
-  return { matrix, types, clusters: k }
+  const maxVal = Math.max(...matrix.flat()) || 1
+  return { matrix, types, clusters: k, maxVal }
 }
 
-export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', activeStep }: KnnVizProps) {
+export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', activeStep, precomputedProjected, precomputedKnnAdj }: KnnVizProps) {
   const isZh = lang === 'zh'
   const nCells = data.length
-  const pca = useMemo(() => computePCA(data, 10), [data])
+  // 优先使用预计算投影（若有效）,否则实时计算PCA
+  const pca = useMemo(() => {
+    if (precomputedProjected && precomputedProjected.length > 0 && precomputedProjected[0]) {
+      return { projected: precomputedProjected, evecs: [], evals: [] }
+    }
+    return computePCA(data, 10)
+  }, [data, precomputedProjected])
 
   // Step 1 state
   const [cellA, setCellA] = useState(0)
@@ -202,24 +206,41 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
   const step2Ref = useRef<HTMLDivElement>(null)
   const step2P5 = useRef<p5 | null>(null)
 
+  const neighborsRef = useRef<number[]>([])
+  const tooltipRef = useRef<{x: number, y: number, cell: number, type: string, k: number} | null>(null)
+
+
   // Step 3 state
   const [playing, setPlaying] = useState(false)
   const [frameIdx, setFrameIdx] = useState(0)
   const step3Ref = useRef<HTMLDivElement>(null)
   const step3P5 = useRef<p5 | null>(null)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Step 4 state
   const [resolution, setResolution] = useState(1.0)
+  const [hoveredCell, setHoveredCell] = useState<number | null>(null)
   const step4Ref = useRef<HTMLDivElement>(null)
   const step4P5 = useRef<p5 | null>(null)
 
-  const knn = useMemo(() => buildKNN(pca.projected, kVal, metric), [pca.projected, kVal, metric])
+  // 优先使用预计算KNN邻接表
+  const knn = useMemo(() => {
+    if (precomputedKnnAdj && precomputedKnnAdj.length === data.length) {
+      // 构建 edges
+      const edges: [number, number][] = []
+      for (let i = 0; i < precomputedKnnAdj.length; i++) {
+        for (const j of precomputedKnnAdj[i]) {
+          if (i < j) edges.push([i, j])
+        }
+      }
+      return { adj: precomputedKnnAdj, edges }
+    }
+    return buildKNN(pca.projected, kVal, metric)
+  }, [pca.projected, kVal, metric, precomputedKnnAdj, data.length])
   const frames = useMemo(() => louvainFrames(pca.projected, knn.adj, 1.0), [pca.projected, knn.adj])
   const commLabels = useMemo(() => {
-    const { edges: _e, adj } = buildKNN(pca.projected, kVal, metric)
-    return louvain(adj, resolution)
-  }, [pca.projected, kVal, metric, resolution])
+    return louvain(knn.adj, resolution)
+  }, [knn.adj, resolution])
   const ari = useMemo(() => computeARI(commLabels, cellTypes), [commLabels, cellTypes])
   const nmi = useMemo(() => computeNMI(commLabels, cellTypes), [commLabels, cellTypes])
   const confMat = useMemo(() => confusionMatrix(commLabels, cellTypes), [commLabels, cellTypes])
@@ -299,6 +320,7 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
       let mnX = Math.min(...valsX), mxX = Math.max(...valsX), mnY = Math.min(...valsY), mxY = Math.max(...valsY)
       const rx = mxX - mnX || 1, ry = mxY - mnY || 1
       mnX -= rx * 0.1; mxX += rx * 0.1; mnY -= ry * 0.1; mxY += ry * 0.1
+      let hov = -1
 
       p.setup = () => { const c = p.createCanvas(W, H); c.parent(step2Ref.current!); p.textFont('Inter'); p.noLoop() }
       p.draw = () => {
@@ -312,12 +334,34 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
           const y2 = M.t + ph - (valsY[j] - mnY) / (mxY - mnY) * ph
           p.line(x1, y1, x2, y2)
         }
+        // Highlight hovered cell edges
+        if (hov >= 0) {
+          p.stroke(66, 133, 244, 160); p.strokeWeight(2)
+          for (const [i, j] of edges) {
+            if (i === hov || j === hov) {
+              const x1 = M.l + (valsX[i] - mnX) / (mxX - mnX) * pw
+              const y1 = M.t + ph - (valsY[i] - mnY) / (mxY - mnY) * ph
+              const x2 = M.l + (valsX[j] - mnX) / (mxX - mnX) * pw
+              const y2 = M.t + ph - (valsY[j] - mnY) / (mxY - mnY) * ph
+              p.line(x1, y1, x2, y2)
+            }
+          }
+        }
         // Points
         for (let i = 0; i < nCells; i++) {
           const x = M.l + (valsX[i] - mnX) / (mxX - mnX) * pw
           const y = M.t + ph - (valsY[i] - mnY) / (mxY - mnY) * ph
-          const [r, g, b] = getTypeColor(cellTypes[i]); p.fill(r, g, b, 220); p.noStroke()
-          p.ellipse(x, y, 9, 9)
+          const [r, g, b] = getTypeColor(cellTypes[i])
+          if (i === hov) {
+            p.fill(r, g, b, 255); p.stroke(0); p.strokeWeight(2); p.ellipse(x, y, 14, 14)
+            const bx = x + 12, by = y - 42
+            p.fill(255, 255, 255, 240); p.stroke(180); p.strokeWeight(1); p.rect(bx, by, 110, 38, 5)
+            p.noStroke(); p.fill(50); p.textSize(10); p.textAlign(p.LEFT, p.TOP)
+            p.text('Cell #' + (i + 1), bx + 6, by + 5)
+            p.fill(80); p.textSize(9); p.text(cellTypes[i], bx + 6, by + 20)
+          } else {
+            p.fill(r, g, b, 220); p.noStroke(); p.ellipse(x, y, 9, 9)
+          }
         }
         // Legend
         const types = Array.from(new Set(cellTypes)); let ly = M.t + 10
@@ -331,10 +375,35 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
         p.text('PC1', M.l + pw / 2, H - 5)
         p.push(); p.translate(14, M.t + ph / 2); p.rotate(-p.HALF_PI); p.text('PC2', 0, 0); p.pop()
       }
+      p.mouseMoved = () => {
+        let c = -1, cd = 12
+        for (let i = 0; i < nCells; i++) {
+          const x = M.l + (valsX[i] - mnX) / (mxX - mnX) * pw
+          const y = M.t + ph - (valsY[i] - mnY) / (mnY - mnY) * ph
+          const d = Math.hypot(p.mouseX - x, p.mouseY - y)
+          if (d < cd) { c = i; cd = d }
+        }
+        if (c !== hov) { hov = c; p.redraw(); setHoveredCell(c >= 0 ? c : null) }
+        // 更新邻居和 tooltip refs
+        if (c >= 0) {
+          const nbrs = knn.adj[c] || []
+          neighborsRef.current = nbrs
+          tooltipRef.current = {
+            x: p.mouseX + 15,
+            y: p.mouseY + 15,
+            cell: c,
+            type: cellTypes[c],
+            k: nbrs.length
+          }
+        } else {
+          neighborsRef.current = []
+          tooltipRef.current = null
+        }
+      }
     }
     step2P5.current = new p5(sketch)
     return () => { step2P5.current?.remove() }
-  }, [activeStep, kVal, metric, pca.projected, knn, cellTypes, nCells])
+  }, [activeStep, pca.projected, kVal, metric, cellTypes, nCells])
 
   // ── Step 3: Louvain animation ──
   useEffect(() => {
@@ -563,7 +632,7 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
                     <tr key={i}>
                       <td className="p-1 font-semibold" style={{ color: `rgb(${r},${g},${b})` }}>{type}</td>
                       {confMat.matrix[i].map((val, j) => {
-                        const maxVal = Math.max(...confMat.matrix.flat()) || 1
+                        const maxVal = confMat.maxVal
                         const intensity = val / maxVal
                         return (
                           <td key={j} className="p-1 text-center rounded"

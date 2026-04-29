@@ -32,9 +32,14 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "**/*.d.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "design-sandbox",
+    "design-sandbox/**/*",
+    ".next",
+    "out"
   ]
 }

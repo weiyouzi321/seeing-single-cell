@@ -7,7 +7,10 @@
       "ch3": "3 · Preprocessing",
       "ch4": "4 · PCA",
       "ch5": "5 · Clustering",
-      "ch6": "6 · Visualization"
+      "ch6": "6 · Visualization",
+      "ch7": "Batch Integration",
+      "advanced": "Advanced Analysis",
+      "ch8": "Differential Expression"
     },
     "home": {
       "tagline": "Interactive Learning",
@@ -542,7 +545,55 @@
       "step4Back": "← Back to Step 3",
       "prevCh5": "← KNN Clustering",
       "ch7Soon": "Chapter 7 (DEG) Coming Soon"
-    }
+    },
+    "ch7": {
+      "title": "Integration",
+      "subtitle": "Remove batch effects and align low-dimensional representations",
+      "what": "What is Integration",
+      "whatDesc": "Align cells from different batches into a shared space",
+      "why": "Why Integrate",
+      "whyDesc": "Batch effects can mask true cell-type structure",
+      "concept": "Core Concept",
+      "conceptDesc": "After correction, same cell types mix across batches",
+      "before": "Before",
+      "after": "After",
+      "algo": "Common Methods",
+      "algoList": [
+        "Seurat Integration",
+        "Harmony",
+        "bbknn",
+        "Scanorama",
+        "MNN",
+        "ComBat"
+      ],
+      "metrics": "Evaluation Metrics",
+      "metricsDesc": "Measure cell-type consistency before and after",
+      "beforeText": "Left: batch effect separates same cell types",
+      "afterText": "Right: integrated cells from same type re-cluster",
+      "prevChap": "Previous",
+      "nextChap": "Next"
+    },
+    "advanced": {
+      "title": "Advanced Analysis",
+      "subtitle": "Integration, differential expression, trajectory inference",
+      "badgeNew": "New"
+    },
+    "ch7.interactive": "交互式展示",
+    "ch7.useButtonsAbove": "使用上方按钮切换不同步骤",
+    "ch7.algoIterative": "使用迭代优化去除批次效应",
+    "ch7.algoMNN": "同时建模批次和技术噪声",
+    "ch7.algoLinear": "寻找两个数据集之间的线性变换，使生物学信号一致",
+    "ch7.algoDeep": "深度学习生成模型",
+    "ch7.algoCorrelation": "最大化相关性",
+    "ch7.batchIntroduced": "引入的系统性技术偏差",
+    "ch7.batchSeparates": "导致同一细胞类型在不同批次中分布分离",
+    "ch7.beforeIntegration": "整合前",
+    "ch7.afterIntegration": "整合后",
+    "ch7.showMetrics": "后细胞类型一致性评估",
+    "ch7.dimRedVis": "降维可视化",
+    "ch7.platform": "平台",
+    "ch7.typicalAlgos": "典型整合算法",
+    "ch7.evalMetrics": "评估指标"
   },
   "zh": {
     "nav": {
@@ -552,7 +603,10 @@
       "ch3": "3 · 预处理",
       "ch4": "4 · 降维",
       "ch5": "5 · 聚类",
-      "ch6": "6 · 可视化"
+      "ch6": "6 · 可视化",
+      "ch7": "批次整合",
+      "advanced": "高级分析",
+      "ch8": "差异表达"
     },
     "home": {
       "tagline": "交互式学习",
@@ -991,6 +1045,54 @@
     "footer": "灵感来源",
     "footerAnd": "和",
     "footerBuilt": "使用 Next.js + p5.js 构建",
-    "langSwitch": "EN"
+    "langSwitch": "EN",
+    "ch7": {
+      "title": "批次整合",
+      "subtitle": "消除批次效应，统一不同批次细胞的低维表示",
+      "what": "什么是整合",
+      "whatDesc": "旨在消除批次效应，将不同批次或条件下的细胞映射到同一空间",
+      "why": "为什么要整合",
+      "whyDesc": "由于实验批次、试剂批号或测序平台不同，会形成明显的分离，掩盖真实的细胞类型结构",
+      "concept": "核心概念",
+      "conceptDesc": "经过整合算法校正后，相同细胞类型在不同批次中的细胞混合在一起，生物学信号得以恢复",
+      "before": "整合前",
+      "after": "整合后",
+      "algo": "常用整合算法",
+      "algoList": [
+        "Seurat Integration",
+        "Harmony",
+        "bbknn",
+        "Scanorama",
+        "MNN",
+        "ComBat"
+      ],
+      "metrics": "评估指标",
+      "metricsDesc": "衡量整合前后细胞类型一致性",
+      "beforeText": "左图显示批次效应：相同细胞类型被批次分离",
+      "afterText": "右图显示整合后：相同细胞类型重新聚集",
+      "prevChap": "上一章",
+      "nextChap": "下一章"
+    },
+    "advanced": {
+      "title": "高级分析",
+      "subtitle": "批次整合、差异表达与轨迹推断等进阶方法",
+      "badgeNew": "新增"
+    },
+    "ch7.interactive": "交互式展示",
+    "ch7.useButtonsAbove": "使用上方按钮切换不同步骤",
+    "ch7.algoIterative": "使用迭代优化去除批次效应",
+    "ch7.algoMNN": "同时建模批次和技术噪声",
+    "ch7.algoLinear": "寻找两个数据集之间的线性变换，使生物学信号一致",
+    "ch7.algoDeep": "深度学习生成模型",
+    "ch7.algoCorrelation": "最大化相关性",
+    "ch7.batchIntroduced": "引入的系统性技术偏差",
+    "ch7.batchSeparates": "导致同一细胞类型在不同批次中分布分离",
+    "ch7.beforeIntegration": "整合前",
+    "ch7.afterIntegration": "整合后",
+    "ch7.showMetrics": "后细胞类型一致性评估",
+    "ch7.dimRedVis": "降维可视化",
+    "ch7.platform": "平台",
+    "ch7.typicalAlgos": "典型整合算法",
+    "ch7.evalMetrics": "评估指标"
   }
 }

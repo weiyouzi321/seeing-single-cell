@@ -1,0 +1,275 @@
+{
+  "project": "Seeing Single-Cell \u524d\u7aef\u63d0\u5347\u65b9\u6848",
+  "current_state": {
+    "tech_stack": "Next.js + Tailwind CSS + p5.js + TypeScript",
+    "current_theme": {
+      "primary": "#4361ee (\u7687\u5bb6\u84dd)",
+      "secondary": "#7c3aed (\u7d2b\u7f57\u5170)",
+      "background": "#fafbfc (\u6d45\u7070\u767d)",
+      "text": "#1a202c (\u6df1\u7070)"
+    },
+    "current_features": [
+      "\u7ae0\u8282\u5bfc\u822a (6\u7ae0 + 1\u4e2a\u7ebf\u6027\u4ee3\u6570\u9644\u5f55)",
+      "\u4ea4\u4e92\u5f0f p5.js \u6570\u636e\u53ef\u89c6\u5316",
+      "\u4e2d\u82f1\u53cc\u8bed\u652f\u6301 (i18n)",
+      "\u54cd\u5e94\u5f0f\u8bbe\u8ba1 (\u57fa\u7840)",
+      "\u5361\u7247\u5f0f\u6559\u7a0b\u5e03\u5c40"
+    ],
+    "pain_points": [
+      "\u7f3a\u5c11\u6697\u8272\u6a21\u5f0f",
+      "\u4ea4\u4e92\u52a8\u753b\u8f83\u7b80\u5355 (\u53ea\u6709 hover)",
+      "\u9875\u811a\u8bbe\u8ba1\u8fc7\u4e8e\u57fa\u7840",
+      "Hero \u533a\u57df\u4e0d\u591f\u5438\u775b",
+      "\u7f3a\u4e4f\u5fae\u4ea4\u4e92\u7ec6\u8282",
+      "\u4ee3\u7801\u5757\u529f\u80fd\u5355\u4e00"
+    ]
+  },
+  "inspiration_sources": {
+    "awwwards": {
+      "key_insights": [
+        "\u6781\u7b80\u5bfc\u822a + \u5927\u80c6\u6392\u7248",
+        "\u5361\u7247\u5bc6\u96c6\u4f46\u4fdd\u7559\u547c\u5438\u7a7a\u95f4",
+        "\u4f7f\u75287-8px\u5706\u89d2 (rounded-xl)",
+        "\u7cbe\u51c6\u7684\u9634\u5f71: `0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)`",
+        "gradient \u6587\u5b57\u6807\u9898"
+      ],
+      "applicable_to_sc": "\u2713 \u9ad8 - \u5df2\u90e8\u5206\u5b9e\u73b0\uff0c\u53ef\u589e\u5f3a"
+    },
+    "dark_design": {
+      "key_insights": [
+        "\u907f\u514d #000\uff0c\u7528 #1F1F1F",
+        "\u6587\u672c\u5bf9\u6bd4\u5ea6: \u4e3b #FFFFFF, \u6b21 #B3B3B3, \u5f31 #666",
+        "\u5361\u7247\u80cc\u666f #2D2D2D",
+        "\u8fb9\u6846 #404040 (\u4f4e\u5bf9\u6bd4\u5ea6)"
+      ],
+      "applicable_to_sc": "\u2713\u2713 \u9ad8 - \u5fc5\u987b\u6dfb\u52a0\u6697\u8272\u6a21\u5f0f"
+    },
+    "footer_design": {
+      "key_insights": [
+        "\u7ecf\u5178\u5e03\u5c40: Logo | \u94fe\u63a5 | \u793e\u4ea4 | \u8ba2\u9605",
+        "\u4f7f\u7528\u6d45\u8272\u6216\u6df1\u8272\u5747\u53ef\uff0c\u4f46\u8981\u533a\u5206\u5c42\u6b21",
+        "\u79fb\u52a8\u7aef\u8f6c\u4e3a\u5355\u5217\uff0c\u95f4\u8ddd\u52a0\u5927\u81f3 24px",
+        "\u53ef\u52a0\u5165 Newsletter \u8ba2\u9605"
+      ],
+      "applicable_to_sc": "\u2713 \u4e2d - \u9875\u811a\u4fe1\u606f\u7b80\u5355\uff0c\u53ef\u4f18\u5316"
+    },
+    "landingly": {
+      "key_insights": [
+        "Hero \u5fc5\u987b\u5305\u542b\u6807\u9898 + \u526f\u6807\u9898 + \u4e3b/\u6b21\u6309\u94ae",
+        "\u529f\u80fd\u70b9\u4f7f\u7528\u56fe\u6807 + \u77ed\u6807\u9898 + \u63cf\u8ff0",
+        "CTA \u533a\u57df\u4f7f\u7528\u5bf9\u6bd4\u8272\u6309\u94ae",
+        "\u5145\u5206\u5229\u7528\u9996\u5c4f\u7a7a\u95f4"
+      ],
+      "applicable_to_sc": "\u2713\u2713 \u9ad8 - \u9996\u9875 Hero \u9700\u8981\u5f3a\u5316"
+    },
+    "godly_website": {
+      "key_insights": [
+        "\u975e\u5bf9\u79f0\u5e03\u5c40\u6253\u7834\u5355\u8c03",
+        "\u4f7f\u7528\u6e10\u53d8\u5149\u6655 (gradient glow)",
+        "\u78c1\u6027\u6309\u94ae\u6548\u679c (magnetic button)",
+        "\u6587\u5b57\u9010\u5b57\u663e\u793a\u52a8\u753b",
+        "\u89c6\u5dee\u6eda\u52a8\u5206\u5c42"
+      ],
+      "applicable_to_sc": "\u2713 \u4e2d - \u53ef\u9009\u62e9\u6027\u5b9e\u73b0"
+    }
+  },
+  "recommended_upgrades": {
+    "level_1_quick_wins": {
+      "description": "1-2\u5929\u53ef\u5b8c\u6210\u7684\u5feb\u901f\u4f18\u5316",
+      "items": [
+        {
+          "feature": "\u6697\u8272\u6a21\u5f0f\u5207\u6362",
+          "implementation": "\u6dfb\u52a0 toggle \u6309\u94ae + Tailwind dark: \u7c7b + localStorage \u8bb0\u5fc6",
+          "priority": "P0"
+        },
+        {
+          "feature": "\u6eda\u52a8\u52a8\u753b (AOS\u7c7b\u4f3c)",
+          "implementation": "\u4f7f\u7528 Intersection Observer API \u6216\u7b80\u5355\u7684 CSS animation + JS",
+          "priority": "P0"
+        },
+        {
+          "feature": "\u4ee3\u7801\u5757\u4e00\u952e\u590d\u5236",
+          "implementation": "P5.js \u4ee3\u7801\u5757\u6dfb\u52a0\u590d\u5236\u6309\u94ae\uff0c\u4f7f\u7528 Clipboard API",
+          "priority": "P1"
+        },
+        {
+          "feature": "\u5361\u7247\u60ac\u6d6e\u589e\u5f3a",
+          "implementation": "\u589e\u52a0 `hover:-translate-y-1 hover:shadow-lg` \u5df2\u6709\uff0c\u53ef\u52a0 `transform-gpu`",
+          "priority": "P2"
+        }
+      ]
+    },
+    "level_2_significant": {
+      "description": "\u9700\u89813-5\u5929\u7684\u8f83\u5927\u6539\u8fdb",
+      "items": [
+        {
+          "feature": "\u9875\u811a\u5168\u9762\u66f4\u65b0",
+          "implementation": "\u4e09\u5217\u5e03\u5c40 (Logo\u8bf4\u660e + \u7ae0\u8282\u94fe\u63a5 + \u8ba2\u9605\u6846) + \u6df1\u8272\u80cc\u666f",
+          "priority": "P1"
+        },
+        {
+          "feature": "Hero \u533a\u57df\u91cd\u6784",
+          "implementation": "\u6dfb\u52a0\u7c92\u5b50\u80cc\u666f + \u6e10\u53d8\u6807\u9898 + \u52a8\u6001CTA\u6309\u94ae + \u54cd\u5e94\u5f0f\u5e03\u5c40",
+          "priority": "P0"
+        },
+        {
+          "feature": "\u6570\u636e\u4ea4\u4e92\u589e\u5f3a",
+          "implementation": "\u56fe\u8868\u652f\u6301\u62d6\u62fd/\u7f29\u653e + \u6570\u636e\u70b9 hover \u63d0\u793a + \u6570\u503c\u5b9e\u65f6\u663e\u793a",
+          "priority": "P1"
+        },
+        {
+          "feature": "\u5bfc\u822a\u680f\u6539\u8fdb",
+          "implementation": "\u6eda\u52a8\u65f6\u80cc\u666f\u52a0\u6df1 (bg-white/90 \u2192 bg-white/95) + \u9634\u5f71",
+          "priority": "P2"
+        }
+      ]
+    },
+    "level_3_advanced": {
+      "description": "\u9700\u89811-2\u5468\u7684\u9ad8\u7ea7\u529f\u80fd",
+      "items": [
+        {
+          "feature": "\u78c1\u6027\u6309\u94ae\u6548\u679c",
+          "implementation": "\u4f7f\u7528 GSAP \u6216\u81ea\u5b9a\u4e49 mousemove \u76d1\u542c",
+          "priority": "P2"
+        },
+        {
+          "feature": "\u7ae0\u8282\u641c\u7d22\u529f\u80fd",
+          "implementation": "\u5168\u5c40\u641c\u7d22\u6846 + \u9ad8\u4eae\u7ed3\u679c",
+          "priority": "P2"
+        },
+        {
+          "feature": "\u5b66\u4e60\u8fdb\u5ea6\u8ffd\u8e2a",
+          "implementation": "localStorage \u8bb0\u5f55\u5df2\u8bfb\u7ae0\u8282 + \u8fdb\u5ea6\u6761",
+          "priority": "P3"
+        },
+        {
+          "feature": "\u591a\u4e3b\u9898\u7cfb\u7edf",
+          "implementation": "\u4eae\u8272/\u6697\u8272/\u81ea\u52a8 + \u989c\u8272\u4e3b\u9898\u5b9a\u5236",
+          "priority": "P3"
+        }
+      ]
+    }
+  },
+  "tailwind_color_scheme": {
+    "light_mode": {
+      "bg": "#fafbfc",
+      "surface": "#ffffff",
+      "surface_hover": "#f8fafc",
+      "border": "#e2e8f0",
+      "text": "#1a202c",
+      "text_secondary": "#4a5568",
+      "text_muted": "#718096",
+      "primary": "#4361ee",
+      "primary_hover": "#3651d4",
+      "secondary": "#7c3aed",
+      "accent": "#10b981",
+      "accent_warm": "#f59e0b"
+    },
+    "dark_mode": {
+      "bg": "#0f172a",
+      "surface": "#1e293b",
+      "surface_hover": "#334155",
+      "border": "#334155",
+      "text": "#f1f5f9",
+      "text_secondary": "#cbd5e1",
+      "text_muted": "#64748b",
+      "primary": "#60a5fa",
+      "primary_hover": "#3b82f6",
+      "secondary": "#a78bfa",
+      "accent": "#34d399",
+      "accent_warm": "#fbbf24"
+    }
+  },
+  "component_updates": {
+    "viz_card": {
+      "current": "viz-card",
+      "upgrade": "viz-card --with-shadow --with-hover-lift --with-gradient-border",
+      "classes": "bg-surface rounded-2xl p-6 shadow-sm border border-border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
+      "new_features": [
+        "hover \u65f6\u8f7b\u5fae\u4e0a\u6d6e + \u9634\u5f71\u52a0\u6df1",
+        "\u53ef\u9009 gradient border (\u4f7f\u7528 ::before \u4f2a\u5143\u7d20)",
+        "\u52a0\u8f7d\u52a8\u753b (fade-in)"
+      ]
+    },
+    "button_primary": {
+      "current": "px-6 py-3 rounded-xl bg-[#4361ee] text-white",
+      "upgrade": "btn --primary --with-magnetic --with-ripple",
+      "classes": "px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary-hover transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 cursor-pointer",
+      "new_features": [
+        "\u78c1\u6027\u5438\u9644\u6548\u679c (magnetic)",
+        "\u70b9\u51fb\u6d9f\u6f2a\u6548\u679c (ripple)",
+        "\u6309\u538b\u7f29\u653e (active:scale-95)"
+      ]
+    },
+    "chapter_card": {
+      "current": "viz-card variant with icon",
+      "upgrade": "chapter-card --with-icon --with-progress --with-hover",
+      "classes": "group relative bg-surface rounded-2xl p-6 border border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-2",
+      "new_features": [
+        "\u5de6\u4fa7 border \u6761\u8272\u8868\u793a\u7ae0\u8282\u72b6\u6001",
+        "hover \u65f6\u663e\u793a '\u5f00\u59cb\u5b66\u4e60' \u6309\u94ae",
+        "\u5df2\u8bfb\u7ae0\u8282\u6807\u8bb0\u4e3a\u5b8c\u6210"
+      ]
+    }
+  },
+  "animations": {
+    "fade_in_up": {
+      "code": "animate-fade-in-up",
+      "css": "@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }",
+      "usage": "\u6dfb\u52a0 data-aos=\"fade-up\" \u5c5e\u6027\u6216\u4f7f\u7528 IntersectionObserver"
+    },
+    "scale_in": {
+      "code": "animate-scale-in",
+      "css": "@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }",
+      "usage": "\u7528\u4e8e\u5f39\u7a97\u3001\u6a21\u6001\u6846"
+    },
+    "float": {
+      "code": "animate-float",
+      "css": "animation: float 3s ease-in-out infinite; @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }",
+      "usage": "\u7528\u4e8e Hero \u533a\u57df\u7684\u88c5\u9970\u5143\u7d20"
+    },
+    "gradient_shift": {
+      "code": "animate-gradient",
+      "css": "background-size: 200% auto; animation: gradientShift 3s ease infinite;",
+      "usage": "\u7528\u4e8e Hero \u6807\u9898\u6e10\u53d8"
+    }
+  },
+  "implementation_plan": {
+    "phase_1_1_week": [
+      "\u2705 \u6697\u8272\u6a21\u5f0f\u57fa\u7840 (toggle + dark classes)",
+      "\u2705 \u5168\u5c40\u6eda\u52a8\u52a8\u753b\u6846\u67b6",
+      "\u2705 \u4ee3\u7801\u5757\u590d\u5236\u6309\u94ae",
+      "\u2705 \u5bfc\u822a\u680f\u6eda\u52a8\u589e\u5f3a"
+    ],
+    "phase_2_2_weeks": [
+      "\ud83d\udd1c Hero \u533a\u57df\u5b8c\u5168\u91cd\u6784",
+      "\ud83d\udd1c \u9875\u811a\u4e09\u5217\u5e03\u5c40 + \u8ba2\u9605\u6846",
+      "\ud83d\udd1c \u7ae0\u8282\u5361\u7247 hover \u589e\u5f3a",
+      "\ud83d\udd1c \u6570\u636e\u4ea4\u4e92\u589e\u5f3a (\u62d6\u62fd/\u7f29\u653e)"
+    ],
+    "phase_3_1_week": [
+      "\ud83d\udd1c \u78c1\u6027\u6309\u94ae\u6548\u679c",
+      "\ud83d\udd1c \u952e\u76d8\u5feb\u6377\u952e\u652f\u6301",
+      "\ud83d\udd1c \u5b66\u4e60\u8fdb\u5ea6\u8ffd\u8e2a",
+      "\ud83d\udd1c \u6027\u80fd\u4f18\u5316 (\u56fe\u7247\u61d2\u52a0\u8f7d)"
+    ]
+  },
+  "file_structure": {
+    "to_update": [
+      "tailwind.config.js - \u6269\u5c55\u989c\u8272 + \u6697\u8272\u6a21\u5f0f",
+      "src/styles/globals.css - \u6dfb\u52a0\u52a8\u753b keyframes",
+      "src/components/ThemeToggle.tsx - \u65b0\u5efa (\u4e3b\u9898\u5207\u6362)",
+      "src/components/Footer.tsx - \u91cd\u5199\u9875\u811a",
+      "src/components/Hero.tsx - \u63d0\u53d6 Hero \u4e3a\u72ec\u7acb\u7ec4\u4ef6",
+      "src/app/layout.tsx - \u96c6\u6210 ThemeToggle",
+      "src/components/chapters/ChapterCard.tsx - \u589e\u5f3a\u4ea4\u4e92"
+    ],
+    "to_create": [
+      "src/hooks/useTheme.ts - \u4e3b\u9898\u72b6\u6001\u7ba1\u7406",
+      "src/hooks/useScrollAnimation.ts - \u6eda\u52a8\u52a8\u753b hook",
+      "src/lib/animations.ts - \u52a8\u753b\u914d\u7f6e",
+      "src/components/CodeBlock.tsx - \u589e\u5f3a\u4ee3\u7801\u5757 (\u590d\u5236\u6309\u94ae)",
+      "public/data/design-system.json - \u8bbe\u8ba1\u89c4\u8303\u6587\u6863"
+    ]
+  }
+}

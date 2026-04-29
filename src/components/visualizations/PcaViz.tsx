@@ -30,16 +30,31 @@ function computePCA(data: number[][], nComp = 10) {
   for (let i = 0; i < p; i++) for (let j = i; j < p; j++) { let s = 0; for (let k = 0; k < n; k++) s += centered[k][i] * centered[k][j]; cov[i][j] = s/(n-1); cov[j][i] = cov[i][j] }
   const evecs: number[][] = [], evals: number[] = [], mat = cov.map(r => [...r])
   for (let c = 0; c < Math.min(nComp, p); c++) {
-    let vec = Array(p).fill(0).map(() => Math.random()-0.5); let nm = Math.sqrt(vec.reduce((s: number, v: number) => s+v*v, 0)); vec = vec.map((v: number) => v/nm)
-    for (let it = 0; it < 300; it++) { const nv = Array(p).fill(0); for (let i = 0; i < p; i++) for (let j = 0; j < p; j++) nv[i] += mat[i][j]*vec[j]; nm = Math.sqrt(nv.reduce((s: number, v: number) => s+v*v, 0)); if (nm < 1e-12) break; vec = nv.map((v: number) => v/nm) }
-    let ev = 0; for (let i = 0; i < p; i++) { let mv = 0; for (let j = 0; j < p; j++) mv += mat[i][j]*vec[j]; ev += vec[i]*mv }
+    let vec = Array(p).fill(0).map(() => Math.random()-0.5); let nm = Math.sqrt(vec.reduce((s, v) => s+v*v, 0)); vec = vec.map(v => v/nm)
+    for (let it = 0; it < 300; it++) {
+      const nv = Array(p).fill(0)
+      for (let i = 0; i < p; i++) for (let j = 0; j < p; j++) nv[i] += mat[i][j] * vec[j]
+      nm = Math.sqrt(nv.reduce((s, v) => s+v*v, 0))
+      if (nm < 1e-12) break
+      vec = nv.map(v => v/nm)
+    }
+    let ev = 0
+    for (let i = 0; i < p; i++) { let mv = 0; for (let j = 0; j < p; j++) mv += mat[i][j] * vec[j]; ev += vec[i] * mv }
     evecs.push(vec); evals.push(Math.max(0, ev))
-    for (let i = 0; i < p; i++) for (let j = 0; j < p; j++) mat[i][j] -= ev*vec[i]*vec[j]
-  }
-  return { projected: centered.map(row => evecs.map(ev => ev.reduce((s: number, v: number, j: number) => s+v*row[j], 0))), evecs, evals, centered, cov }
+    for (let i = 0; i < p; i++) for (let j = 0; j < p; j++) mat[i][j] -= ev * vec[i] * vec[j]
+  } // end for
+  // 按特征值降序排列
+  const pairs: {ev: number, vec: number[]}[] = []
+  for (let i = 0; i < evecs.length; i++) pairs.push({ ev: evals[i], vec: evecs[i] })
+  pairs.sort((a, b) => b.ev - a.ev)
+  const sortedEvecs = pairs.map(p => p.vec)
+  const sortedEvals = pairs.map(p => p.ev)
+  const sortedProjected = centered.map(row => sortedEvecs.map(ev => ev.reduce((s, v, j) => s + v * row[j], 0)))
+  return { projected: sortedProjected, evecs: sortedEvecs, evals: sortedEvals, centered, cov }
 }
 
-// Power iteration step-by-step for visualization
+
+
 function powerIterSteps(cov: number[][], nSteps: number) {
   const p = cov.length
   let vec = Array(p).fill(0).map(() => Math.random()-0.5)
@@ -62,11 +77,11 @@ function powerIterSteps(cov: number[][], nSteps: number) {
 export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', activeStep, projected, varianceRatio, covariance, loadings: preLoadings, evals: preEvals }: PcaVizProps) {
   // PCA matrix dimensions (shared)
 
-  const dG = Math.min(geneNames.length, 8)
+  const dG = geneNames.length
 
-  const dC = Math.min(cellTypes.length, 10)
+  const dC = cellTypes.length
 
-  const nPC = Math.min(4, dG)
+  const nPC = Math.min(10, dG)
 
 
 
@@ -101,9 +116,56 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
 
 
   const pca = useMemo(() => computePCA(data, Math.min(10, nG)), [data, nG])
+
+    // Debug: PCA data dimensions
+    if (process.env.NODE_ENV === "development") {
+      console.log("PcaViz Debug:", {
+        projectedLen: projected?.length,
+        projCols: projected?.[0]?.length,
+        loadingsLen: preLoadings?.length,
+        loadingsCols: preLoadings?.[0]?.length,
+        varianceRatioLen: varianceRatio?.length,
+        nG,
+        nC
+      })
+    }
+
+
+  // 验证外部 PCA 数据维度一致性（回退机制）
+  const externalValid = useMemo(() => {
+    if (!projected || !varianceRatio || !preLoadings) return false
+    if (!Array.isArray(projected) || !Array.isArray(varianceRatio) || !Array.isArray(preLoadings)) return false
+    if (projected.length === 0 || projected[0] === undefined) return false
+    const nPCs = projected[0].length
+    const nCells = projected.length
+    const nGenes = preLoadings.length
+    const PCsFromLoadings = preLoadings[0]?.length || 0
+    return (
+      nPCs === varianceRatio.length &&
+      nPCs === PCsFromLoadings &&
+      nGenes === nG &&
+      nCells === nC
+    )
+  }, [projected, varianceRatio, preLoadings, nG, nC])
+
+  // 外部载荷转置：loadings[gene][pc] -> evecs[pc][gene]
+  const externalEvecs = useMemo(() => {
+    if (!preLoadings || !externalValid) return []
+    const pcs = preLoadings[0].length
+    const genes = preLoadings.length
+    const evecs: number[][] = Array.from({ length: pcs }, () => Array(genes).fill(0))
+    for (let g = 0; g < genes; g++) {
+      for (let pc = 0; pc < pcs; pc++) {
+        evecs[pc][g] = preLoadings[g][pc]
+      }
+    }
+    return evecs
+  }, [preLoadings, externalValid])
+
   const computedVarexp = useMemo(() => { const t = pca.evals.reduce((s: number,v: number)=>s+v,0); return t>0 ? pca.evals.map((v: number)=>v/t) : pca.evals.map(()=>0) }, [pca])
-  const varexp = varianceRatio || computedVarexp
+  const varexp = externalValid ? varianceRatio! : computedVarexp
   const pcaProjected = projected || pca.projected
+  const evecsForLoading = externalValid ? externalEvecs : pca.evecs
 
   const rm = (k: string) => { if(refs.current[k]) { refs.current[k]!.remove(); refs.current[k] = null } }
   const mk = (k: string, el: HTMLDivElement | null, sk: any) => { if(!el) return; rm(k); refs.current[k] = new p5(sk) }
@@ -151,7 +213,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     const sk = (p: any) => {
       const W=500, H=360, M={t:30,r:20,b:45,l:50}, pw=W-M.l-M.r, ph=H-M.t-M.b
       const cx=M.l+pw/2, cy=M.t+ph/2, r=Math.min(pw,ph)*0.38
-      const xs=data.map((r: number[])=>r[0]), ys=data.map((r: number[])=>r[1])
+      const xs=data.map((r: number[])=>r[xG]), ys=data.map((r: number[])=>r[yG])
       const mX=xs.reduce((a: number,b: number)=>a+b,0)/xs.length, mY=ys.reduce((a: number,b: number)=>a+b,0)/ys.length
       const sX=Math.sqrt(xs.reduce((s: number,v: number)=>s+(v-mX)**2,0)/xs.length)||1, sY=Math.sqrt(ys.reduce((s: number,v: number)=>s+(v-mY)**2,0)/ys.length)||1
       p.setup=()=>{p.createCanvas(W,H).parent(s2Ref.current!);p.textFont('Inter');p.noLoop()}
@@ -163,8 +225,8 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         let vr=0;for(let i=0;i<nC;i++){const rx2=((xs[i]-mX)/sX)*0.6*r,ry2=-((ys[i]-mY)/sY)*0.6*r;const pr=rx2*dx+ry2*dy;const lx=cx+pr*dx,ly=cy+pr*dy;const[cr,cg,cb]=gc(cellTypes[i]);p.stroke(cr,cg,cb,50);p.strokeWeight(0.7);p.line(cx+rx2,cy+ry2,lx,ly);p.fill(cr,cg,cb,130);p.noStroke();p.ellipse(lx,ly,5,5);vr+=(pr/r)**2}
         vr/=nC
         p.noFill();p.stroke(180);p.strokeWeight(1);p.rect(M.l,M.t,pw,ph)
-        p.noStroke();p.fill(60);p.textSize(11);p.textAlign(p.CENTER,p.TOP);p.text(geneNames[0],M.l+pw/2,M.t+ph+8)
-        p.push();p.translate(12,M.t+ph/2);p.rotate(-Math.PI/2);p.text(geneNames[1],0,0);p.pop()
+        p.noStroke();p.fill(60);p.textSize(11);p.textAlign(p.CENTER,p.TOP);p.text(geneNames[xG],M.l+pw/2,M.t+ph+8)
+        p.push();p.translate(12,M.t+ph/2);p.rotate(-Math.PI/2);p.text(geneNames[yG],0,0);p.pop()
         p.fill(120);p.textSize(8);p.textAlign(p.CENTER,p.TOP);for(let i=0;i<=5;i++)p.text(((i/5)*2-1).toFixed(1),M.l+pw*i/5,M.t+ph+2)
         p.textAlign(p.RIGHT,p.CENTER);for(let i=0;i<=5;i++)p.text(((i/5)*2-1).toFixed(1),M.l-4,M.t+ph-ph*i/5)
         const ut=Array.from(new Set(cellTypes));p.textSize(9);p.textAlign(p.LEFT,p.CENTER);ut.forEach((t,i)=>{const[cr,cg,cb]=gc(t);p.fill(cr,cg,cb);p.noStroke();p.ellipse(W-85,M.t+10+i*16,8,8);p.fill(80);p.text(t,W-77,M.t+10+i*16)})
@@ -179,7 +241,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     }
     mk('s2', s2Ref.current, sk)
     return () => rm('s2')
-  }, [activeStep, pAngle, data, cellTypes, nC, geneNames, isZh])
+  }, [activeStep, pAngle, data, cellTypes, nC, xG, yG, isZh])
 
   // ── Step 3-A: Centered data matrix + gene bar chart ──
   useEffect(() => {
@@ -435,6 +497,8 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
   // ── Step 3-C: Eigendecomposition ──
   useEffect(() => {
     if (activeStep !== 2 || s3Sub !== 2 || !s3EigenRef.current) return
+    // Use small subset for visualization (like Step 3-A/B)
+    const dG = Math.min(nG, 7), dC = Math.min(nC, 10)
     const cSz = 20
     const nPC2 = Math.min(4, dG)
     const covMat = covariance || pca.cov
@@ -583,7 +647,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         }
 
         // 9) Eigenvectors V
-        const evecs = preLoadings || pca.evecs
+        const evecs = preLoadings || evecsForLoading
         const evMx = Math.max(...evecs.slice(0, nPC2).map((r: number[]) => r.map(Math.abs)).flat()) || 1
         for (let pc = 0; pc < nPC2; pc++) {
           for (let i = 0; i < dG; i++) {
@@ -660,6 +724,8 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
   // ── Step 3-D: Projection ──
   useEffect(() => {
     if (activeStep !== 2 || s3Sub !== 3 || !s3ProjRef.current) return
+    // Use small subset for visualization (like Step 3-A/B)
+    const dG = Math.min(nG, 7), dC = Math.min(nC, 10)
     const cSz = 22
     const nPC2 = Math.min(4, dG)
     const innerGap = 42
@@ -727,10 +793,10 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         for (let j = 0; j < dG; j++) { p.push(); p.translate(m1x + j * cSz + cSz / 2, m1y + m1H + 2); p.rotate(-Math.PI / 4); p.text(geneNames[j], 0, 0); p.pop() }
 
         // 4) W matrix
-        const evMx = Math.max(...pca.evecs.slice(0, nPC2).map((r: number[]) => r.map(Math.abs)).flat()) || 1
+        const evMx = Math.max(...evecsForLoading.slice(0, nPC2).map((r: number[]) => r.map(Math.abs)).flat()) || 1
         for (let i = 0; i < dG; i++) {
           for (let j = 0; j < nPC2; j++) {
-            const v = pca.evecs[j][i], n = v / evMx
+            const v = evecsForLoading[j][i], n = v / evMx
             const hiCol = selProj && j === selProj.j
             if (hiCol) { p.fill(139, 92, 246, 220); p.stroke(100, 60, 200); p.strokeWeight(1.5) }
             else if (n >= 0) { p.fill(139, 92, 246, n * 150 + 55); p.stroke(255); p.strokeWeight(0.5) }
@@ -782,7 +848,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         if (selProj) {
           const { i: si, j: sj } = selProj
           const rowI = pca.centered[si]
-          const colJ = pca.evecs[sj]
+          const colJ = evecsForLoading[sj]
           const dp = rowI.reduce((s: number, v: number, k: number) => s + v * colJ[k], 0)
 
           p.fill(255, 248, 240); p.stroke(245, 158, 11, 150); p.strokeWeight(1.5); p.rect(panelX, panelY, panelW, panelH, 10)
@@ -1015,7 +1081,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         })
 
         // Loading arrows
-        const loadX = pca.evecs.slice(0, Math.min(10, nG)).map((vec: number[], pc: number) => ({ gene: geneNames[pc], load: vec[xPC] })).sort((a: any, b: any) => Math.abs(b.load) - Math.abs(a.load)).slice(0, 3)
+        const loadX = evecsForLoading.slice(0, Math.min(10, nG)).map((vec: number[], pc: number) => ({ gene: geneNames[pc], load: vec[xPC] })).sort((a: any, b: any) => Math.abs(b.load) - Math.abs(a.load)).slice(0, 3)
         if (loadX.length) {
           p.fill(60); p.textSize(8); p.textAlign(p.LEFT, p.TOP)
           p.text(isZh ? 'X轴载荷:' : 'X loadings:', M.l + pw + 12, M.t + 10 + ut.length * 16 + 8)
@@ -1025,7 +1091,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
             p.fill(80); p.textSize(7); p.text(lg.gene, x0 + len + 3, y0 - 3)
           })
         }
-        const loadY = pca.evecs.slice(0, Math.min(10, nG)).map((vec: number[], pc: number) => ({ gene: geneNames[pc], load: vec[yPC] })).sort((a: any, b: any) => Math.abs(b.load) - Math.abs(a.load)).slice(0, 3)
+        const loadY = evecsForLoading.slice(0, Math.min(10, nG)).map((vec: number[], pc: number) => ({ gene: geneNames[pc], load: vec[yPC] })).sort((a: any, b: any) => Math.abs(b.load) - Math.abs(a.load)).slice(0, 3)
         if (loadY.length) {
           p.fill(60); p.textSize(8); p.textAlign(p.LEFT, p.TOP)
           p.text(isZh ? 'Y轴载荷:' : 'Y loadings:', M.l + pw + 12, M.t + 10 + ut.length * 16 + 8 + (loadX.length ? loadX.length * 18 + 10 : 0))
@@ -1161,7 +1227,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
       <div className="flex items-center justify-center gap-6 mb-6 text-sm">
         <label className="flex items-center gap-2">
           <span className={isZh ? 'text-gray-600' : 'text-gray-500'}>{isZh?'X 轴 PC':'X PC'}:</span>
-          <select value={xPC} onChange={e => { setXPC(+e.target.value); if (+e.target.value === yPC) setYPC(Math.min(yPC + 1, pca.evecs.length - 1)) }}
+          <select value={xPC} onChange={e => { setXPC(+e.target.value); if (+e.target.value === yPC) setYPC(Math.min(yPC + 1, evecsForLoading.length - 1)) }}
                   className="border rounded px-2 py-1 bg-white text-sm">
             {Array.from({ length: Math.min(10, pca.evals.length) }, (_, i) => (
               <option key={i} value={i}>PC{i + 1} ({((varexp[i] || 0) * 100).toFixed(1)}%)</option>
@@ -1170,7 +1236,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         </label>
         <label className="flex items-center gap-2">
           <span className={isZh ? 'text-gray-600' : 'text-gray-500'}>{isZh?'Y 轴 PC':'Y PC'}:</span>
-          <select value={yPC} onChange={e => { setYPC(+e.target.value); if (+e.target.value === xPC) setXPC(Math.min(xPC + 1, pca.evecs.length - 1)) }}
+          <select value={yPC} onChange={e => { setYPC(+e.target.value); if (+e.target.value === xPC) setXPC(Math.min(xPC + 1, evecsForLoading.length - 1)) }}
                   className="border rounded px-2 py-1 bg-white text-sm">
             {Array.from({ length: Math.min(10, pca.evals.length) }, (_, i) => (
               <option key={i} value={i}>PC{i + 1} ({((varexp[i] || 0) * 100).toFixed(1)}%)</option>
@@ -1256,10 +1322,10 @@ function PCProjectionTable({ data, geneNames, pca, xPC, yPC, isZh, projected }: 
   const geneInfos = geneNames.map((name, g) => ({
     name,
     expr: cellExpr[g],
-    xLoad: pca.evecs[g]?.[xPC] ?? 0,
-    yLoad: pca.evecs[g]?.[yPC] ?? 0,
-    xContrib: (cellExpr[g] ?? 0) * (pca.evecs[g]?.[xPC] ?? 0),
-    yContrib: (cellExpr[g] ?? 0) * (pca.evecs[g]?.[yPC] ?? 0),
+    xLoad: pca.evecs[xPC]?.[g] ?? 0,
+    yLoad: pca.evecs[yPC]?.[g] ?? 0,
+    xContrib: (cellExpr[g] ?? 0) * (pca.evecs[xPC]?.[g] ?? 0),
+    yContrib: (cellExpr[g] ?? 0) * (pca.evecs[yPC]?.[g] ?? 0),
   }))
 
   // Sort by absolute x contribution + absolute y contribution

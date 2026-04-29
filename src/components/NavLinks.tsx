@@ -28,10 +28,47 @@ export default function NavLinks() {
     { href: '/chapters/0-linear-algebra/5-patterns', label: lang === 'zh' ? '0.5 · 实用模式' : '0.5 · Patterns' },
     { href: '/chapters/0-linear-algebra/6-factorizations', label: lang === 'zh' ? '0.6 · 矩阵分解' : '0.6 · Factorizations' },
   ]
+  const [openAdv, setOpenAdv] = useState(false)
+  const timeoutAdv = useRef<NodeJS.Timeout | null>(null)
+
 
   return (
     <>
-      <Link href="/" className="hover:text-[#4361ee] transition-colors">{t('nav.home')}</Link>
+          {/* Advanced Analysis dropdown */}
+      <div
+        className="relative"
+        onMouseEnter={() => { if (timeoutAdv.current) clearTimeout(timeoutAdv.current); setOpenAdv(true) }}
+        onMouseLeave={() => { timeoutAdv.current = setTimeout(() => setOpenAdv(false), 200) }}
+      >
+        <button className="hover:text-teal-600 transition-colors flex items-center gap-1">
+          {t('nav.advanced')}
+          <svg className={`w-3 h-3 transition-transform ${openAdv ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {openAdv && (
+          <div className="absolute top-full left-1/2 -translate-x-1/0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+            <Link
+              href="/chapters/7-integration"
+              className="block px-4 py-2 text-sm text-gray-600 hover:text-teal-600 hover:bg-gray-50 transition-colors"
+              onClick={() => setOpenAdv(false)}
+            >
+              <span className="text-gray-400 mr-2">7</span>
+              {t('nav.ch7')}
+            </Link>
+            <Link
+              href="/chapters/8-de"
+              className="block px-4 py-2 text-sm text-gray-600 hover:text-teal-600 hover:bg-gray-50 transition-colors"
+              onClick={() => setOpenAdv(false)}
+            >
+              <span className="text-gray-400 mr-2">8</span>
+              {t('nav.ch8')}
+            </Link>
+          </div>
+        )}
+      </div>
+
+  <Link href="/" className="hover:text-[#4361ee] transition-colors">{t('nav.home')}</Link>
       <div
         className="relative"
         onMouseEnter={() => { if (timeoutBasic.current) clearTimeout(timeoutBasic.current); setOpenBasic(true) }}

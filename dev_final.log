@@ -1,0 +1,84 @@
+
+> seeing-single-cell@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.5
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 2.9s
+ ○ Compiling / ...
+ ✓ Compiled / in 5.7s (538 modules)
+ ✓ Compiled in 499ms (266 modules)
+ GET / 200 in 62ms
+ GET / 200 in 30ms
+ GET / 200 in 1007ms
+ GET / 200 in 35ms
+ ○ Compiling /chapters/1-matrix ...
+ ✓ Compiled /chapters/1-matrix in 3.4s (530 modules)
+ ✓ Compiled /chapters/2-distribution in 368ms (538 modules)
+ ○ Compiling /chapters/3-preprocessing ...
+ ✓ Compiled /chapters/3-preprocessing in 1059ms (550 modules)
+ ○ Compiling /chapters/4-pca ...
+ ✓ Compiled /chapters/4-pca in 886ms (558 modules)
+ ○ Compiling /chapters/5-knn ...
+ ✓ Compiled /chapters/5-knn in 1292ms (568 modules)
+ ○ Compiling /chapters/6-dimred ...
+ ✓ Compiled /chapters/6-dimred in 776ms (571 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 539ms (288 modules)
+ GET / 200 in 382ms
+ GET / 200 in 768ms
+ GET / 200 in 41ms
+ GET / 200 in 33ms
+ GET / 200 in 36ms
+ GET / 200 in 34ms
+ ✓ Compiled in 1147ms (296 modules)
+ ✓ Compiled in 1015ms (579 modules)
+ ✓ Compiled in 1366ms (579 modules)
+ ✓ Compiled in 603ms (579 modules)
+ ✓ Compiled in 912ms (579 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1154ms (568 modules)
+ GET / 404 in 1504ms
+ GET / 404 in 1518ms
+ GET /_next/static/css/app/layout.css?v=1777184204731 404 in 548ms
+ GET /_next/static/chunks/main-app.js?v=1777184204731 404 in 474ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 468ms
+ GET /_next/static/chunks/app/layout.js 404 in 338ms
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat '/Users/yiqi/seeing-single-cell/.next/server/vendor-chunks/@swc.js'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/@swc' in /Users/yiqi/seeing-single-cell/.next/server for build dependencies doesn't lead to expected result '/Users/yiqi/seeing-single-cell/.next/server/vendor-chunks/@swc.js', but to 'Error: Can't resolve './vendor-chunks/@swc' in '/Users/yiqi/seeing-single-cell/.next/server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/@swc (expected /Users/yiqi/seeing-single-cell/.next/server/vendor-chunks/@swc.js)
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/.next/server/webpack-runtime.js
+<w>  at file /Users/yiqi/seeing-single-cell/.next/server/webpack-runtime.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/.next/server/app/_not-found/page.js
+<w>  at file /Users/yiqi/seeing-single-cell/.next/server/app/_not-found/page.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/node_modules/next/dist/server/require.js
+<w>  at file /Users/yiqi/seeing-single-cell/node_modules/next/dist/server/require.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/node_modules/next/dist/server/load-components.js
+<w>  at file /Users/yiqi/seeing-single-cell/node_modules/next/dist/server/load-components.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/utils.js
+<w>  at file /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/utils.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/handle-externals.js
+<w>  at file /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/handle-externals.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+<w>  at file /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+<w>  at resolve commonjs /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/next' in /Users/yiqi/seeing-single-cell/.next/server for build dependencies doesn't lead to expected result '/Users/yiqi/seeing-single-cell/.next/server/vendor-chunks/next.js', but to 'Error: Can't resolve './vendor-chunks/next' in '/Users/yiqi/seeing-single-cell/.next/server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/next (expected /Users/yiqi/seeing-single-cell/.next/server/vendor-chunks/next.js)
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/.next/server/webpack-runtime.js
+<w>  at file /Users/yiqi/seeing-single-cell/.next/server/webpack-runtime.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/.next/server/app/_not-found/page.js
+<w>  at file /Users/yiqi/seeing-single-cell/.next/server/app/_not-found/page.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/node_modules/next/dist/server/require.js
+<w>  at file /Users/yiqi/seeing-single-cell/node_modules/next/dist/server/require.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/node_modules/next/dist/server/load-components.js
+<w>  at file /Users/yiqi/seeing-single-cell/node_modules/next/dist/server/load-components.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/utils.js
+<w>  at file /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/utils.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/handle-externals.js
+<w>  at file /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/handle-externals.js
+<w>  at file dependencies /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+<w>  at file /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+<w>  at resolve commonjs /Users/yiqi/seeing-single-cell/node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+ GET / 404 in 38ms

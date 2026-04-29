@@ -18,57 +18,49 @@ const TYPE_COLORS: Record<string, [number, number, number]> = {
 }
 function getTypeColor(type: string): [number, number, number] { return TYPE_COLORS[type] || [150, 150, 150] }
 
-function computePCA(data: number[][], nComp: number = 10) {
-  const n = data.length, p = data[0].length
-  const means = Array(p).fill(0)
-  for (let j = 0; j < p; j++) { for (let i = 0; i < n; i++) means[j] += data[i][j]; means[j] /= n }
-  const centered = data.map(row => row.map((v, j) => v - means[j]))
-  const cov: number[][] = Array.from({ length: p }, () => Array(p).fill(0))
-  for (let i = 0; i < p; i++) for (let j = i; j < p; j++) { let s = 0; for (let k = 0; k < n; k++) s += centered[k][i] * centered[k][j]; cov[i][j] = s / (n - 1); cov[j][i] = cov[i][j] }
-  const evecs: number[][] = [], evals: number[] = [], mat = cov.map(r => [...r])
-  for (let c = 0; c < Math.min(nComp, p); c++) {
-    let vec = Array(p).fill(0).map(() => Math.random() - 0.5); let nm = Math.sqrt(vec.reduce((s, v) => s + v * v, 0)); vec = vec.map(v => v / nm)
-    for (let it = 0; it < 300; it++) { const nv = Array(p).fill(0); for (let i = 0; i < p; i++) for (let j = 0; j < p; j++) nv[i] += mat[i][j] * vec[j]; nm = Math.sqrt(nv.reduce((s, v) => s + v * v, 0)); if (nm < 1e-12) break; vec = nv.map(v => v / nm) }
-    let ev = 0; for (let i = 0; i < p; i++) { let mv = 0; for (let j = 0; j < p; j++) mv += mat[i][j] * vec[j]; ev += vec[i] * mv }
-    evecs.push(vec); evals.push(Math.max(0, ev))
-    for (let i = 0; i < p; i++) for (let j = 0; j < p; j++) mat[i][j] -= ev * vec[i] * vec[j]
-  }
-  return centered.map(row => evecs.map(ev => ev.reduce((s, v, j) => s + v * row[j], 0)))
+import { computePCA } from '@/lib/math'
+
+function seededRandom(seed: number) {
+  let s = seed
+  return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646 }
 }
 
-function makeSwissRoll(n: number) {
+function makeSwissRoll(n: number, seed: number = 42) {
+  const rng = seededRandom(seed)
   const pts: number[][] = [], labels: string[] = []
   for (let i = 0; i < n; i++) {
-    const t = 1.5 * Math.PI * (1 + 2 * Math.random())
-    const y = 20 * Math.random()
+    const t = 1.5 * Math.PI * (1 + 2 * rng())
+    const y = 20 * rng()
     pts.push([t * Math.cos(t), y, t * Math.sin(t)])
     labels.push(t < 4.5 * Math.PI * 0.55 ? 'Inner' : 'Outer')
   }
   return { points: pts, labels }
 }
-function makeMoons(n: number) {
+function makeMoons(n: number, seed: number = 42) {
+  const rng = seededRandom(seed)
   const pts: number[][] = [], labels: string[] = []
   for (let i = 0; i < n; i++) {
-    const a = Math.PI * i / n + (Math.random() - 0.5) * 0.15
+    const a = Math.PI * i / n + (rng() - 0.5) * 0.15
     pts.push([Math.cos(a), Math.sin(a)])
     labels.push('Moon1')
   }
   for (let i = 0; i < n; i++) {
-    const a = Math.PI * i / n + (Math.random() - 0.5) * 0.15
+    const a = Math.PI * i / n + (rng() - 0.5) * 0.15
     pts.push([1 - Math.cos(a), 1 - Math.sin(a) - 0.5])
     labels.push('Moon2')
   }
   return { points: pts, labels }
 }
-function makeCircles(n: number) {
+function makeCircles(n: number, seed: number = 42) {
+  const rng = seededRandom(seed)
   const pts: number[][] = [], labels: string[] = []
   for (let i = 0; i < n; i++) {
-    const a = 2 * Math.PI * i / n + (Math.random() - 0.5) * 0.2
+    const a = 2 * Math.PI * i / n + (rng() - 0.5) * 0.2
     pts.push([Math.cos(a) * 0.5, Math.sin(a) * 0.5])
     labels.push('Inner')
   }
   for (let i = 0; i < n; i++) {
-    const a = 2 * Math.PI * i / n + (Math.random() - 0.5) * 0.2
+    const a = 2 * Math.PI * i / n + (rng() - 0.5) * 0.2
     pts.push([Math.cos(a) * 1.5, Math.sin(a) * 1.5])
     labels.push('Outer')
   }
@@ -117,7 +109,7 @@ function runUMAP(X: number[][], nNeighbors: number = 15, minDist: number = 0.1, 
   for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { let d = 0; for (let k = 0; k < dim; k++) d += (X[i][k] - X[j][k]) ** 2; D[i][j] = Math.sqrt(d); D[j][i] = D[i][j] }
   const knn: number[][] = Array.from({ length: n }, () => [])
   for (let i = 0; i < n; i++) { const sorted = D[i].map((d, j) => ({ j, d })).filter(x => x.j !== i).sort((a, b) => a.d - b.d); knn[i] = sorted.slice(0, nNeighbors).map(x => x.j) }
-  const Y = computePCA(X, 2).map(row => [row[0] * 0.1, row[1] * 0.1])
+  const Y = computePCA(X, 2).projected.map(row => [row[0] * 0.1, row[1] * 0.1])
   for (let iter = 0; iter < iterations; iter++) {
     const lr = 1 - iter / iterations
     for (let i = 0; i < n; i++) {
@@ -169,7 +161,7 @@ const SYNTH_PALETTE: Record<string, [number, number, number]> = { 'Inner': [66, 
 export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', activeStep, precomputedTsne, precomputedUmap }: DimRedVizProps) {
   const isZh = lang === 'zh'
   const nCells = data.length
-  const pca = useMemo(() => computePCA(data, 10), [data])
+  const pca = useMemo(() => computePCA(data, 10).projected, [data])
 
   const [dataset, setDataset] = useState<'swissroll' | 'moons' | 'circles'>('swissroll')
   const step1Ref = useRef<HTMLDivElement>(null)
@@ -190,6 +182,7 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
   const step3P5 = useRef<p5 | null>(null)
 
   const [tsneRunCount, setTsneRunCount] = useState(0)
+  const [isComputing, setIsComputing] = useState(false)
   const [tsneResult4, setTsneResult4] = useState<number[][] | null>(null)
   const step4AllRef = useRef<HTMLDivElement>(null)
   const step4AllP5 = useRef<p5 | null>(null)
@@ -202,20 +195,33 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
 
   useEffect(() => {
     if (activeStep !== 1) return
-    const frames: number[][][] = []
-    for (const it of [0, 20, 50, 100, 200, 300]) { frames.push(runTSNE(pca, perplexity, lr, it, 42)) }
-    setTsneFrames(frames); setTsneIter(0)
+    setIsComputing(true)
+    setTimeout(() => {
+      const frames: number[][][] = []
+      for (const it of [0, 20, 50, 100, 200, 300]) { frames.push(runTSNE(pca, perplexity, lr, it, 42)) }
+      setTsneFrames(frames)
+      setTsneIter(0)
+      setIsComputing(false)
+    }, 50)
   }, [activeStep, perplexity, lr, pca])
 
   useEffect(() => {
     if (activeStep !== 2) return
-    setUmapResult(runUMAP(pca, nNeighbors, minDist, 200))
+    setIsComputing(true)
+    setTimeout(() => {
+      setUmapResult(runUMAP(pca, nNeighbors, minDist, 200))
+      setIsComputing(false)
+    }, 50)
   }, [activeStep, nNeighbors, minDist, pca])
 
   useEffect(() => {
     if (activeStep !== 3) return
-    setTsneResult4(runTSNE(pca, 30, 200, 300, Date.now()))
-    setUmapResult(runUMAP(pca, 15, 0.1, 200))
+    setIsComputing(true)
+    setTimeout(() => {
+      setTsneResult4(runTSNE(pca, 30, 200, 300, Date.now()))
+      setUmapResult(runUMAP(pca, 15, 0.1, 200))
+      setIsComputing(false)
+    }, 50)
   }, [activeStep, tsneRunCount])
 
   useEffect(() => {
@@ -225,7 +231,7 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
     const sketch = (p: any) => {
       const W = 540, H = 180
       let genData = ds === 'swissroll' ? makeSwissRoll(50) : ds === 'moons' ? makeMoons(50) : makeCircles(50)
-      const pcaSyn = genData.points.map(r => r.length > 2 ? computePCA([r], 2)[0] : r)
+      const pcaSyn = genData.points.map(r => r.length > 2 ? computePCA([r], 2).projected[0] : r)
       const tsneSyn = runTSNE(genData.points, 20, 100, 200, 42)
       const umapSyn = runUMAP(genData.points, 10, 0.1, 150)
       p.setup = () => { const c = p.createCanvas(W, H); c.parent(step1Ref.current!); p.textFont('Inter'); p.noLoop() }
@@ -292,12 +298,6 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
     return () => { step4AllP5.current?.remove() }
   }, [activeStep, pca, tsneResult4, umapResult, cellTypes, tsneRunCount])
 
-  useEffect(() => {
-    if (!tsnePlaying) return
-    const iv = setInterval(() => { setTsneIter(prev => { if (prev >= tsneFrames.length - 1) { setTsnePlaying(false); return prev } return prev + 1 }) }, 1000)
-    return () => clearInterval(iv)
-  }, [tsnePlaying, tsneFrames.length])
-
   const iters = [0, 20, 50, 100, 200, 300]
 
   if (activeStep === 0) {
@@ -305,13 +305,15 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
       <div>
         <div className="control-group">
           <label>{isZh ? '数据集' : 'Dataset'}:</label>
-          {(['swissroll', 'moons', 'circles'] as const).map(ds => (
+          {isComputing && <div className="flex justify-center py-4 text-sm text-purple-500">{isZh ? '计算中...' : 'Computing...'}</div>}
+        {(['swissroll', 'moons', 'circles'] as const).map(ds => (
             <button key={ds} onClick={() => setDataset(ds)}
               className={`px-3 py-1 rounded text-sm ${dataset === ds ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
               {ds === 'swissroll' ? (isZh ? '瑞士卷' : 'Swiss Roll') : ds === 'moons' ? (isZh ? '双月' : 'Two Moons') : (isZh ? '同心圆' : 'Circles')}
             </button>
           ))}
         </div>
+        {isComputing && <div className="flex justify-center py-4 text-sm text-purple-500">{isZh ? '计算中...' : 'Computing...'}</div>}
         <div ref={step1Ref} className="flex justify-center" />
       </div>
     )
@@ -341,6 +343,7 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
         <div className="text-center text-sm text-gray-500 mb-2">
           {isZh ? '迭代' : 'Iter'}: <span className="font-bold">{iters[Math.min(tsneIter, iters.length - 1)]}</span> / 300
         </div>
+        {isComputing && <div className="flex justify-center py-4 text-sm text-red-500">{isZh ? '计算中...' : 'Computing t-SNE...'}</div>}
         <div ref={step2Ref} className="flex justify-center" />
       </div>
     )
@@ -361,6 +364,7 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
             <span className="font-mono text-sm w-10">{minDist.toFixed(2)}</span>
           </div>
         </div>
+        {isComputing && <div className="flex justify-center py-4 text-sm text-blue-500">{isZh ? '计算中...' : 'Computing UMAP...'}</div>}
         <div ref={step3Ref} className="flex justify-center" />
       </div>
     )
@@ -374,6 +378,7 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
             {isZh ? '重新运行t-SNE' : 'Re-run t-SNE'} (x{tsneRunCount + 1})
           </button>
         </div>
+        {isComputing && <div className="flex justify-center py-4 text-sm text-green-500">{isZh ? '计算中...' : 'Computing...'}</div>}
         <div ref={step4AllRef} className="flex justify-center" />
       </div>
     )
