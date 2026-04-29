@@ -38,3 +38,11 @@ next-env.d.ts
 scripts/*.npy
 scripts/*.tar.gz
 scripts/filtered_gene_bc_matrices/
+
+design-sandbox/.next/
+src/node_modules/
+*.log
+*.pid
+
+# Design sandbox (not main project)
+/design-sandbox/
