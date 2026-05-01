@@ -4,17 +4,24 @@ const path = require('path')
 const nextConfig = {
   output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
 
-  // TypeScript
+  // GitHub Pages 子路径 - 通过环境变量控制
+  basePath: process.env.BASE_PATH || '',
+  assetPrefix: process.env.BASE_PATH || '',
+  trailingSlash: true,
+
   typescript: {
     ignoreBuildErrors: true,
   },
 
-  // Images
   images: {
     unoptimized: true,
   },
 
-  // 保持别名
+  // 排除 design-sandbox
+  exclude: [
+    /[\\/]design-sandbox[\\/]/
+  ],
+
   webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
