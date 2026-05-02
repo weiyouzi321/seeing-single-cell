@@ -10,7 +10,7 @@ const navItems = [
   { name: 'Ch2 分布', href: '/chapters/2-distribution' },
   { name: 'Ch3 预处理', href: '/chapters/3-preprocessing' },
   { name: 'Ch4 PCA', href: '/chapters/4-pca' },
-  { name: 'Ch5 聚类', href: '/chapters/5-clustering' },
+  { name: 'Ch5 KNN', href: '/chapters/5-knn' },
 ]
 
 export default function Header() {
