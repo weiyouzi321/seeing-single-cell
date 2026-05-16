@@ -7,7 +7,8 @@ const nextConfig = {
   output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
 
   // GitHub Pages 子路径 - 通过环境变量控制
-    basePath: process.env.NODE_ENV === 'production' ? '/seeing-single-cell' : '',
+  // 本地构建: BASE_PATH=''  CI构建: BASE_PATH=/seeing-single-cell
+  basePath: typeof process.env.BASE_PATH !== 'undefined' ? process.env.BASE_PATH : '/seeing-single-cell',
   assetPrefix: process.env.BASE_PATH || '',
   trailingSlash: true,
 

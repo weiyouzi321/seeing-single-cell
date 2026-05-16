@@ -226,14 +226,20 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
   // 优先使用预计算KNN邻接表
   const knn = useMemo(() => {
     if (precomputedKnnAdj && precomputedKnnAdj.length === data.length) {
-      // 构建 edges
+      // precomputedKnnAdj 可能是 dict[]（如 [{'14':0.333,...}, ...]）或 number[][]
+      // 统一转为 number[][] 格式
+      const normAdj: number[][] = precomputedKnnAdj.map(item =>
+        typeof item === 'object' && !Array.isArray(item)
+          ? Object.keys(item).map(Number)
+          : item as number[]
+      )
       const edges: [number, number][] = []
-      for (let i = 0; i < precomputedKnnAdj.length; i++) {
-        for (const j of precomputedKnnAdj[i]) {
+      for (let i = 0; i < normAdj.length; i++) {
+        for (const j of normAdj[i]) {
           if (i < j) edges.push([i, j])
         }
       }
-      return { adj: precomputedKnnAdj, edges }
+      return { adj: normAdj, edges }
     }
     return buildKNN(pca.projected, kVal, metric)
   }, [pca.projected, kVal, metric, precomputedKnnAdj, data.length])
