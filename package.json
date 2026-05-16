@@ -7,7 +7,9 @@
     "build": "NODE_ENV=production next build",
     "start": "next start",
     "preview": "serve out -l 3000",
-    "lint": "next lint"
+    "lint": "next lint",
+    "export-docs": "NODE_ENV=production next build && mv out docs",
+    "export": "NODE_ENV=production next build && mv out docs"
   },
   "dependencies": {
     "d3": "^7.9.0",

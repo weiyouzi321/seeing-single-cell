@@ -40,10 +40,23 @@ const navItems = [
 
 function Dropdown({ children, menu }) {
   const [open, setOpen] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  
+  const handleMouseEnter = () => {
+    setOpen(true)
+    setHovered(true)
+  }
+  
+  const handleMouseLeave = () => {
+    setOpen(false)
+    setHovered(false)
+  }
+  
   return (
     <div className="relative group">
       <button
-        onClick={() => setOpen(!open)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className="flex items-center space-x-1 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-600 transition-colors"
       >
         {children}
@@ -54,13 +67,38 @@ function Dropdown({ children, menu }) {
       {open && (
         <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-slate-900 shadow-lg rounded-b-lg ring-1 ring-black ring-opacity-5 z-10">
           {menu.map((item, index) => (
-            <a
+            <div
               key={index}
-              href={item.href}
-              className="block px-4 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"
+              className="group"
+              onMouseEnter={() => setOpen(true)}
+              onMouseLeave={() => setOpen(false)}
             >
-              {item.name}
-            </a>
+              {item.href ? (
+                <a
+                  href={item.href}
+                  className="block px-4 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  {item.name}
+                </a>
+              ) : (
+                <div className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 font-medium">
+                  {item.name}
+                </div>
+              )}
+              {item.children && (
+                <div className="absolute left-full top-0 w-40 bg-white dark:bg-slate-900 shadow-lg rounded-b-lg ring-1 ring-black ring-opacity-5 mt-0.5">
+                  {item.children.map((subItem, subIndex) => (
+                    <a
+                      key={subIndex}
+                      href={subItem.href}
+                      className="block px-4 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      {subItem.name}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}

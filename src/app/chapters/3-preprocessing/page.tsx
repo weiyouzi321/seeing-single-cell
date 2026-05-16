@@ -67,7 +67,7 @@ export default function PreprocessingChapter() {
     async function loadData() {
       try {
         const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
-        const res = await fetch(`/data/pbmc_data.json`)
+        const res = await fetch(`/data/pbmc_data_small.json`)
         if (res.ok) {
           setData(await res.json())
         }
@@ -220,7 +220,7 @@ export default function PreprocessingChapter() {
               </div>
               <p className="text-sm text-gray-600">{t('ch3.whyLogConclusion')}</p>
             </div>
-            <NormalizationViz data={data.expression_matrix} geneNames={data.gene_names} cellTypes={data.cell_types} lang={lang} />
+            <NormalizationViz data={data.expression_matrix} geneNames={data.gene_names} cellTypes={data.cell_types || []} lang={lang} />
 
             <div className="info-panel tip mt-6">
               <h3>{t('ch3.tryThisTitle')}</h3>
@@ -281,7 +281,7 @@ export default function PreprocessingChapter() {
             </div>
             <p className="text-sm text-gray-600 mb-4">{t('ch3.hvgDataInput')}</p>
 
-            <HvgViz data={normalizedData} geneNames={data.gene_names} cellTypes={data.cell_types} lang={lang} />
+            <HvgViz data={normalizedData} geneNames={data.gene_names} cellTypes={data.cell_types || []} lang={lang} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <div className="info-panel math"><h3>Poisson: <K math="\text{Var} = \mu" /></h3><p className="text-xs text-gray-500">{t('ch3.poissonDesc2')}</p></div>
               <div className="info-panel math"><h3>NB: <K math="\text{Var} = \mu + \alpha\mu^2" /></h3><p className="text-xs text-gray-500">{t('ch3.nbDesc2')}</p></div>
@@ -321,7 +321,7 @@ export default function PreprocessingChapter() {
               <p className="text-xs text-gray-500">{t('ch3.scaleFormulaDesc')}</p>
             </div>
 
-            <ScaleDataViz data={normalizedData} geneNames={data.gene_names} cellTypes={data.cell_types} lang={lang} />
+            <ScaleDataViz data={normalizedData} geneNames={data.gene_names} cellTypes={data.cell_types || []} lang={lang} />
             <div className="flex justify-between mt-6">
               <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-red-500 hover:text-red-600 transition-colors">← {t('ch3.backHVG')}</button>
             </div>

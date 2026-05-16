@@ -2,10 +2,12 @@
 const path = require('path')
 
 const nextConfig = {
+  // output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
+  // 在开发模式下禁用output，只在生产环境启用
   output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
 
   // GitHub Pages 子路径 - 通过环境变量控制
-  basePath: process.env.BASE_PATH || '',
+    basePath: process.env.NODE_ENV === 'production' ? '/seeing-single-cell' : '',
   assetPrefix: process.env.BASE_PATH || '',
   trailingSlash: true,
 
@@ -17,11 +19,18 @@ const nextConfig = {
     unoptimized: true,
   },
 
-  // 排除 design-sandbox
-  exclude: [
-    /[\\/]design-sandbox[\\/]/
-  ],
-
+  // 排除 design-sandbox - 通过 webpack 别名和排除构建
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    }
+    // 排除 design-sandbox 目录
+    if (config.externals) {
+      config.externals.push(/design-sandbox/);
+    }
+    return config;
+  },
 
   // 旧URL重定向 - 修复死链
   async redirects() {
@@ -32,14 +41,6 @@ const nextConfig = {
       { source: '/chapters/4-differential-expression', destination: '/chapters/4-pca/', permanent: true },
       { source: '/chapters/5-trajectory', destination: '/chapters/5-knn/', permanent: true },
     ]
-  },
-
-  webpack: (config, { isServer }) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.resolve(__dirname, 'src'),
-    }
-    return config
   },
 }
 

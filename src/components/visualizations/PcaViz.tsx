@@ -132,12 +132,23 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
 
 
   // 验证外部 PCA 数据维度一致性（回退机制）
+  // Support both projected formats: number[][] and object[] {pc1,pc2,...}
+  const normalizedProjected = useMemo(() => {
+    if (!projected || !Array.isArray(projected) || projected.length === 0) return null
+    if (Array.isArray(projected[0])) return projected  // Already number[][]
+    // Convert object[] {pc1,pc2,...} to number[][]
+    return projected.map((row: any) => {
+      const keys = Object.keys(row).filter(k => k.startsWith('pc')).sort()
+      return keys.map(k => row[k] ?? 0)
+    })
+  }, [projected])
+
   const externalValid = useMemo(() => {
-    if (!projected || !varianceRatio || !preLoadings) return false
-    if (!Array.isArray(projected) || !Array.isArray(varianceRatio) || !Array.isArray(preLoadings)) return false
-    if (projected.length === 0 || projected[0] === undefined) return false
-    const nPCs = projected[0].length
-    const nCells = projected.length
+    if (!normalizedProjected || !varianceRatio || !preLoadings) return false
+    if (!Array.isArray(normalizedProjected) || !Array.isArray(varianceRatio) || !Array.isArray(preLoadings)) return false
+    if (normalizedProjected.length === 0 || normalizedProjected[0] === undefined) return false
+    const nPCs = normalizedProjected[0].length
+    const nCells = normalizedProjected.length
     const nGenes = preLoadings.length
     const PCsFromLoadings = preLoadings[0]?.length || 0
     return (
@@ -146,7 +157,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
       nGenes === nG &&
       nCells === nC
     )
-  }, [projected, varianceRatio, preLoadings, nG, nC])
+  }, [normalizedProjected, varianceRatio, preLoadings, nG, nC])
 
   // 外部载荷转置：loadings[gene][pc] -> evecs[pc][gene]
   const externalEvecs = useMemo(() => {
@@ -164,7 +175,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
 
   const computedVarexp = useMemo(() => { const t = pca.evals.reduce((s: number,v: number)=>s+v,0); return t>0 ? pca.evals.map((v: number)=>v/t) : pca.evals.map(()=>0) }, [pca])
   const varexp = externalValid ? varianceRatio! : computedVarexp
-  const pcaProjected = projected || pca.projected
+  const pcaProjected = normalizedProjected || pca.projected
   const evecsForLoading = externalValid ? externalEvecs : pca.evecs
 
   const rm = (k: string) => { if(refs.current[k]) { refs.current[k]!.remove(); refs.current[k] = null } }
@@ -1312,9 +1323,9 @@ interface PCProjectionTableProps {
   projected?: number[][]
 }
 
-function PCProjectionTable({ data, geneNames, pca, xPC, yPC, isZh, projected }: PCProjectionTableProps) {
+function PCProjectionTable({ data, geneNames, pca, xPC, yPC, isZh, projected: propProjected }: PCProjectionTableProps) {
   const cellIdx = 0
-  const pcaProjected = projected || pca.projected
+  const pcaProjected = propProjected || pca.projected
   const cellExpr = data[cellIdx]
   const nShow = Math.min(6, geneNames.length)
 

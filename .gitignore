@@ -45,3 +45,9 @@ src/node_modules/
 
 # Design sandbox (not main project)
 /design-sandbox/
+
+# Build output (CI generates fresh build)
+/out/
+
+# Ignored by default in gitignore
+.next/
