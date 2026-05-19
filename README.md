@@ -1,121 +1,146 @@
 # Seeing Single-Cell 🧬
 
-Interactive visualization of single-cell analysis mathematics, inspired by [Seeing Theory](https://seeing-theory.brown.edu/) and [3Blue1Brown](https://www.3blue1brown.com/).
+**Interactive visualization of single-cell analysis mathematics** — inspired by [3Blue1Brown](https://www.3blue1brown.com/)'s visual-first math education and [Seeing Theory](https://seeing-theory.brown.edu/)'s interactive learning approach.
 
-## 🎯 Project Goals
+> 🎯 **Live demo**: [weiyouzi321.github.io/seeing-single-cell](https://weiyouzi321.github.io/seeing-single-cell/)
 
-- Help biology students understand the mathematical principles behind single-cell analysis
-- Provide interactive visualizations to build intuition about algorithms and parameters
-- Enable researchers to better understand and optimize their analysis pipelines
+Seeing Single-Cell bridges the gap between mathematical theory and practical single-cell RNA-seq analysis. Instead of static figures and formulas, students can click on matrix elements to watch PCA computations unfold step by step, drag sliders to see how parameters affect KNN clustering in real time, and build intuition for the algorithms that power modern bioinformatics pipelines.
+
+## ✨ Features
+
+- **🎨 Interactive visualizations** powered by p5.js — click, drag, and explore
+- **📐 Step-by-step computation** — watch matrix operations (covariance, eigenvalue decomposition) build up visually
+- **📊 Real PBMC 3k data** — 75-cell teaching subset + 300-cell full dataset from 10x Genomics
+- **🌐 Bilingual** — full Chinese and English interface
+- **🌙 Dark mode** — comfortable viewing day or night
+- **📱 Responsive** — works on desktop and mobile
+- **🚀 Static export** — zero server cost, deployed via GitHub Pages
 
 ## 📚 Chapters
 
-### Chapter 1: Gene Expression Matrix
-- Interactive visualization of the expression matrix
-- Understanding cells, genes, and expression values
-- Mathematical representation and key concepts
+### Linear Algebra Foundation (Ch0)
 
-### Chapter 2: Data Distribution
-- Statistical distributions in single-cell data
-- Histograms and kernel density estimation
-- Distribution parameters and their meanings
+| Sub-chapter | Topic |
+|---|---|
+| 0.0 | Linear Algebra Overview |
+| 0.1 | Matrix Views — rows, columns, and dimensions |
+| 0.2 | Vector Products — dot product, norms |
+| 0.3 | Matrix × Vector — linear transformations |
+| 0.4 | Matrix × Matrix — composition of transformations |
+| 0.5 | Practical Patterns — common matrix operations |
+| 0.6 | Factorizations — CR, LU, QR, EVD, SVD |
 
-### Chapter 3: PCA (Coming Soon)
-- Principal component analysis visualization
-- Covariance matrix and eigenvalues
-- Dimensionality reduction
+### Basic Analysis Pipeline
 
-### Chapter 4: t-SNE (Coming Soon)
-- t-distributed stochastic neighbor embedding
-- Probability distributions and optimization
-- Perplexity parameter effects
+| Chapter | Topic |
+|---|---|
+| **Ch1** | **Gene Expression Matrix** — cells, genes, and expression values |
+| **Ch2** | **Quality Control & Filtering** — histograms, KDE, QC metrics |
+| **Ch3** | **Preprocessing Trilogy** — normalization, HVG selection, scaling |
+| **Ch4** | **PCA Dimensionality Reduction** — covariance matrix → eigenvalue decomposition → interactive stepping |
+| **Ch5** | **KNN Clustering** — distance metrics, neighborhood graphs, cluster assignment |
+| **Ch6** | **t-SNE & UMAP Visualization** — non-linear embedding for visual exploration |
 
-### Chapter 5: Clustering (Coming Soon)
-- K-means clustering visualization
-- Distance metrics and optimization
-- Cluster validation
+### Advanced Analysis
 
-### Chapter 6: Differential Expression (Coming Soon)
-- Statistical hypothesis testing
-- p-values and multiple testing correction
-- Volcano plots and effect sizes
+| Chapter | Topic |
+|---|---|
+| **Ch7** | **Batch Integration** — harmonizing datasets from different experiments |
 
-## 🚀 Getting Started
+## 🛠️ Tech Stack
 
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/seeing-single-cell.git
-cd seeing-single-cell
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-### Building for Production
-
-```bash
-# Build the project
-npm run build
-
-# Export static files
-npm run export
-```
-
-## 🛠️ Technology Stack
-
-- **Frontend Framework**: Next.js 14
-- **Visualization**: p5.js (interactive) + D3.js (charts)
-- **Mathematics**: Math.js + KaTeX (formulas)
-- **Styling**: Tailwind CSS
-- **Language**: TypeScript
+| Technology | Purpose |
+|---|---|
+| **Next.js 14** (App Router) | Static site generation & routing |
+| **p5.js** (instance mode) | Interactive canvas visualization |
+| **D3.js** | Statistical charts (histograms, KDE) |
+| **KaTeX** | Mathematical formula rendering |
+| **Math.js** | Linear algebra computation |
+| **Tailwind CSS** | Styling & responsive design |
+| **TypeScript** | Type safety |
+| **GitHub Actions** | CI/CD auto-deploy to Pages |
 
 ## 📊 Data
 
-The project uses simulated PBMC (Peripheral Blood Mononuclear Cell) data for educational purposes:
-- 100 cells
-- 50 genes
-- 6 cell types (CD4 T, CD8 T, B, NK, Monocyte, DC)
+All chapters use real **10x Genomics PBMC 3k** (Peripheral Blood Mononuclear Cells) data:
+
+- **Full dataset**: 300 cells × ~2000 highly variable genes
+- **Teaching subset**: 75 cells × 40 genes (strict subset of full data, with 7 cell types)
+- **Pre-computed results**: PCA, t-SNE, UMAP, KNN graphs, batch-corrected embeddings
+- **Data generation**: fully reproducible via `scripts/generate_all_data.js` (seed = 42)
+- **Cell types**: CD4 T cells, CD8 T cells, B cells, NK cells, Monocytes, Dendritic cells, Megakaryocytes
+
+## 🚀 Getting Started
+
+```bash
+# Prerequisites
+node >= 18, npm or yarn
+
+# 1. Clone
+git clone https://github.com/weiyouzi321/seeing-single-cell.git
+cd seeing-single-cell
+
+# 2. Install
+npm install
+
+# 3. Start dev server (http://localhost:3000)
+npm run dev
+
+# 4. Build for production (static export)
+npm run build
+
+# 5. Preview the build
+npx serve out -l 3000
+```
+
+> **Note**: For deployment to GitHub Pages, the build uses `BASE_PATH=/seeing-single-cell`. See `.github/workflows/deploy.yml` for the full CI/CD pipeline.
+
+## 📁 Project Structure
+
+```
+src/
+├── app/
+│   ├── layout.tsx          # Root layout with ThemeProvider
+│   ├── page.tsx            # Landing page
+│   └── chapters/           # Chapter pages (0–7)
+│       ├── 0-linear-algebra/  # Sub-chapters (1–6)
+│       ├── 1-matrix/
+│       ├── 2-distribution/
+│       ├── 3-preprocessing/
+│       ├── 4-pca/
+│       ├── 5-knn/
+│       ├── 6-dimred/
+│       └── 7-integration/
+├── components/
+│   ├── NavLinks.tsx        # Navigation with chapter dropdown
+│   ├── LangSwitcher.tsx    # ZH/EN toggle
+│   ├── ThemeToggle.tsx     # Dark/light mode
+│   └── visualizations/     # p5.js interactive components
+├── lib/
+│   ├── i18n/               # Internationalization
+│   └── math.ts             # Helper functions
+└── types/
+```
 
 ## 🎨 Design Philosophy
 
-Inspired by [Seeing Theory](https://seeing-theory.brown.edu/):
-- Clean, minimalist design
-- Interactive visualizations
-- Mathematical rigor with accessibility
-- Progressive disclosure of complexity
+- **Progressive disclosure**: Start from linear algebra fundamentals, build up to real analysis pipelines
+- **Interactive first**: Every concept has a visual component you can manipulate
+- **Real data**: No toy examples — all visualizations use genuine PBMC 3k data
+- **Reproducible**: Data generation scripts let you verify and extend the dataset
+- **Bilingual**: Lowering language barriers for Chinese-speaking students in computational biology
 
-## 📖 References
+## 📖 Inspiration
 
-- [Seeing Theory](https://seeing-theory.brown.edu/) - Probability and statistics visualization
-- [3Blue1Brown](https://www.3blue1brown.com/) - Mathematical animations
-- [Seurat](https://satijalab.org/seurat/) - Single-cell analysis toolkit
-- [Scanpy](https://scanpy.readthedocs.io/) - Single-cell analysis in Python
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+- [3Blue1Brown](https://www.3blue1brown.com/) — Essence of linear algebra & calculus series
+- [Seeing Theory](https://seeing-theory.brown.edu/) — Interactive probability & statistics
+- [Seurat](https://satijalab.org/seurat/) — Single-cell analysis toolkit
+- [Scanpy](https://scanpy.readthedocs.io/) — Single-cell analysis in Python
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License — see [LICENSE](LICENSE).
 
 ## 🙏 Acknowledgments
 
-- Inspired by the amazing work of [Daniel Kunin](https://github.com/danielkunin) on Seeing Theory
-- Thanks to the [Brown University](https://www.brown.edu/) STATS4STEM program
-- Built with love for the single-cell biology community
-
----
-
-**Made with ❤️ for biology students and researchers**
-
-<!-- update 1777713442.869364 -->
+Built with ❤️ for the single-cell biology community. Special thanks to the Brown University STATS4STEM program and the 3Blue1Brown team for the inspiration.
