@@ -33,16 +33,7 @@ const nextConfig = {
     return config;
   },
 
-  // 旧URL重定向 - 修复死链
-  async redirects() {
-    return [
-      // 描述性slug → 数字ID路由 (永久重定向)
-      { source: '/chapters/1-dimensionality-reduction', destination: '/chapters/1-matrix/', permanent: true },
-      { source: '/chapters/3-clustering', destination: '/chapters/3-preprocessing/', permanent: true },
-      { source: '/chapters/4-differential-expression', destination: '/chapters/4-pca/', permanent: true },
-      { source: '/chapters/5-trajectory', destination: '/chapters/5-knn/', permanent: true },
-    ]
-  },
+  // redirects: 静态导出不支持，已在 public/ 目录创建 HTML 重定向页面
 }
 
 module.exports = nextConfig

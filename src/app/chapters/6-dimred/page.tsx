@@ -216,7 +216,9 @@ export default function DimRedChapter() {
 
       <div className="flex justify-between items-center py-8 border-t border-gray-100">
         <Link href="/chapters/5-knn" className="text-gray-400 hover:text-blue-600 transition-colors">{t('ch6.prevCh5')}</Link>
-        <span className="text-sm text-gray-300">{t('ch6.ch7Soon')}</span>
+        <Link href="/chapters/7-integration" className="px-5 py-2.5 rounded-xl bg-teal-500 text-white font-medium hover:bg-teal-600 transition-colors shadow-sm">
+          {t('ch7.nextChap')}
+        </Link>
       </div>
     </div>
   )

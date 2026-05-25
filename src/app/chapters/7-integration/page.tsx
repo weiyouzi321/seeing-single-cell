@@ -146,6 +146,15 @@ export default function IntegrationChapter() {
       <div className="bg-gray-50 rounded-xl p-8 text-center text-gray-400">
         IntegrationViz will render here (step {activeStep + 1})
       </div>
+      {/* Prev/Next Navigation */}
+      <div className="flex justify-between items-center py-8 border-t border-gray-100 mt-8">
+        <Link href="/chapters/6-dimred" className="text-gray-400 hover:text-blue-600 transition-colors">
+          {isZh ? '← 上一章：t-SNE & UMAP' : '← Previous: t-SNE & UMAP'}
+        </Link>
+        <span className="text-sm text-gray-300">
+          {isZh ? '已是最后一章' : 'Last Chapter'}
+        </span>
+      </div>
     </div>
   )
 }
