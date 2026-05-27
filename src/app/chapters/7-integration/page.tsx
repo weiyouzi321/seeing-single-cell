@@ -151,9 +151,9 @@ export default function IntegrationChapter() {
         <Link href="/chapters/6-dimred" className="text-gray-400 hover:text-blue-600 transition-colors">
           {isZh ? '← 上一章：t-SNE & UMAP' : '← Previous: t-SNE & UMAP'}
         </Link>
-        <span className="text-sm text-gray-300">
-          {isZh ? '已是最后一章' : 'Last Chapter'}
-        </span>
+        <Link href="/chapters/8-deg" className="text-gray-400 hover:text-rose-600 transition-colors">
+          {isZh ? '下一章：差异表达分析 →' : 'Next: Differential Expression →'}
+        </Link>
       </div>
     </div>
   )

@@ -50,7 +50,7 @@ const chapterGroups: ChapterGroup[] = [
     color: 'from-rose-500 to-orange-500',
     items: [
       { href: '/chapters/7-integration', labelZh: '7 · 批次整合', labelEn: '7 · Batch Integration' },
-      // { href: '/chapters/8-de', labelZh: '8 · 差异表达分析', labelEn: '8 · Differential Expression' },
+      { href: '/chapters/8-deg', labelZh: '8 · 差异表达分析', labelEn: '8 · Differential Expression' },
     ],
   },
 ]
