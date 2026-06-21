@@ -12,6 +12,7 @@ export default function LangSwitcher() {
                  bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800
                  border border-gray-200"
       title={lang === 'en' ? 'Switch to Chinese' : 'Switch to English'}
+      aria-label={lang === 'en' ? 'Switch to Chinese' : 'Switch to English'}
     >
       {t('langSwitch')}
     </button>

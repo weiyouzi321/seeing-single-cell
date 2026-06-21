@@ -32,7 +32,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
 
   const t = (key: string): string => {
     const keys = key.split('.')
-    let obj: any = translations[lang]
+    let obj: any = translations[lang]  // eslint-disable-line @typescript-eslint/no-explicit-any -- i18n key traversal
     for (const k of keys) {
       if (obj && typeof obj === 'object' && k in obj) {
         obj = obj[k]

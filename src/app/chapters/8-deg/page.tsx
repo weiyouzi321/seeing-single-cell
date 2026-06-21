@@ -47,8 +47,8 @@ function K({ math }: { math: string }) {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null
     const render = () => {
-      if (ref.current && (window as any).katex) {
-        try { (window as any).katex.render(math, ref.current, { throwOnError: false, displayMode: false }) } catch(e) { if(ref.current) ref.current.textContent = math }
+      if (ref.current && window.katex) {
+        try { window.katex.render(math, ref.current, { throwOnError: false, displayMode: false }) } catch(e) { if(ref.current) ref.current.textContent = math }
       } else { timer = setTimeout(render, 300) }
     }
     render()
@@ -64,7 +64,7 @@ export default function DegChapter() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !(window as any).katex) {
+    if (typeof window !== 'undefined' && !window.katex) {
       const s = document.createElement('script')
       s.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js'
       s.async = true

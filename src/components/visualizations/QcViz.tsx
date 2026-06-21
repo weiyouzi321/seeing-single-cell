@@ -12,7 +12,7 @@ interface QcVizProps {
   translations?: Record<string, string>
 }
 
-export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, translations }: QcVizProps) {
+export default function QcViz({ cellTypes, qcMetrics, lang, translations }: QcVizProps) {
   const isZh = lang === 'zh'
   const t = (key: string, fallback: string) => translations?.[key] || fallback
 
@@ -31,7 +31,8 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
   const [useMAD, setUseMAD] = useState(false)
   const [madK, setMadK] = useState(3)
   const [hoveredCell, setHoveredCell] = useState<number | null>(null)
-  const [selectedMetric, setSelectedMetric] = useState<'nCount' | 'nFeature' | 'pct_mito'>('nCount')
+  const hoveredCellRef = useRef<number | null>(null)
+
 
   const L = {
     nCount: isZh ? 'nCount (总UMI数)' : 'nCount (Total UMIs)',
@@ -110,8 +111,9 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
     if (!violinRef.current) return
     if (violinP5.current) violinP5.current.remove()
 
-    const sketch = (p: any) => {
-      const W = 700, H = 300
+    const sketch = (p: p5) => {
+      const containerW = Math.min(violinRef.current?.clientWidth || 700, 700)
+      const W = containerW, H = 300
       const margin = { top: 30, right: 20, bottom: 40, left: 60 }
       const plotW = W - margin.left - margin.right
       const plotH = H - margin.top - margin.bottom
@@ -121,6 +123,13 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
         c.parent(violinRef.current!)
         p.textFont('Inter')
         p.noLoop()
+      }
+
+      p.windowResized = () => {
+        if (violinRef.current) {
+          const nw = Math.min(violinRef.current.clientWidth, 700)
+          p.resizeCanvas(nw, H)
+        }
       }
 
       p.draw = () => {
@@ -235,8 +244,9 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
     if (!scatterRef.current) return
     if (scatterP5.current) scatterP5.current.remove()
 
-    const sketch = (p: any) => {
-      const W = 400, H = 300
+    const sketch = (p: p5) => {
+      const containerW = Math.min(scatterRef.current?.clientWidth || 400, 400)
+      const W = containerW, H = 300
       const margin = { top: 20, right: 20, bottom: 45, left: 55 }
       const plotW = W - margin.left - margin.right
       const plotH = H - margin.top - margin.bottom
@@ -246,6 +256,13 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
         c.parent(scatterRef.current!)
         p.textFont('Inter')
         p.noLoop()
+      }
+
+      p.windowResized = () => {
+        if (scatterRef.current) {
+          const nw = Math.min(scatterRef.current.clientWidth, 400)
+          p.resizeCanvas(nw, H)
+        }
       }
 
       p.draw = () => {
@@ -271,7 +288,7 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
           const x = ox + (qcMetrics.nCount[i] / ncMax) * plotW
           const y = oy + plotH - (qcMetrics.nFeature[i] / nfMax) * plotH
           const kept = filterResult.keep.includes(i)
-          if (i === hoveredCell) {
+          if (i === hoveredCellRef.current) {
             p.fill(239, 68, 68); p.stroke(0); p.strokeWeight(1)
             p.ellipse(x, y, 10, 10)
           } else if (kept) {
@@ -323,20 +340,22 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
           if (d < closestDist) { closestDist = d; closest = i }
         }
         setHoveredCell(closest >= 0 ? closest : null)
+        hoveredCellRef.current = closest >= 0 ? closest : null
         p.redraw()
       }
     }
     scatterP5.current = new p5(sketch)
     return () => { if (scatterP5.current) scatterP5.current.remove() }
-  }, [qcMetrics, filterResult, hoveredCell, lang])
+  }, [qcMetrics, filterResult, lang])
 
   // Draw nCount vs percent_mt scatter plot
   useEffect(() => {
     if (!scatterMtRef.current) return
     if (scatterMtP5.current) scatterMtP5.current.remove()
 
-    const sketch = (p: any) => {
-      const W = 400, H = 300
+    const sketch = (p: p5) => {
+      const containerW = Math.min(scatterMtRef.current?.clientWidth || 400, 400)
+      const W = containerW, H = 300
       const margin = { top: 20, right: 20, bottom: 45, left: 55 }
       const plotW = W - margin.left - margin.right
       const plotH = H - margin.top - margin.bottom
@@ -346,6 +365,13 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
         c.parent(scatterMtRef.current!)
         p.textFont('Inter')
         p.noLoop()
+      }
+
+      p.windowResized = () => {
+        if (scatterMtRef.current) {
+          const nw = Math.min(scatterMtRef.current.clientWidth, 400)
+          p.resizeCanvas(nw, H)
+        }
       }
 
       p.draw = () => {
@@ -371,7 +397,7 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
           const x = ox + (qcMetrics.nCount[i] / ncMax) * plotW
           const y = oy + plotH - (qcMetrics.pct_mito[i] / mtMax) * plotH
           const kept = filterResult.keep.includes(i)
-          if (i === hoveredCell) {
+          if (i === hoveredCellRef.current) {
             p.fill(239, 68, 68); p.stroke(0); p.strokeWeight(1)
             p.ellipse(x, y, 10, 10)
           } else if (kept) {
@@ -413,12 +439,13 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
           if (d < closestDist) { closestDist = d; closest = i }
         }
         setHoveredCell(closest >= 0 ? closest : null)
+        hoveredCellRef.current = closest >= 0 ? closest : null
         p.redraw()
       }
     }
     scatterMtP5.current = new p5(sketch)
     return () => { if (scatterMtP5.current) scatterMtP5.current.remove() }
-  }, [qcMetrics, filterResult, hoveredCell, lang])
+  }, [qcMetrics, filterResult, lang])
 
   const metricOptions = [
     { key: 'nCount' as const, label: L.nCount, color: '#10b981', maxVal: Math.max(...qcMetrics.nCount) },
@@ -444,7 +471,8 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
           <div className="flex items-center gap-2 text-sm">
             <span className="text-gray-500">MAD ×</span>
             <input type="range" min="1" max="5" step="0.5" value={madK}
-              onChange={e => setMadK(parseFloat(e.target.value))} className="w-24" />
+              onChange={e => setMadK(parseFloat(e.target.value))} className="w-24"
+              aria-label="MAD multiplier for adaptive threshold" />
             <span className="font-mono font-semibold text-indigo-600">{madK}</span>
           </div>
         )}
@@ -466,7 +494,8 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
                         ...prev,
                         [m.key === 'nCount' ? 'nCountMin' : 'nFeatureMin']: parseInt(e.target.value)
                       }))}
-                      className="flex-1" />
+                      className="flex-1"
+                      aria-label={`${m.label} minimum threshold`} />
                     <span className="font-mono text-xs w-8 text-right">
                       {m.key === 'nCount' ? thresholds.nCountMin : thresholds.nFeatureMin}
                     </span>
@@ -483,7 +512,8 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
                         ...prev,
                         [m.key === 'nCount' ? 'nCountMax' : 'nFeatureMax']: parseInt(e.target.value)
                       }))}
-                      className="flex-1" />
+                      className="flex-1"
+                      aria-label={`${m.label} maximum threshold`} />
                     <span className="font-mono text-xs w-8 text-right">
                       {m.key === 'nCount' ?
                         (thresholds.nCountMax === Infinity ? '∞' : thresholds.nCountMax) :
@@ -497,7 +527,8 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
                     <input type="range" min="2" max={Math.min(100, dataRanges.pctMitoMax * 1.5)} step="0.5"
                       value={thresholds.pctMitoMax === Infinity ? dataRanges.pctMitoMax : thresholds.pctMitoMax}
                       onChange={e => setThresholds(prev => ({ ...prev, pctMitoMax: parseFloat(e.target.value) }))}
-                      className="flex-1" />
+                      className="flex-1"
+                      aria-label={`${m.label} maximum threshold`} />
                     <span className="font-mono text-xs w-10 text-right">
                       {thresholds.pctMitoMax === Infinity ? '∞' : thresholds.pctMitoMax.toFixed(1)}%
                     </span>
@@ -512,18 +543,24 @@ export default function QcViz({ data, geneNames, cellTypes, qcMetrics, lang, tra
       {/* Violin plots */}
       <div>
         <h4 className="text-sm font-semibold text-gray-500 mb-2">{L.violinTitle}</h4>
-        <div ref={violinRef} className="p5-canvas-container" />
+        <div ref={violinRef} className="p5-canvas-container" role="img" aria-label="QC metrics violin plot showing distribution of nCount, nFeature, and mitochondrial percentage">
+          <span className="sr-only">Violin plots showing the distribution of quality control metrics across cells, including total UMI counts, detected genes, and mitochondrial gene percentage.</span>
+        </div>
       </div>
 
       {/* Scatter plots + hover info */}
       <div className="flex gap-6 items-start">
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-semibold text-gray-500 mb-2">{isZh ? 'nCount vs nFeature' : 'nCount vs nFeature'}</h4>
-          <div ref={scatterRef} className="p5-canvas-container" />
+          <div ref={scatterRef} className="p5-canvas-container" role="img" aria-label="Scatter plot of nCount vs nFeature showing cell quality filtering">
+            <span className="sr-only">Scatter plot comparing total UMI counts (nCount) with detected genes (nFeature). Cells are colored based on whether they pass quality thresholds.</span>
+          </div>
         </div>
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-semibold text-gray-500 mb-2">{isZh ? 'nCount vs percent_mt' : 'nCount vs percent_mt'}</h4>
-          <div ref={scatterMtRef} className="p5-canvas-container" />
+          <div ref={scatterMtRef} className="p5-canvas-container" role="img" aria-label="Scatter plot of nCount vs mitochondrial percentage showing cell quality filtering">
+            <span className="sr-only">Scatter plot comparing total UMI counts with mitochondrial gene percentage. Cells are colored based on whether they pass quality thresholds.</span>
+          </div>
         </div>
         <div className="w-56 flex-shrink-0">
           {hoveredCell !== null ? (

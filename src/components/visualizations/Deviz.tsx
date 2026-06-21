@@ -10,8 +10,8 @@ interface DegGene {
   log2FC: number
   pval: number
   padj: number
-  pct_A: number
-  pct_B: number
+  pct_expressed_A: number
+  pct_expressed_B: number
   mean_A: number
   mean_B: number
 }
@@ -381,6 +381,7 @@ export default function Deviz({ degData, topMarkers, cellTypes, lang = 'en' }: D
             value={fcThresh}
             onChange={e => setFcThresh(Number(e.target.value))}
             className="w-28"
+            aria-label="Fold change threshold for volcano plot"
           />
           <span className="font-mono text-sm w-8">{fcThresh.toFixed(1)}</span>
         </div>
@@ -390,6 +391,7 @@ export default function Deviz({ degData, topMarkers, cellTypes, lang = 'en' }: D
             value={pThresh}
             onChange={e => setPThresh(Number(e.target.value))}
             className="border border-gray-200 rounded px-2 py-1 text-sm"
+            aria-label="Adjusted p-value threshold for volcano plot"
           >
             <option value={0.05}>0.05</option>
             <option value={0.01}>0.01</option>
@@ -400,7 +402,9 @@ export default function Deviz({ degData, topMarkers, cellTypes, lang = 'en' }: D
       </div>
 
       {/* Canvas */}
-      <div ref={volcanoRef} className="flex justify-center" />
+      <div ref={volcanoRef} className="flex justify-center" role="img" aria-label="Volcano plot showing differential gene expression with fold change vs significance">
+        <span className="sr-only">Volcano plot displaying genes as dots. X-axis: log2 fold change. Y-axis: -log10 adjusted p-value. Red dots: upregulated. Blue dots: downregulated. Gray dots: not significant.</span>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
@@ -505,7 +509,7 @@ export default function Deviz({ degData, topMarkers, cellTypes, lang = 'en' }: D
             const key = `${g.gene}|${ct}`
             if (!lookup.has(key)) {
               lookup.set(key, {
-                pct: Math.max(g.pct_A, g.pct_B),
+                pct: Math.max(g.pct_expressed_A, g.pct_expressed_B),
                 mean: Math.max(g.mean_A, g.mean_B),
               })
             }

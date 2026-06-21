@@ -38,14 +38,14 @@ function K({ math }: { math: string }) {
   const ref = useRef<HTMLSpanElement>(null)
   useEffect(() => {
     const render = () => {
-      if (ref.current && typeof window !== 'undefined' && (window as any).katex) {
-        try { (window as any).katex.render(math, ref.current, { throwOnError: false }) } catch(e) {}
+      if (ref.current && typeof window !== 'undefined' && window.katex) {
+        try { window.katex.render(math, ref.current, { throwOnError: false }) } catch(e) {}
       } else if (ref.current) {
         ref.current.textContent = math
       }
     }
     // KaTeX might still be loading
-    if ((window as any).katex) { render() } else { setTimeout(render, 500) }
+    if (window.katex) { render() } else { setTimeout(render, 500) }
   }, [math])
   return <span ref={ref} className="inline-block" />
 }
@@ -58,7 +58,7 @@ export default function PreprocessingChapter() {
 
   useEffect(() => {
     // Load KaTeX JS
-    if (typeof window !== 'undefined' && !(window as any).katex) {
+    if (typeof window !== 'undefined' && !window.katex) {
       const script = document.createElement('script')
       script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js'
       script.async = true

@@ -128,7 +128,7 @@ function runUMAP(X: number[][], nNeighbors: number = 15, minDist: number = 0.1, 
   return Y
 }
 
-function drawScatter(p: any, coords: number[][], labels: string[], labelMap: Record<string, [number, number, number]>, W: number, H: number, M: any, title: string) {
+function drawScatter(p: p5, coords: number[][], labels: string[], labelMap: Record<string, [number, number, number]>, W: number, H: number, M: { t: number; r: number; b: number; l: number }, title: string) {
   const pw = W - M.l - M.r, ph = H - M.t - M.b
   const xs = coords.map(c => c[0]), ys = coords.map(c => c[1])
   let mnX = Math.min(...xs), mxX = Math.max(...xs), mnY = Math.min(...ys), mxY = Math.max(...ys)
@@ -142,7 +142,7 @@ function drawScatter(p: any, coords: number[][], labels: string[], labelMap: Rec
   if (title) { p.fill(80); p.noStroke(); p.textSize(12); p.textAlign(p.CENTER); p.text(title, M.l + pw / 2, H - 5) }
 }
 
-function drawCellScatter(p: any, coords: number[][], cellTypes: string[], W: number, H: number, M: any, title: string) {
+function drawCellScatter(p: p5, coords: number[][], cellTypes: string[], W: number, H: number, M: { t: number; r: number; b: number; l: number }, title: string) {
   const pw = W - M.l - M.r, ph = H - M.t - M.b
   const xs = coords.map(c => c[0]), ys = coords.map(c => c[1])
   let mnX = Math.min(...xs), mxX = Math.max(...xs), mnY = Math.min(...ys), mxY = Math.max(...ys)
@@ -228,8 +228,9 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
     if (activeStep !== 0 || !step1Ref.current) return
     if (step1P5.current) step1P5.current.remove()
     const ds = dataset
-    const sketch = (p: any) => {
-      const W = 540, H = 180
+    const sketch = (p: p5) => {
+      const containerW = Math.min(step1Ref.current?.clientWidth || 540, 540)
+      const W = containerW, H = 180
       let genData = ds === 'swissroll' ? makeSwissRoll(50) : ds === 'moons' ? makeMoons(50) : makeCircles(50)
       const pcaSyn = genData.points.map(r => r.length > 2 ? computePCA([r], 2).projected[0] : r)
       const tsneSyn = runTSNE(genData.points, 20, 100, 200, 42)
@@ -250,8 +251,8 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
     if (activeStep !== 1 || !step2Ref.current || tsneFrames.length === 0) return
     if (step2P5.current) step2P5.current.remove()
     const frame = tsneFrames[Math.min(tsneIter, tsneFrames.length - 1)]
-    const sketch = (p: any) => {
-      const W = 480, H = 400, M = { t: 20, r: 20, b: 30, l: 40 }
+    const sketch = (p: p5) => {
+      const W = Math.min(step2Ref.current?.clientWidth || 480, 480), H = 400, M = { t: 20, r: 20, b: 30, l: 40 }
       p.setup = () => { const c = p.createCanvas(W, H); c.parent(step2Ref.current!); p.textFont('Inter'); p.noLoop() }
       p.draw = () => { drawCellScatter(p, frame, cellTypes, W, H, M, '') }
     }
@@ -271,8 +272,8 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
     if (activeStep !== 2 || !step3Ref.current || !umapResult) return
     if (step3P5.current) step3P5.current.remove()
     const coords = umapResult
-    const sketch = (p: any) => {
-      const W = 480, H = 400, M = { t: 20, r: 20, b: 30, l: 40 }
+    const sketch = (p: p5) => {
+      const W = Math.min(step3Ref.current?.clientWidth || 480, 480), H = 400, M = { t: 20, r: 20, b: 30, l: 40 }
       p.setup = () => { const c = p.createCanvas(W, H); c.parent(step3Ref.current!); p.textFont('Inter'); p.noLoop() }
       p.draw = () => { drawCellScatter(p, coords, cellTypes, W, H, M, '') }
     }
@@ -284,8 +285,9 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
     if (activeStep !== 3 || !step4AllRef.current || !tsneResult4 || !umapResult) return
     if (step4AllP5.current) step4AllP5.current.remove()
     const pcaR = pca.map(r => [r[0], r[1]])
-    const sketch = (p: any) => {
-      const W = 540, H = 180
+    const sketch = (p: p5) => {
+      const containerW = Math.min(step4AllRef.current?.clientWidth || 540, 540)
+      const W = containerW, H = 180
       p.setup = () => { const c = p.createCanvas(W, H); c.parent(step4AllRef.current!); p.textFont('Inter'); p.noLoop() }
       p.draw = () => {
         p.background(255)
@@ -314,7 +316,9 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
           ))}
         </div>
         {isComputing && <div className="flex justify-center py-4 text-sm text-purple-500">{isZh ? '计算中...' : 'Computing...'}</div>}
-        <div ref={step1Ref} className="flex justify-center" />
+        <div ref={step1Ref} className="flex justify-center" role="img" aria-label="Synthetic dataset comparison of PCA, t-SNE, and UMAP dimensionality reduction">
+          <span className="sr-only">Side-by-side comparison of PCA, t-SNE, and UMAP applied to synthetic datasets (Swiss Roll, Two Moons, Circles).</span>
+        </div>
       </div>
     )
   }
@@ -325,12 +329,14 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
         <div className="control-group flex-wrap">
           <div className="flex items-center gap-3">
             <label>{isZh ? '困惑度' : 'Perplexity'}:</label>
-            <input type="range" min={5} max={50} value={perplexity} onChange={e => setPerplexity(Number(e.target.value))} />
+            <input type="range" min={5} max={50} value={perplexity} onChange={e => setPerplexity(Number(e.target.value))}
+              aria-label="t-SNE perplexity parameter" />
             <span className="font-mono text-sm w-8">{perplexity}</span>
           </div>
           <div className="flex items-center gap-3">
             <label>{isZh ? '学习率' : 'LR'}:</label>
-            <input type="range" min={50} max={500} step={10} value={lr} onChange={e => setLr(Number(e.target.value))} />
+            <input type="range" min={50} max={500} step={10} value={lr} onChange={e => setLr(Number(e.target.value))}
+              aria-label="t-SNE learning rate" />
             <span className="font-mono text-sm w-10">{lr}</span>
           </div>
         </div>
@@ -344,7 +350,9 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
           {isZh ? '迭代' : 'Iter'}: <span className="font-bold">{iters[Math.min(tsneIter, iters.length - 1)]}</span> / 300
         </div>
         {isComputing && <div className="flex justify-center py-4 text-sm text-red-500">{isZh ? '计算中...' : 'Computing t-SNE...'}</div>}
-        <div ref={step2Ref} className="flex justify-center" />
+        <div ref={step2Ref} className="flex justify-center" role="img" aria-label="t-SNE iteration visualization of cell type clusters">
+          <span className="sr-only">Animated t-SNE visualization showing how cell clusters form over iterations. Use play/pause controls to observe convergence.</span>
+        </div>
       </div>
     )
   }
@@ -355,17 +363,21 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
         <div className="control-group flex-wrap">
           <div className="flex items-center gap-3">
             <label>n_neighbors:</label>
-            <input type="range" min={2} max={50} value={nNeighbors} onChange={e => setNN(Number(e.target.value))} />
+            <input type="range" min={2} max={50} value={nNeighbors} onChange={e => setNN(Number(e.target.value))}
+              aria-label="UMAP n_neighbors parameter" />
             <span className="font-mono text-sm w-8">{nNeighbors}</span>
           </div>
           <div className="flex items-center gap-3">
             <label>min_dist:</label>
-            <input type="range" min={0.01} max={1} step={0.01} value={minDist} onChange={e => setMinDist(Number(e.target.value))} />
+            <input type="range" min={0.01} max={1} step={0.01} value={minDist} onChange={e => setMinDist(Number(e.target.value))}
+              aria-label="UMAP min_dist parameter" />
             <span className="font-mono text-sm w-10">{minDist.toFixed(2)}</span>
           </div>
         </div>
         {isComputing && <div className="flex justify-center py-4 text-sm text-blue-500">{isZh ? '计算中...' : 'Computing UMAP...'}</div>}
-        <div ref={step3Ref} className="flex justify-center" />
+        <div ref={step3Ref} className="flex justify-center" role="img" aria-label="UMAP visualization of cell type clusters">
+          <span className="sr-only">UMAP visualization showing cell clusters colored by type. Adjust n_neighbors and min_dist to explore cluster structure.</span>
+        </div>
       </div>
     )
   }
@@ -379,7 +391,9 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
           </button>
         </div>
         {isComputing && <div className="flex justify-center py-4 text-sm text-green-500">{isZh ? '计算中...' : 'Computing...'}</div>}
-        <div ref={step4AllRef} className="flex justify-center" />
+        <div ref={step4AllRef} className="flex justify-center" role="img" aria-label="Comparison of PCA, t-SNE, and UMAP for cell type visualization">
+          <span className="sr-only">Side-by-side comparison of PCA, t-SNE, and UMAP applied to real single-cell data. Click re-run to see stochastic variation in t-SNE.</span>
+        </div>
       </div>
     )
   }

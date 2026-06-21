@@ -13,7 +13,7 @@ export default function LinearAlgebraHome() {
   const t = (key: string): string => {
     const dict = lang === 'zh' ? laZh : laEn
     const keys = key.split('.')
-    let obj: any = dict
+    let obj: any = dict  // eslint-disable-line @typescript-eslint/no-explicit-any -- i18n key traversal
     for (const k of keys) {
       if (obj && typeof obj === 'object' && k in obj) obj = obj[k]
       else return key

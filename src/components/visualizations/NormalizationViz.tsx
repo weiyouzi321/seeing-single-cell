@@ -98,8 +98,9 @@ export default function NormalizationViz({ data, geneNames, cellTypes, lang = 'e
     if (distP5.current) distP5.current.remove()
     const currentData = normalizedData
     const rawData = data
-    const sketch = (p: any) => {
-      const width = 440
+    const sketch = (p: p5) => {
+      const containerW = Math.min(distRef.current?.clientWidth || 440, 440)
+      const width = containerW
       const height = 280
       const margin = { top: 40, right: 20, bottom: 45, left: 50 }
       const plotW = width - margin.left - margin.right
@@ -109,6 +110,13 @@ export default function NormalizationViz({ data, geneNames, cellTypes, lang = 'e
         canvas.parent(distRef.current!)
         p.textFont('Inter')
         p.noLoop()
+      }
+
+      p.windowResized = () => {
+        if (distRef.current) {
+          const nw = Math.min(distRef.current.clientWidth, 440)
+          p.resizeCanvas(nw, height)
+        }
       }
       p.draw = () => {
         p.background(255)
@@ -183,7 +191,7 @@ export default function NormalizationViz({ data, geneNames, cellTypes, lang = 'e
     if (!matrixRef.current) return
     if (matrixP5.current) matrixP5.current.remove()
     const currentData = normalizedData
-    const sketch = (p: any) => {
+    const sketch = (p: p5) => {
       const cellSize = 10, marginLeft = 80, marginTop = 40, marginRight = 50
       const cols = currentData[0].length, rows = currentData.length
       const matrixW = cols * cellSize, matrixH = rows * cellSize
@@ -199,7 +207,7 @@ export default function NormalizationViz({ data, geneNames, cellTypes, lang = 'e
       p.draw = () => {
         p.background(255)
         p.fill(50); p.textSize(12); p.textAlign(p.LEFT, p.TOP)
-        p.text((L as any).exprMatrix || "Expression Matrix", marginLeft, 8)
+        p.text((L as Record<string, string>).exprMatrix || "Expression Matrix", marginLeft, 8)
         p.noStroke()
         let lastType = ''
         for (let i = 0; i < rows; i++) {
@@ -282,8 +290,8 @@ export default function NormalizationViz({ data, geneNames, cellTypes, lang = 'e
           <div className="border-t border-gray-200 pt-2 mt-1">
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{L.logTransform}</div>
             <div className="flex flex-col gap-1.5">
-              {['none', 'log1p', 'log2', 'ln'].map((mode) => (
-                <button key={mode} onClick={() => setLogTransform(mode as any)}
+              {(['none', 'log1p', 'log2', 'ln'] as const).map((mode) => (
+                <button key={mode} onClick={() => setLogTransform(mode)}
                   className={"px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all text-left " +
                     (logTransform === mode ? 'bg-emerald-600 text-white shadow-sm' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200')}>
                   {mode === 'none' ? L.logNone : mode === 'log1p' ? L.log1p : mode === 'log2' ? L.log2 : L.logLn}
@@ -296,10 +304,13 @@ export default function NormalizationViz({ data, geneNames, cellTypes, lang = 'e
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <div ref={distRef} className="p5-canvas-container" />
+          <div ref={distRef} className="p5-canvas-container" role="img" aria-label="Gene expression distribution comparing raw and normalized data">
+            <span className="sr-only">Histogram comparing raw and normalized expression levels for the selected gene. Toggle transformation steps to see their effect.</span>
+          </div>
           <div className="control-group mt-2">
             <label>{L.gene}</label>
-            <select value={selectedGene} onChange={(e) => setSelectedGene(parseInt(e.target.value))}>
+            <select value={selectedGene} onChange={(e) => setSelectedGene(parseInt(e.target.value))}
+              aria-label="Select gene for normalization comparison">
               {geneNames.map((gene, i) => (<option key={gene} value={i}>{gene}</option>))}
             </select>
           </div>
@@ -307,7 +318,9 @@ export default function NormalizationViz({ data, geneNames, cellTypes, lang = 'e
       </div>
       <div className="flex gap-6 items-start">
         <div className="flex-1 min-w-0">
-          <div ref={matrixRef} className="p5-canvas-container" />
+          <div ref={matrixRef} className="p5-canvas-container" role="img" aria-label="Normalized expression matrix heatmap">
+            <span className="sr-only">Heatmap of normalized gene expression across all cells. Hover over cells to see expression values.</span>
+          </div>
         </div>
         <div className="w-56 flex-shrink-0 space-y-4">
           {hoveredCell ? (

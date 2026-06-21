@@ -23,6 +23,9 @@ export default function MatrixVectorViz({
   const containerRef = useRef<HTMLDivElement>(null)
   const [selectedRow, setSelectedRow] = useState<number | null>(null)
   const [calculationStep, setCalculationStep] = useState<number>(0)
+  const selectedRowRef = useRef<number | null>(null)
+  const calculationStepRef = useRef<number>(0)
+  const p5InstanceRef = useRef<p5 | null>(null)
 
   // 解析颜色 (hex to RGB)
   const hexToRgb = (hex: string) => {
@@ -93,14 +96,14 @@ export default function MatrixVectorViz({
             const y = mY + i * cSz
             const v = matrix[i][j]
             const n = v / maxVal
-            const isSelected = selectedRow === i
+            const isSelected = selectedRowRef.current === i
 
             if (isSelected) {
               p.fill(themeRgb.r, themeRgb.g, themeRgb.b, 100)
               p.noStroke()
               p.rect(x, y, cSz, cSz)
               // 显示计算过程
-              if (j < calculationStep) {
+              if (j < calculationStepRef.current) {
                 p.fill(0)
                 p.textSize(8)
                 p.textAlign(p.CENTER, p.CENTER)
@@ -111,7 +114,7 @@ export default function MatrixVectorViz({
               // Normal cell coloring based on value
               const intensity = Math.min(Math.abs(n), 1)
               const c = p.lerpColor(p.color(255), p.color(themeRgb.r, themeRgb.g, themeRgb.b), intensity)
-              p.fill(c as any)
+              p.fill(c)
               p.stroke(230)
               p.strokeWeight(0.5)
               p.rect(x, y, cSz, cSz)
@@ -143,8 +146,8 @@ export default function MatrixVectorViz({
         }
 
         // Draw result vector values (computed)
-        if (selectedRow !== null) {
-          const row = selectedRow
+        if (selectedRowRef.current !== null) {
+          const row = selectedRowRef.current
           let sum = 0
           for (let j = 0; j < cX; j++) {
             sum += matrix[row][j] * vector[j]
@@ -156,10 +159,10 @@ export default function MatrixVectorViz({
             const term = matrix[row][j] * vector[j]
 
             p.noStroke()
-            p.fill(220, 60, 60, 150 + (j < calculationStep ? 100 : 0))
+            p.fill(220, 60, 60, 150 + (j < calculationStepRef.current ? 100 : 0))
             p.textSize(8)
             p.textAlign(p.CENTER, p.CENTER)
-            if (j < calculationStep) {
+            if (j < calculationStepRef.current) {
               p.text(`${term.toFixed(1)}`, x + resultW/2, y + cSz/2)
             } else {
               p.text('?', x + resultW/2, y + cSz/2)
@@ -189,7 +192,7 @@ export default function MatrixVectorViz({
         }
 
         // Click instructions
-        if (selectedRow === null) {
+        if (selectedRowRef.current === null) {
           p.fill(150); p.textSize(9); p.textAlign(p.CENTER, p.BOTTOM)
           p.text(
             lang === 'zh' ? '点击矩阵的行查看计算' : 'Click a row to calculate',
@@ -221,8 +224,18 @@ export default function MatrixVectorViz({
     }
 
     const sketchInstance = new p5(sketch)
-    return () => sketchInstance.remove()
-  }, [matrix, vector, labelsRows, labelsCols, color, lang, selectedRow, calculationStep])
+    p5InstanceRef.current = sketchInstance
+    return () => { sketchInstance.remove(); p5InstanceRef.current = null }
+  }, [matrix, vector, labelsRows, labelsCols, color, lang])
+
+  // Sync state to refs and trigger redraw (cheap — no canvas recreation)
+  useEffect(() => {
+    selectedRowRef.current = selectedRow
+    calculationStepRef.current = calculationStep
+    if (p5InstanceRef.current) {
+      p5InstanceRef.current.redraw()
+    }
+  }, [selectedRow, calculationStep])
 
   // Step animation for showing calculation terms
   useEffect(() => {

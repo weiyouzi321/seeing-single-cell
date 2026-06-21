@@ -12,15 +12,12 @@
     "export": "NODE_ENV=production next build && mv out docs"
   },
   "dependencies": {
-    "d3": "^7.9.0",
     "katex": "^0.16.10",
     "lucide-react": "^1.11.0",
-    "mathjs": "^12.4.2",
     "next": "14.2.5",
     "p5": "^1.9.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-p5": "^1.3.35",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {

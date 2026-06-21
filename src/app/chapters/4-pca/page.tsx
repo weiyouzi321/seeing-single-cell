@@ -24,8 +24,8 @@ function K({ math }: { math: string }) {
     let cancelled = false
     const render = () => {
       if (cancelled) return
-      if (ref.current && typeof window !== 'undefined' && (window as any).katex) {
-        try { (window as any).katex.render(math, ref.current, { throwOnError: false, displayMode: false }) } catch(e) { if (ref.current && !cancelled) ref.current.textContent = math }
+      if (ref.current && typeof window !== 'undefined' && window.katex) {
+        try { window.katex.render(math, ref.current, { throwOnError: false, displayMode: false }) } catch(e) { if (ref.current && !cancelled) ref.current.textContent = math }
       } else if (!cancelled) {
         setTimeout(render, 200)
       }
@@ -40,12 +40,13 @@ export default function PcaChapter() {
   const { t, lang } = useLang()
   const isZh = lang === 'zh'
   const [data, setData] = useState<PBMCData | null>(null)
-  const [pcaData, setPcaData] = useState<any>(null)
+  interface PcaData { projected?: number[][]; variance_ratio?: number[]; cov?: number[][]; loadings?: number[][]; evals?: number[]; [key: string]: unknown }
+const [pcaData, setPcaData] = useState<PcaData | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeStep, setActiveStep] = useState(0)
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !(window as any).katex) {
+    if (typeof window !== 'undefined' && !window.katex) {
       const script = document.createElement('script')
       script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js'
       script.async = true

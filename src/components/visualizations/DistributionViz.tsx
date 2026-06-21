@@ -298,7 +298,9 @@ export default function DistributionViz({ data, geneNames, cellTypes, lang, tran
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       <div className="flex-1">
-        <div ref={containerRef} className="p5-canvas-container" />
+        <div ref={containerRef} className="p5-canvas-container" role="img" aria-label="Gene expression distribution histogram">
+          <span className="sr-only">Interactive histogram showing expression level distribution for the selected gene. Hover over bars to see bin details.</span>
+        </div>
 
         {/* Hover tooltip */}
         {hoveredBar && (
@@ -319,6 +321,7 @@ export default function DistributionViz({ data, geneNames, cellTypes, lang, tran
               setSelectedGene(parseInt(e.target.value))
               setHoveredBar(null)
             }}
+            aria-label="Select gene for expression distribution"
           >
             {geneNames.map((gene, i) => (
               <option key={gene} value={i}>{gene}</option>
@@ -333,6 +336,7 @@ export default function DistributionViz({ data, geneNames, cellTypes, lang, tran
             value={binCount}
             onChange={(e) => setBinCount(parseInt(e.target.value))}
             className="w-32"
+            aria-label="Number of histogram bins"
           />
           <span className="font-mono text-sm text-gray-500">{binCount}</span>
 

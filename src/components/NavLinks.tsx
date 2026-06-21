@@ -64,15 +64,17 @@ function DropdownGroup({ group, lang, onItemClick }: {
 
   return (
     <div className="min-w-[180px]">
-      <div className={`px-4 py-2 text-xs font-bold uppercase tracking-wider bg-gradient-to-r ${group.color} bg-clip-text text-transparent`}>
+      <div className={`px-4 py-2 text-xs font-bold uppercase tracking-wider bg-gradient-to-r ${group.color} bg-clip-text text-transparent`}
+           role="presentation">
         {label}
       </div>
-      <div className="py-1">
+      <div className="py-1" role="group" aria-label={label}>
         {group.items.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             onClick={onItemClick}
+            role="menuitem"
             className="block px-4 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors rounded-sm mx-1"
           >
             {lang === 'zh' ? item.labelZh : item.labelEn}
@@ -140,6 +142,9 @@ export default function NavLinks() {
                 ? 'text-[#4361ee] bg-gray-50 dark:bg-slate-800'
                 : 'text-gray-600 dark:text-gray-300 hover:text-[#4361ee] dark:hover:text-[#4361ee] hover:bg-gray-50 dark:hover:bg-slate-800'
               }`}
+            aria-label={lang === 'zh' ? '章节导航' : 'Chapter navigation'}
+            aria-expanded={chaptersOpen}
+            aria-haspopup="true"
           >
             {lang === 'zh' ? '章节' : 'Chapters'}
             <svg
@@ -156,6 +161,8 @@ export default function NavLinks() {
             <div
               className="absolute top-full right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-3 z-50 animate-fade-in-up"
               style={{ minWidth: '580px' }}
+              role="menu"
+              aria-label={lang === 'zh' ? '章节列表' : 'Chapter list'}
             >
               <div className="flex gap-2 px-2">
                 {chapterGroups.map((group) => (

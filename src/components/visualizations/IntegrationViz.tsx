@@ -126,7 +126,10 @@ export default function IntegrationViz({
 
   return (
     <div className="w-full">
-      <div ref={containerRef} className="w-full h-[500px] rounded-xl border border-gray-200 overflow-hidden bg-white" />
+      <div ref={containerRef} className="w-full h-[500px] rounded-xl border border-gray-200 overflow-hidden bg-white"
+           role="img" aria-label="Batch integration visualization showing cell distributions before and after integration">
+        <span className="sr-only">Interactive visualization showing how batch integration aligns cells from different experimental batches. Compare before and after integration views.</span>
+      </div>
       <p className="text-center mt-3 text-gray-500 text-sm">{phaseText}</p>
     </div>
   )

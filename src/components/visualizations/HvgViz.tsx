@@ -69,8 +69,9 @@ export default function HvgViz({ data, geneNames, cellTypes, lang = 'en' }: HvgV
     if (!scatterRef.current) return
     if (scatterP5.current) scatterP5.current.remove()
     const stats = geneStats
-    const sketch = (p: any) => {
-      const width = 440, height = 380
+    const sketch = (p: p5) => {
+      const containerW = Math.min(scatterRef.current?.clientWidth || 440, 440)
+      const width = containerW, height = 380
       const margin = { top: 20, right: 20, bottom: 50, left: 55 }
       const plotW = width - margin.left - margin.right
       const plotH = height - margin.top - margin.bottom
@@ -115,7 +116,7 @@ export default function HvgViz({ data, geneNames, cellTypes, lang = 'en' }: HvgV
         })
         p.endShape()
         // Points
-        stats.forEach((s: any) => {
+        stats.forEach((s: { gene: string; mean: number; variance: number; cv: number; index: number; isHVG: boolean }) => {
           const x = ox + (s.mean / maxMean) * plotW
           const y = oy + plotH - (s.variance / maxVar) * plotH
           if (s.isHVG) {
@@ -174,7 +175,7 @@ export default function HvgViz({ data, geneNames, cellTypes, lang = 'en' }: HvgV
     if (heatmapP5.current) heatmapP5.current.remove()
     const hvgIndices = hvgList.map(h => h.index)
     if (hvgIndices.length === 0) return
-    const sketch = (p: any) => {
+    const sketch = (p: p5) => {
       const cellW = 8, cellH = 12
       const marginLeft = 70, marginTop = 30, marginBottom = 60
       const nCells = data.length, nHVGs = hvgIndices.length
@@ -259,7 +260,8 @@ export default function HvgViz({ data, geneNames, cellTypes, lang = 'en' }: HvgV
       <div className="control-group" style={{ background: '#fef2f2', border: '1px solid #fecaca' }}>
         <label className="text-sm font-semibold text-gray-700">Number of HVGs</label>
         <input type="range" min="3" max={Math.min(geneNames.length, 25)} value={nTopGenes}
-          onChange={(e) => setNTopGenes(parseInt(e.target.value))} className="w-48" />
+          onChange={(e) => setNTopGenes(parseInt(e.target.value))} className="w-48"
+          aria-label="Number of highly variable genes to select" />
         <span className="font-mono text-sm text-red-600 font-semibold">{nTopGenes}</span>
       </div>
 
@@ -267,7 +269,9 @@ export default function HvgViz({ data, geneNames, cellTypes, lang = 'en' }: HvgV
       <div className="flex gap-6 items-start">
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-semibold text-gray-500 mb-2">Mean vs Variance</h4>
-          <div ref={scatterRef} className="p5-canvas-container" />
+          <div ref={scatterRef} className="p5-canvas-container" role="img" aria-label="Scatter plot of gene mean expression vs variance showing highly variable genes">
+            <span className="sr-only">Scatter plot showing gene mean expression vs variance. Highly variable genes (HVGs) are highlighted in red, with Poisson and negative binomial distribution fits shown as reference curves.</span>
+          </div>
         </div>
         <div className="w-56 flex-shrink-0">
           <div className="stat-card">
@@ -291,7 +295,9 @@ export default function HvgViz({ data, geneNames, cellTypes, lang = 'en' }: HvgV
       {/* Bottom: Heatmap (full width, cells sorted by type) */}
       <div className="flex gap-6 items-start">
         <div className="flex-1 min-w-0">
-          <div ref={heatmapRef} className="p5-canvas-container" />
+          <div ref={heatmapRef} className="p5-canvas-container" role="img" aria-label="Heatmap of highly variable gene expression across cells sorted by type">
+            <span className="sr-only">Heatmap showing expression of selected highly variable genes across all cells, sorted by cell type. Hover to see gene, cell type, and expression value.</span>
+          </div>
           <p className="text-xs text-gray-400 mt-1">
             {L.heatmapDesc}
           </p>

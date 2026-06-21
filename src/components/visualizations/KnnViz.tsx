@@ -266,8 +266,8 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
     if (activeStep !== 0 || !step1Ref.current) return
     if (step1P5.current) step1P5.current.remove()
     const ca = cellA, cb = cellB
-    const sketch = (p: any) => {
-      const W = 520, H = 320, M = { t: 30, r: 20, b: 50, l: 55 }
+    const sketch = (p: p5) => {
+      const W = Math.min(step1Ref.current?.clientWidth || 520, 520), H = 320, M = { t: 30, r: 20, b: 50, l: 55 }
       const pw = W - M.l - M.r, ph = H - M.t - M.b
       const ng = geneNames.length
       const maxVal = Math.max(...data[ca], ...data[cb]) * 1.1 || 1
@@ -319,8 +319,8 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
     if (activeStep !== 1 || !step2Ref.current) return
     if (step2P5.current) step2P5.current.remove()
     const proj = pca.projected; const edges = knn.edges
-    const sketch = (p: any) => {
-      const W = 520, H = 440, M = { t: 30, r: 30, b: 55, l: 55 }
+    const sketch = (p: p5) => {
+      const W = Math.min(step2Ref.current?.clientWidth || 520, 520), H = 440, M = { t: 30, r: 30, b: 55, l: 55 }
       const pw = W - M.l - M.r, ph = H - M.t - M.b
       const valsX = proj.map(r => r[0]), valsY = proj.map(r => r[1])
       let mnX = Math.min(...valsX), mxX = Math.max(...valsX), mnY = Math.min(...valsY), mxY = Math.max(...valsY)
@@ -421,8 +421,8 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
       [255, 112, 67], [0, 172, 193], [121, 85, 72], [96, 125, 139], [205, 220, 57],
       [233, 30, 99], [103, 58, 183], [0, 150, 136], [255, 193, 7], [158, 158, 158],
     ]
-    const sketch = (p: any) => {
-      const W = 520, H = 440, M = { t: 30, r: 30, b: 55, l: 55 }
+    const sketch = (p: p5) => {
+      const W = Math.min(step3Ref.current?.clientWidth || 520, 520), H = 440, M = { t: 30, r: 30, b: 55, l: 55 }
       const pw = W - M.l - M.r, ph = H - M.t - M.b
       const valsX = proj.map((r: number[]) => r[0]), valsY = proj.map((r: number[]) => r[1])
       let mnX = Math.min(...valsX), mxX = Math.max(...valsX), mnY = Math.min(...valsY), mxY = Math.max(...valsY)
@@ -469,8 +469,8 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
       [66, 133, 244], [234, 67, 53], [52, 168, 83], [251, 188, 4], [171, 71, 188],
       [255, 112, 67], [0, 172, 193], [121, 85, 72], [96, 125, 139], [205, 220, 57],
     ]
-    const sketch = (p: any) => {
-      const W = 520, H = 440, M = { t: 30, r: 30, b: 55, l: 55 }
+    const sketch = (p: p5) => {
+      const W = Math.min(step4Ref.current?.clientWidth || 520, 520), H = 440, M = { t: 30, r: 30, b: 55, l: 55 }
       const pw = W - M.l - M.r, ph = H - M.t - M.b
       const valsX = proj.map((r: number[]) => r[0]), valsY = proj.map((r: number[]) => r[1])
       let mnX = Math.min(...valsX), mxX = Math.max(...valsX), mnY = Math.min(...valsY), mxY = Math.max(...valsY)
@@ -504,13 +504,15 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
         <div className="control-group">
           <div className="flex items-center gap-2">
             <label>{isZh ? '\u7ec6\u80de A' : 'Cell A'}:</label>
-            <select value={cellA} onChange={e => setCellA(Number(e.target.value))}>
+            <select value={cellA} onChange={e => setCellA(Number(e.target.value))}
+              aria-label="Select cell A for distance comparison">
               {Array.from({ length: nCells }, (_, i) => <option key={i} value={i}>#{i + 1} ({cellTypes[i]})</option>)}
             </select>
           </div>
           <div className="flex items-center gap-2">
             <label>{isZh ? '\u7ec6\u80de B' : 'Cell B'}:</label>
-            <select value={cellB} onChange={e => setCellB(Number(e.target.value))}>
+            <select value={cellB} onChange={e => setCellB(Number(e.target.value))}
+              aria-label="Select cell B for distance comparison">
               {Array.from({ length: nCells }, (_, i) => <option key={i} value={i}>#{i + 1} ({cellTypes[i]})</option>)}
             </select>
           </div>
@@ -538,22 +540,29 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
         <div className="control-group">
           <div className="flex items-center gap-3 flex-1">
             <label>{isZh ? 'K (\u90bb\u5c45\u6570)' : 'K (neighbors)'}:</label>
-            <input type="range" min={1} max={30} value={kVal} onChange={e => setKVal(Number(e.target.value))} className="flex-1" />
+            <input type="range" min={1} max={30} value={kVal} onChange={e => setKVal(Number(e.target.value))} className="flex-1"
+              aria-label="Number of nearest neighbors (K)" />
             <span className="font-mono text-sm w-8">{kVal}</span>
           </div>
           <div className="flex items-center gap-2">
             <label>{isZh ? '\u8ddd\u79bb' : 'Metric'}:</label>
             <button onClick={() => setMetric('euclidean')}
+              aria-label="Use Euclidean distance metric"
+              aria-pressed={metric === 'euclidean'}
               className={`px-3 py-1 rounded text-sm ${metric === 'euclidean' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
               {isZh ? '\u6b27\u6c0f' : 'Euclidean'}
             </button>
             <button onClick={() => setMetric('cosine')}
+              aria-label="Use cosine distance metric"
+              aria-pressed={metric === 'cosine'}
               className={`px-3 py-1 rounded text-sm ${metric === 'cosine' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
               {isZh ? '\u4f59\u5f26' : 'Cosine'}
             </button>
           </div>
         </div>
-        <div ref={step2Ref} className="flex justify-center" />
+        <div ref={step2Ref} className="flex justify-center" role="img" aria-label="KNN graph visualization showing cell connections in PCA space">
+          <span className="sr-only">Interactive KNN graph visualization. Hover over cells to see their nearest neighbors. Edges connect cells to their K nearest neighbors.</span>
+        </div>
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
             <div className="text-xs text-gray-500">{isZh ? '\u603b\u8fb9\u6570' : 'Total Edges'}</div>
@@ -597,7 +606,9 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
           <span className="text-gray-600">{isZh ? '\u8f6e\u6b21' : 'Round'}: <span className="font-bold">{frameIdx}</span> / {frames.length - 1}</span>
           <span className="text-gray-600">{isZh ? '\u793e\u533a\u6570' : 'Communities'}: <span className="font-bold text-purple-600">{nCommunities3}</span></span>
         </div>
-        <div ref={step3Ref} className="flex justify-center" />
+        <div ref={step3Ref} className="flex justify-center" role="img" aria-label="Louvain community detection animation showing clustering iterations">
+          <span className="sr-only">Animated visualization of the Louvain community detection algorithm. Communities are shown as colored clusters in PCA space.</span>
+        </div>
       </div>
     )
   }
@@ -609,14 +620,17 @@ export default function KnnViz({ data, geneNames, cellTypes, lang = 'en', active
           <div className="flex items-center gap-3 flex-1">
             <label>{isZh ? '\u5206\u8fa8\u7387' : 'Resolution'}:</label>
             <input type="range" min={0.1} max={3} step={0.1} value={resolution}
-              onChange={e => setResolution(Number(e.target.value))} className="flex-1" />
+              onChange={e => setResolution(Number(e.target.value))} className="flex-1"
+              aria-label="Louvain resolution parameter controlling cluster granularity" />
             <span className="font-mono text-sm w-10">{resolution.toFixed(1)}</span>
           </div>
           <div className="text-sm text-gray-500">
             {isZh ? '\u805a\u7c7b\u6570' : 'Clusters'}: <span className="font-bold text-purple-600">{nCommunities4}</span>
           </div>
         </div>
-        <div ref={step4Ref} className="flex justify-center" />
+        <div ref={step4Ref} className="flex justify-center" role="img" aria-label="Clustering evaluation with confusion matrix and quality metrics">
+          <span className="sr-only">Visualization showing cluster assignments compared to true cell types, with ARI and NMI quality metrics.</span>
+        </div>
 
         {/* Confusion matrix */}
         <div className="mt-6">

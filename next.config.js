@@ -8,12 +8,12 @@ const nextConfig = {
 
   // GitHub Pages 子路径 - 通过环境变量控制
   // 本地构建: BASE_PATH=''  CI构建: BASE_PATH=/seeing-single-cell
-  basePath: typeof process.env.BASE_PATH !== 'undefined' ? process.env.BASE_PATH : '/seeing-single-cell',
+  basePath: typeof process.env.BASE_PATH !== 'undefined' ? process.env.BASE_PATH : '',
   assetPrefix: process.env.BASE_PATH || '',
   trailingSlash: true,
 
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   images: {

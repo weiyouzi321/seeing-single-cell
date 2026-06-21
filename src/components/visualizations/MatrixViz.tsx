@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import p5 from 'p5'
 
 interface MatrixVizProps {
@@ -166,7 +166,9 @@ export default function MatrixViz({ data, geneNames, cellTypes, lang, translatio
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       <div className="flex-1">
-        <div ref={containerRef} className="p5-canvas-container" />
+        <div ref={containerRef} className="p5-canvas-container" role="img" aria-label="Expression matrix heatmap visualization showing gene expression across cell types">
+          <span className="sr-only">Interactive expression matrix heatmap. Hover over cells to see gene expression values for each cell type. Click to highlight rows and columns.</span>
+        </div>
         <div className="control-group">
           <label>{translations?.colorScale || 'Color Scale'}</label>
           <input
@@ -177,6 +179,7 @@ export default function MatrixViz({ data, geneNames, cellTypes, lang, translatio
             value={colorScale}
             onChange={(e) => setColorScale(parseFloat(e.target.value))}
             className="w-40"
+            aria-label="Color scale factor"
           />
           <span className="font-mono text-sm text-gray-500">{colorScale.toFixed(1)}×</span>
         </div>

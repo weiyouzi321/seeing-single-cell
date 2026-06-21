@@ -18,13 +18,13 @@ function K({ math }: { math: string }) {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null
     const render = () => {
-      if (ref.current && (window as any).katex) {
-        try { (window as any).katex.render(math, ref.current, { throwOnError: false }) } catch(e) {}
+      if (ref.current && window.katex) {
+        try { window.katex.render(math, ref.current, { throwOnError: false }) } catch(e) {}
       } else if (ref.current) {
         ref.current.textContent = math
       }
     }
-    if ((window as any).katex) {
+    if (window.katex) {
       render()
     } else {
       timer = setTimeout(render, 500)
@@ -38,12 +38,13 @@ export default function DimRedChapter() {
   const { t, lang } = useLang()
   const isZh = lang === 'zh'
   const [data, setData] = useState<PBMCData | null>(null)
-  const [dimredData, setDimredData] = useState<any>(null)
+  interface DimredData { tsne?: number[][]; umap?: number[][]; [key: string]: unknown }
+const [dimredData, setDimredData] = useState<DimredData | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeStep, setActiveStep] = useState(0)
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !(window as any).katex) { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js'; s.async = true; document.head.appendChild(s) }
+    if (typeof window !== 'undefined' && !window.katex) { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js'; s.async = true; document.head.appendChild(s) }
     async function load() { 
       try { 
         const b = process.env.NEXT_PUBLIC_BASE_PATH || ''

@@ -96,8 +96,9 @@ export default function ScaleDataViz({ data, geneNames, cellTypes, lang = 'en' }
     if (!container) return
     if (p5Ref.current) p5Ref.current.remove()
 
-    const sketch = (p: any) => {
-      const width = 380
+    const sketch = (p: p5) => {
+      const containerW = Math.min(container?.clientWidth || 380, 380)
+      const width = containerW
       const height = 260
       const margin = { top: 40, right: 20, bottom: 40, left: 45 }
       const plotW = width - margin.left - margin.right
@@ -226,18 +227,23 @@ export default function ScaleDataViz({ data, geneNames, cellTypes, lang = 'en' }
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <h4 className="text-sm font-semibold text-gray-500 mb-2">{L.before}</h4>
-          <div ref={beforeRef} className="p5-canvas-container" />
+          <div ref={beforeRef} className="p5-canvas-container" role="img" aria-label="Histogram of log-normalized gene expression before centering">
+            <span className="sr-only">Histogram showing the distribution of log-normalized expression values for the selected gene before z-score centering.</span>
+          </div>
         </div>
         <div>
           <h4 className="text-sm font-semibold text-gray-500 mb-2">{L.after}</h4>
-          <div ref={afterRef} className="p5-canvas-container" />
+          <div ref={afterRef} className="p5-canvas-container" role="img" aria-label="Histogram of gene expression after z-score centering">
+            <span className="sr-only">Histogram showing the distribution of expression values for the selected gene after z-score centering (mean=0, std=1).</span>
+          </div>
         </div>
       </div>
 
       {/* Gene selector */}
       <div className="control-group">
         <label>{L.hvgGene}</label>
-        <select value={selectedGeneIdx} onChange={(e) => setSelectedGeneIdx(parseInt(e.target.value))}>
+        <select value={selectedGeneIdx} onChange={(e) => setSelectedGeneIdx(parseInt(e.target.value))}
+          aria-label="Select HVG gene for scaling comparison">
           {hvgNames.map((gene, i) => (
             <option key={gene} value={i}>{gene}</option>
           ))}

@@ -59,8 +59,8 @@ export default function RootLayout({
           <main className="max-w-6xl mx-auto px-6">
             {children}
           </main>
-          <footer className="border-t border-gray-100 mt-20">
-            <div className="max-w-6xl mx-auto px-6 py-8 text-center text-sm text-gray-400">
+          <footer className="border-t border-gray-100 dark:border-slate-800 mt-20">
+            <div className="max-w-6xl mx-auto px-6 py-8 text-center text-sm text-gray-400 dark:text-slate-500">
               <p>
                 <FooterText />
               </p>

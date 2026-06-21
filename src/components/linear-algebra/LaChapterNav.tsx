@@ -45,6 +45,7 @@ export default function LaChapterNav({ currentHref }: { currentHref: string }) {
         {prev ? (
           <Link
             href={prev.href}
+            aria-label={(isZh ? '上一节: ' : 'Previous: ') + prev.num + ' · ' + (isZh ? prev.zh : prev.en)}
             className="group flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-indigo-300 hover:shadow-sm transition-all"
           >
             <span className="text-indigo-500">←</span>
@@ -81,6 +82,7 @@ export default function LaChapterNav({ currentHref }: { currentHref: string }) {
         {next ? (
           <Link
             href={next.href}
+            aria-label={(isZh ? '下一节: ' : 'Next: ') + next.num + ' · ' + (isZh ? next.zh : next.en)}
             className="group flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-indigo-300 hover:shadow-sm transition-all"
           >
             <div className="text-right">

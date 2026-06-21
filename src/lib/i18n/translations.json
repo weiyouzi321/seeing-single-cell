@@ -12,6 +12,10 @@
       "advanced": "Advanced Analysis",
       "ch8": "Differential Expression"
     },
+    "ch8": {
+      "title": "Differential Expression",
+      "subtitle": "Find genes that distinguish cell types or conditions. From volcano plots to marker heatmaps, understand the statistics behind differential expression."
+    },
     "home": {
       "tagline": "Interactive Learning",
       "title": "Seeing Single-Cell",
@@ -607,6 +611,10 @@
       "ch7": "批次整合",
       "advanced": "高级分析",
       "ch8": "差异表达"
+    },
+    "ch8": {
+      "title": "差异表达",
+      "subtitle": "找到区分不同细胞类型或条件的基因。从火山图到标记基因热图，理解差异表达的统计原理。"
     },
     "home": {
       "tagline": "交互式学习",

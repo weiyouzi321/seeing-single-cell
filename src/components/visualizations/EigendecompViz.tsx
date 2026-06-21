@@ -99,12 +99,12 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
   const varexp = useMemo(() => { const t = pca.evals.reduce((s: number,v: number)=>s+v,0); return t>0 ? pca.evals.map((v: number)=>v/t) : pca.evals.map(()=>0) }, [pca])
 
   const rm = (k: string) => { if(refs.current[k]) { refs.current[k]!.remove(); refs.current[k] = null } }
-  const mk = (k: string, el: HTMLDivElement | null, sk: any) => { if(!el) return; rm(k); refs.current[k] = new p5(sk) }
+  const mk = (k: string, el: HTMLDivElement | null, sk: (p: p5) => void) => { if(!el) return; rm(k); refs.current[k] = new p5(sk) }
 
   // ── Step 1: Interactive scatter ──
   useEffect(() => {
     if (activeStep !== 0 || !s1Ref.current) return
-    const sk = (p: any) => {
+    const sk = (p: p5) => {
       const W=500, H=400, M={t:25,r:20,b:45,l:50}, pw=W-M.l-M.r, ph=H-M.t-M.b
       let hov=-1, zm=1, px2=0, py2=0, pan=false, psx=0,psy=0,ppx=0,ppy=0
       const xs=data.map((r: number[])=>r[xG]), ys=data.map((r: number[])=>r[yG])
@@ -129,7 +129,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
         p.fill(180);p.noStroke();p.textSize(9);p.textAlign(p.LEFT,p.BOTTOM);p.text(isZh?'悬停查看 · 滚轮缩放 · 拖拽平移':'Hover · Scroll zoom · Drag pan',M.l,H-3)
       }
       p.mouseMoved=()=>{let c=-1,cd=15;for(let i=0;i<nC;i++){const{x,y}=ts(rx[i],ry[i]);const d=Math.hypot(p.mouseX-x,p.mouseY-y);if(d<cd){c=i;cd=d}}if(c!==hov){hov=c;p.redraw()}}
-      p.mouseWheel=(e: any)=>{if(p.mouseX<M.l||p.mouseX>M.l+pw||p.mouseY<M.t||p.mouseY>M.t+ph)return;zm=Math.max(0.5,Math.min(5,zm+(e.delta>0?-0.12:0.12)));p.redraw();return false}
+      p.mouseWheel=(e: WheelEvent)=>{if(p.mouseX<M.l||p.mouseX>M.l+pw||p.mouseY<M.t||p.mouseY>M.t+ph)return;zm=Math.max(0.5,Math.min(5,zm+(e.deltaY>0?-0.12:0.12)));p.redraw();return false}
       p.mousePressed=()=>{if(p.mouseX>=M.l&&p.mouseX<=M.l+pw&&p.mouseY>=M.t&&p.mouseY<=M.t+ph){pan=true;psx=p.mouseX;psy=p.mouseY;ppx=px2;ppy=py2}}
       p.mouseDragged=()=>{if(!pan)return;px2=ppx+(p.mouseX-psx);py2=ppy+(p.mouseY-psy);p.redraw()}
       p.mouseReleased=()=>{pan=false}
@@ -141,7 +141,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
   // ── Step 2: Variance projection ──
   useEffect(() => {
     if (activeStep !== 1 || !s2Ref.current) return
-    const sk = (p: any) => {
+    const sk = (p: p5) => {
       const W=500, H=360, M={t:30,r:20,b:45,l:50}, pw=W-M.l-M.r, ph=H-M.t-M.b
       const cx=M.l+pw/2, cy=M.t+ph/2, r=Math.min(pw,ph)*0.38
       const xs=data.map((r: number[])=>r[0]), ys=data.map((r: number[])=>r[1])
@@ -181,7 +181,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     const dG = Math.min(nG, 10), dC = Math.min(nC, 20), cSz = 20
     const mX = 60, mY = 55
     const W = mX + dG*cSz + 220, H = mY + dC*cSz + 40
-    const sk = (p: any) => {
+    const sk = (p: p5) => {
       p.setup=()=>{p.createCanvas(W,H).parent(s3MatRef.current!);p.textFont('Inter');p.noLoop()}
       p.draw=()=>{
         p.background(255)
@@ -251,7 +251,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     const W = sigmaX + dG * cSz + 20
     const H = detailY + 105
 
-    const sk = (p: any) => {
+    const sk = (p: p5) => {
       p.setup=()=>{p.createCanvas(W,H).parent(s3CovRef.current!);p.textFont('Inter');p.noLoop()}
       p.draw=()=>{
         p.background(255)
@@ -375,7 +375,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     const W = evX + nPC * (cSz + 2) + 50
     const H = mY + dG * cSz + 130
 
-    const sk = (p: any) => {
+    const sk = (p: p5) => {
       p.setup=()=>{p.createCanvas(W,H).parent(s3EigenRef.current!);p.textFont('Inter');p.noLoop()}
       p.draw=()=>{
         p.background(255)
@@ -526,7 +526,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
     const cSz = 22
     const nPC = Math.min(4, dG)
     const W = 720, H = 420
-    const sk = (p: any) => {
+    const sk = (p: p5) => {
       p.setup=()=>{p.createCanvas(W,H).parent(s3ProjRef.current!);p.textFont('Inter');p.noLoop()}
       p.draw=()=>{
         p.background(255)
@@ -648,7 +648,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
   // ── Step 4: Elbow + PC scatter (unchanged) ──
   useEffect(() => {
     if (activeStep !== 3 || !s4ERef.current) return
-    const sk = (p: any) => {
+    const sk = (p: p5) => {
       const W = 340, H = 320, M = { t: 45, r: 25, b: 55, l: 55 }, pw = W - M.l - M.r, ph = H - M.t - M.b, bW = pw / 10
       p.setup = () => { p.createCanvas(W, H).parent(s4ERef.current!); p.textFont('Inter'); p.noLoop() }
       p.draw = () => {
@@ -709,7 +709,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
 
   useEffect(() => {
     if (activeStep !== 3 || !s4SRef.current) return
-    const sk = (p: any) => {
+    const sk = (p: p5) => {
       const W = 480, H = 360, M = { t: 50, r: 30, b: 65, l: 45 }, pw = W - M.l - M.r, ph = H - M.t - M.b
       let zm_local = zm.current, px2 = ppx.current, py2 = ppy.current
       p.setup = () => { p.createCanvas(W, H).parent(s4SRef.current!); p.textFont('Inter'); p.noLoop() }
@@ -810,7 +810,7 @@ export default function PcaViz({ data, geneNames, cellTypes, lang = 'en', active
           p.redraw()
         }
       }
-      p.mouseWheel = (e: any) => { zm.current = Math.max(0.5, Math.min(5, zm.current + (e.delta > 0 ? -0.12 : 0.12))); p.redraw() }
+      p.mouseWheel = (e: WheelEvent) => { zm.current = Math.max(0.5, Math.min(5, zm.current + (e.deltaY > 0 ? -0.12 : 0.12))); p.redraw() }
     }
     mk('s4s', s4SRef.current, sk)
     return () => rm('s4s')
