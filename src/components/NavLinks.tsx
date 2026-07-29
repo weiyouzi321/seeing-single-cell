@@ -129,6 +129,14 @@ export default function NavLinks() {
           {lang === 'zh' ? '首页' : 'Home'}
         </Link>
 
+        {/* 访问统计 */}
+        <Link
+          href="/analytics"
+          className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-[#7c3aed] dark:hover:text-[#7c3aed] transition-colors rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800"
+        >
+          {lang === 'zh' ? '🌍 访问统计' : '🌍 Analytics'}
+        </Link>
+
         {/* 章节 (Mega Dropdown) */}
         <div
           ref={dropdownRef}
@@ -205,6 +213,15 @@ export default function NavLinks() {
               className="block px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-xl transition-colors"
             >
               {lang === 'zh' ? '🏠 首页' : '🏠 Home'}
+            </Link>
+
+            {/* 访问统计 */}
+            <Link
+              href="/analytics"
+              onClick={closeAll}
+              className="block px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-purple-50 dark:hover:bg-slate-800 rounded-xl transition-colors"
+            >
+              {lang === 'zh' ? '🌍 访问统计' : '🌍 Analytics'}
             </Link>
 
             {/* 章节分组 */}

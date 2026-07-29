@@ -39,6 +39,17 @@ jobs:
       - name: Add .nojekyll
         run: touch out/.nojekyll
 
+      - name: Inject analytics credentials
+        if: ${{ secrets.ANALYTICS_BIN_ID != '' && secrets.ANALYTICS_BIN_KEY != '' }}
+        run: |
+          sed -i "s/__ANALYTICS_BIN_ID__/${{ secrets.ANALYTICS_BIN_ID }}/g" \
+            out/scripts/analytics.js out/analytics.html
+          sed -i "s/__ANALYTICS_BIN_KEY__/${{ secrets.ANALYTICS_BIN_KEY }}/g" \
+            out/scripts/analytics.js
+          find out -type f \( -name '*.js' -o -name '*.html' -o -name '*.json' -o -name '*.txt' \) -exec \
+            sed -i "s/__ANALYTICS_BIN_ID__/${{ secrets.ANALYTICS_BIN_ID }}/g" {} +
+        shell: bash
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
