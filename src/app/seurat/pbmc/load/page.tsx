@@ -63,8 +63,8 @@ export default function SeuratLoad() {
     loadData()
   }, [])
 
-  const cellTypeCounts = useMemo(() => {
-    if (!data) return {}
+  const cellTypeCounts: [string, number][] = useMemo(() => {
+    if (!data) return []
     const c: Record<string, number> = {}
     data.cell_types.forEach((t) => {
       c[t] = (c[t] || 0) + 1
