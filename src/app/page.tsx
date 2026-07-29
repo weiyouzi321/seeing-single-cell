@@ -198,35 +198,33 @@ export default function Home() {
             </a>
 
             {/* Seurat Tutorial */}
-            <a
-              href="https://satijalab.org/seurat/articles/pbmc3k_tutorial.html"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/seurat"
               className="group block bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 overflow-hidden"
             >
               <div className="h-2 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
-                    {lang === 'zh' ? '外部' : 'External'}
+                    {lang === 'zh' ? '内置' : 'Built-in'}
                   </span>
-                  <span className="text-xs text-gray-400 dark:text-slate-500">↗</span>
+                  <span className="text-xs text-emerald-500">NEW</span>
                 </div>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 mb-2 group-hover:text-emerald-600 transition-colors">
-                  {lang === 'zh' ? 'Seurat 教程' : 'Seurat Tutorial'}
+                  {lang === 'zh' ? 'Seurat 经典教程（中文）' : 'Seurat Tutorial (Chinese)'}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-slate-400 leading-relaxed">
                   {lang === 'zh'
-                    ? 'R 语言单细胞 RNA-seq 数据分析的标准流程：质控、归一化、聚类与可视化。'
-                    : 'The standard R workflow for scRNA-seq analysis: QC, normalization, clustering, and visualization.'}
+                    ? '完整翻译 Seurat PBMC 3K 经典教程：数据加载、质控、标准化、PCA、KNN 聚类、UMAP 可视化、差异表达分析。'
+                    : 'Complete translation of the Seurat PBMC 3K tutorial: data loading, QC, normalization, PCA, KNN clustering, UMAP, and DEG analysis.'}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {['R', 'Seurat', 'scRNA-seq'].map((kw) => (
-                    <span key={kw} className="text-xs text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-700 px-2 py-0.5 rounded-full">{kw}</span>
+                    <span key={kw} className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">{kw}</span>
                   ))}
                 </div>
               </div>
-            </a>
+            </Link>
           </div>
         </div>
       </section>

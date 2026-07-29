@@ -129,6 +129,14 @@ export default function NavLinks() {
           {lang === 'zh' ? '首页' : 'Home'}
         </Link>
 
+        {/* Seurat 教程 */}
+        <Link
+          href="/seurat"
+          className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-[#10b981] dark:hover:text-[#10b981] transition-colors rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800"
+        >
+          {lang === 'zh' ? '🧬 Seurat教程' : '🧬 Seurat'}
+        </Link>
+
         {/* 访问统计 */}
         <Link
           href="/analytics"
@@ -213,6 +221,15 @@ export default function NavLinks() {
               className="block px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-xl transition-colors"
             >
               {lang === 'zh' ? '🏠 首页' : '🏠 Home'}
+            </Link>
+
+            {/* Seurat 教程 */}
+            <Link
+              href="/seurat"
+              onClick={closeAll}
+              className="block px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-slate-800 rounded-xl transition-colors"
+            >
+              {lang === 'zh' ? '🧬 Seurat 教程' : '🧬 Seurat Tutorial'}
             </Link>
 
             {/* 访问统计 */}
