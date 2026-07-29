@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import Link from 'next/link'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import '../styles/globals.css'
@@ -31,6 +32,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
       <head>
+        <Analytics />
+
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css"
@@ -70,6 +73,22 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
+  )
+}
+
+
+// Inline client-side analytics script loader
+// Pure embedded: no external monitoring service, no Google account needed.
+// Uses JSONBin.io (free) + ip-api.com (free) for anonymous visitor stats.
+// Dashboard: https://weiyouzi321.github.io/seeing-single-cell/#/analytics
+function Analytics() {
+  const scriptUrl = '/scripts/analytics.js'
+  return (
+    <Script
+      src={scriptUrl}
+      strategy="afterInteractive"
+      crossOrigin="anonymous"
+    />
   )
 }
 

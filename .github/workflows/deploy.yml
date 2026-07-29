@@ -32,6 +32,7 @@ jobs:
         env:
           BASE_PATH: /seeing-single-cell
           NEXT_PUBLIC_BASE_PATH: /seeing-single-cell
+          NEXT_PUBLIC_GA_ID: ${{ secrets.NEXT_PUBLIC_GA_ID }}
           NODE_ENV: production
         run: npm run build
 
