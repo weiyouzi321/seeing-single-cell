@@ -159,7 +159,8 @@ async function main(){
       document.getElementById('load-fail').style.display = 'flex';
       return;
     }
-    const data = await r.json();
+    const raw = await r.json();
+    const data = { visits: Array.isArray(raw) ? raw : (raw.record || []) };
     if(!data.visits || data.visits.length === 0){
       document.getElementById('loading').style.display = 'none';
       document.getElementById('load-fail').style.display = 'flex';
