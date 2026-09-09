@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0 --port 3000",
-    "build": "NODE_ENV=production next build",
+    "build": "next build",
     "start": "next start",
     "preview": "serve out -l 3000",
     "lint": "next lint",
-    "export-docs": "NODE_ENV=production next build && mv out docs",
-    "export": "NODE_ENV=production next build && mv out docs"
+    "export-docs": "next build && mv out docs",
+    "export": "next build && mv out docs"
   },
   "dependencies": {
     "katex": "^0.16.10",
