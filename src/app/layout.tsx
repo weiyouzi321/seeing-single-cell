@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/hooks/useTheme'
 import LangSwitcher from '@/components/LangSwitcher'
 import NavLinks from '@/components/NavLinks'
 import ThemeToggle from '@/components/ThemeToggle'
+import VisitorCounter from '@/components/VisitorCounter'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -67,6 +68,9 @@ export default function RootLayout({
               <p>
                 <FooterText />
               </p>
+              <p className="mt-2 text-xs">
+                <VisitorCounter />
+              </p>
             </div>
           </footer>
         </LangProvider>
@@ -82,10 +86,12 @@ export default function RootLayout({
 // Uses JSONBin.io (free) + ip-api.com (free) for anonymous visitor stats.
 // Dashboard: https://weiyouzi321.github.io/seeing-single-cell/#/analytics
 function Analytics() {
-  const scriptUrl = '/scripts/analytics.js'
+  // basePath is NOT auto-prepended by next/script — must be explicit,
+  // otherwise the request goes to https://weiyouzi321.github.io/scripts/… → 404.
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
   return (
     <Script
-      src={scriptUrl}
+      src={`${basePath}/scripts/analytics.js`}
       strategy="afterInteractive"
       crossOrigin="anonymous"
     />

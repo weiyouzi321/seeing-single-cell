@@ -137,6 +137,66 @@ function StatCard({ label, value, zh }: { label: string; value: string; zh: stri
   )
 }
 
+// ── Busuanzi (busuanzi.cc) visit stats ─────────────────────────────────
+// Reads the spans filled by the footer VisitorCounter (root layout), so the
+// tracking script is loaded exactly once per visit — no double counting.
+
+function BusuanziStats() {
+  const { lang } = useLang()
+  const [v, setV] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    const read = () => {
+      const get = (id: string) => {
+        const el = document.getElementById(id)
+        const txt = (el?.textContent || '').trim()
+        return txt && txt !== '…' && txt !== '...' ? txt : null
+      }
+      const sitePv = get('busuanzi_site_pv')
+      const siteUv = get('busuanzi_site_uv')
+      if (sitePv || siteUv) {
+        setV({
+          site_pv: sitePv || '–',
+          site_uv: siteUv || '–',
+          today_pv: get('busuanzi_today_pv') || '–',
+          today_uv: get('busuanzi_today_uv') || '–',
+        })
+        return true
+      }
+      return false
+    }
+    if (read()) return
+    const timer = setInterval(() => { if (read()) clearInterval(timer) }, 500)
+    const stop = setTimeout(() => clearInterval(timer), 15000)
+    return () => {
+      clearInterval(timer)
+      clearTimeout(stop)
+    }
+  }, [])
+
+  const has = Object.keys(v).length > 0
+  if (!has) return null
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-lg font-semibold mb-3 text-gray-200">
+        {lang === 'zh' ? '📈 站点访问量' : '📈 Site Traffic'}
+      </h2>
+      <div className="flex flex-wrap gap-3">
+        <StatCard label="Total Visits" zh="总访问量" value={v.site_pv} />
+        <StatCard label="Unique Visitors" zh="总访客数" value={v.site_uv} />
+        <StatCard label="Today" zh="今日访问" value={v.today_pv} />
+        <StatCard label="Today (UV)" zh="今日访客" value={v.today_uv} />
+      </div>
+      <p className="text-xs text-gray-500 mt-2">
+        {lang === 'zh'
+          ? '数据来自不蒜子统计（busuanzi.cc），页面每次被打开即计数。'
+          : 'Powered by busuanzi.cc — counts every page load.'}
+      </p>
+    </div>
+  )
+}
+
 // ── Main ───────────────────────────────────────────────────────────────
 
 export default function Analytics() {
@@ -255,6 +315,9 @@ export default function Analytics() {
               ? '全球访客访问情况实时可视化'
               : 'Real-time visualization of global visitor traffic'}
           </p>
+
+          {/* Busuanzi site traffic (works out of the box, no setup needed) */}
+          <BusuanziStats />
 
           {loaded ? (
             <>

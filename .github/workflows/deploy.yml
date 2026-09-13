@@ -40,14 +40,24 @@ jobs:
         run: touch out/.nojekyll
 
       - name: Inject analytics credentials
-        if: ${{ secrets.ANALYTICS_BIN_ID != '' && secrets.ANALYTICS_BIN_KEY != '' }}
+        # NOTE: `secrets` context is NOT allowed in step-level `if:` —
+        # GitHub rejects the whole workflow with
+        # "Unrecognized named-value: 'secrets'" (0s failure, no jobs run).
+        # Pass secrets through env and guard in bash instead.
+        env:
+          ANALYTICS_BIN_ID: ${{ secrets.ANALYTICS_BIN_ID }}
+          ANALYTICS_BIN_KEY: ${{ secrets.ANALYTICS_BIN_KEY }}
         run: |
-          sed -i "s/__ANALYTICS_BIN_ID__/${{ secrets.ANALYTICS_BIN_ID }}/g" \
+          if [ -z "$ANALYTICS_BIN_ID" ] || [ -z "$ANALYTICS_BIN_KEY" ]; then
+            echo "Analytics secrets not configured — skipping injection"
+            exit 0
+          fi
+          sed -i "s|__ANALYTICS_BIN_ID__|${ANALYTICS_BIN_ID}|g" \
             out/scripts/analytics.js out/analytics.html
-          sed -i "s/__ANALYTICS_BIN_KEY__/${{ secrets.ANALYTICS_BIN_KEY }}/g" \
+          sed -i "s|__ANALYTICS_BIN_KEY__|${ANALYTICS_BIN_KEY}|g" \
             out/scripts/analytics.js
           find out -type f \( -name '*.js' -o -name '*.html' -o -name '*.json' -o -name '*.txt' \) -exec \
-            sed -i "s/__ANALYTICS_BIN_ID__/${{ secrets.ANALYTICS_BIN_ID }}/g" {} +
+            sed -i "s|__ANALYTICS_BIN_ID__|${ANALYTICS_BIN_ID}|g" {} +
         shell: bash
 
       - name: Deploy to GitHub Pages
