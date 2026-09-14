@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useMemo, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLang } from '@/lib/i18n/LangContext'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -8,9 +8,40 @@ const DimRedViz = dynamic(() => import('@/components/visualizations/DimRedViz'),
   ssr: false, loading: () => <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500" /></div>
 })
 
-interface PBMCData {
-  metadata: { n_cells: number; n_genes: number; cell_types: string[]; source: string }
-  gene_names: string[]; cell_types: string[]; expression_matrix: number[][]
+/**
+ * Chapter 6 used to download pbmc_scaled.json (4.6 MB) and run a 2000x2000
+ * covariance PCA on the main thread (~minutes of freeze). Everything it needs
+ * now lives in pbmc_dimred.json (~36 KB): precomputed PCA(10), real t-SNE and
+ * real UMAP coordinates, computed offline with sklearn/umap-learn.
+ */
+interface DimredData {
+  cell_types: string[]
+  pca?: number[][]
+  tsne?: number[][]
+  umap?: number[][]
+}
+
+/** Accept both number[][] and legacy {x,y}[] shapes. */
+function toCoords(v: unknown): number[][] | undefined {
+  if (!Array.isArray(v) || v.length === 0) return undefined
+  const first = v[0] as { x?: number; y?: number } | number[]
+  if (Array.isArray(first) && typeof first[0] === 'number') return v as number[][]
+  if (first && typeof first === 'object' && 'x' in first && 'y' in first)
+    return (v as { x: number; y: number }[]).map(p => [Number(p.x), Number(p.y)])
+  return undefined
+}
+
+async function fetchWithRetry(url: string, retries = 2): Promise<DimredData> {
+  let lastErr: unknown
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const r = await fetch(url, { cache: 'no-store' })
+      if (r.ok) return (await r.json()) as DimredData
+      lastErr = new Error(`HTTP ${r.status}`)
+    } catch (e) { lastErr = e }
+    if (i < retries) await new Promise(res => setTimeout(res, 800 * (i + 1)))
+  }
+  throw lastErr instanceof Error ? lastErr : new Error('fetch failed')
 }
 
 function K({ math }: { math: string }) {
@@ -37,36 +68,36 @@ function K({ math }: { math: string }) {
 export default function DimRedChapter() {
   const { t, lang } = useLang()
   const isZh = lang === 'zh'
-  const [data, setData] = useState<PBMCData | null>(null)
-  interface DimredData { tsne?: number[][]; umap?: number[][]; [key: string]: unknown }
-const [dimredData, setDimredData] = useState<DimredData | null>(null)
+  const [data, setData] = useState<DimredData | null>(null)
+  const [loadError, setLoadError] = useState(false)
   const [loading, setLoading] = useState(true)
   const [activeStep, setActiveStep] = useState(0)
 
+  const load = () => {
+    setLoading(true); setLoadError(false)
+    const b = process.env.NEXT_PUBLIC_BASE_PATH || ''
+    fetchWithRetry(`${b}/data/pbmc_dimred.json`)
+      .then(d => setData(d))
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false))
+  }
+
   useEffect(() => {
     if (typeof window !== 'undefined' && !window.katex) { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js'; s.async = true; document.head.appendChild(s) }
-    async function load() { 
-      try { 
-        const b = process.env.NEXT_PUBLIC_BASE_PATH || ''
-        const [r1, r2] = await Promise.all([
-          fetch(`${b}/data/pbmc_scaled.json`),
-          fetch(`${b}/data/pbmc_dimred.json`),
-        ])
-        if (r1.ok) setData(await r1.json())
-        if (r2.ok) setDimredData(await r2.json())
-      } catch(e) { console.error(e) } finally { setLoading(false) } 
-    }
     load()
   }, [])
 
-  // Data already scaled from pbmc_scaled.json
-  const processed = useMemo(() => {
-    if (!data) return null
-    return { scaled: data.expression_matrix, hvgNames: data.gene_names }
-  }, [data])
+  const pcaCoords = data?.pca
+  const tsneCoords = toCoords(data?.tsne)
+  const umapCoords = toCoords(data?.umap)
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500" /></div>
-  if (!data || !processed) return <p className="text-center text-red-500 py-12">Failed to load data.</p>
+  if (loadError || !data || !pcaCoords) return (
+    <div className="text-center py-12">
+      <p className="text-red-500 mb-3">{isZh ? '数据加载失败，请检查网络后重试。' : 'Failed to load data. Please check your connection and retry.'}</p>
+      <button onClick={load} className="px-5 py-2 rounded-xl bg-purple-500 text-white text-sm font-medium">{isZh ? '重新加载' : 'Retry'}</button>
+    </div>
+  )
 
   const steps = [
     { label: t('ch6.stepBtn1'), color: '#8b5cf6', icon: '\u{1f9ed}' },
@@ -123,7 +154,7 @@ const [dimredData, setDimredData] = useState<DimredData | null>(null)
             <div className="viz-card-header"><div className="step-number" style={{ background: '#8b5cf6' }}>1</div><h2>{t('ch6.step1Name')}</h2></div>
             <div className="info-panel concept mb-4"><h3>{t('ch6.step1Why')}</h3><p>{t('ch6.step1WhyDesc')}</p></div>
             <div className="info-panel tip mb-4"><h3>{t('ch6.step1TryTitle')}</h3><p>{t('ch6.step1TryDesc')}</p></div>
-            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={0} precomputedTsne={dimredData?.tsne} precomputedUmap={dimredData?.umap} />
+            <DimRedViz pca={pcaCoords} cellTypes={data.cell_types} lang={lang} activeStep={0} precomputedTsne={tsneCoords} precomputedUmap={umapCoords} />
             <div className="flex justify-end mt-6">
               <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#ef4444' }}>{t('ch6.step1Next')}</button>
             </div>
@@ -141,7 +172,7 @@ const [dimredData, setDimredData] = useState<DimredData | null>(null)
               <div className="text-center my-1"><K math="P(j|i) = \frac{\exp(-\|x_i - x_j\|^2 / 2\sigma^2)}{\sum_{k \neq i} \exp(-\|x_i - x_k\|^2 / 2\sigma^2)}" /></div>
             </div>
             <div className="info-panel tip mb-4"><h3>{t('ch6.step2TryTitle')}</h3><p>{t('ch6.step2TryDesc')}</p></div>
-            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={1} precomputedTsne={dimredData?.tsne} precomputedUmap={dimredData?.umap} />
+            <DimRedViz pca={pcaCoords} cellTypes={data.cell_types} lang={lang} activeStep={1} precomputedTsne={tsneCoords} precomputedUmap={umapCoords} />
             <div className="flex justify-between mt-6">
               <button onClick={() => setActiveStep(0)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-purple-500 hover:text-purple-600 transition-colors">{t('ch6.step2Back')}</button>
               <button onClick={() => setActiveStep(2)} className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#3b82f6' }}>{t('ch6.step2Next')}</button>
@@ -161,16 +192,16 @@ const [dimredData, setDimredData] = useState<DimredData | null>(null)
                 <table className="text-xs w-full mt-1">
                   <thead><tr className="border-b"><th className="text-left py-1 text-gray-500"></th><th className="text-left py-1 text-red-500">t-SNE</th><th className="text-left py-1 text-blue-500">UMAP</th></tr></thead>
                   <tbody>
-                    <tr className="border-b"><td className="py-1 text-gray-600">{isZh ? '局部' : 'Local'}</td><td>\u2705</td><td>\u2705</td></tr>
-                    <tr className="border-b"><td className="py-1 text-gray-600">{isZh ? '全局' : 'Global'}</td><td>\u274c</td><td>\u2705</td></tr>
-                    <tr className="border-b"><td className="py-1 text-gray-600">{isZh ? '速度' : 'Speed'}</td><td>\ud83d\udc22</td><td>\ud83d\udc07</td></tr>
-                    <tr><td className="py-1 text-gray-600">{isZh ? '可重复' : 'Reproducible'}</td><td>\u274c</td><td>\u2705</td></tr>
+                    <tr className="border-b"><td className="py-1 text-gray-600">{isZh ? '局部' : 'Local'}</td><td>{'\u2705'}</td><td>{'\u2705'}</td></tr>
+                    <tr className="border-b"><td className="py-1 text-gray-600">{isZh ? '全局' : 'Global'}</td><td>{'\u274c'}</td><td>{'\u2705'}</td></tr>
+                    <tr className="border-b"><td className="py-1 text-gray-600">{isZh ? '速度' : 'Speed'}</td><td>{'\ud83d\udc22'}</td><td>{'\ud83d\udc07'}</td></tr>
+                    <tr><td className="py-1 text-gray-600">{isZh ? '可重复' : 'Reproducible'}</td><td>{'\u274c'}</td><td>{'\u2705'}</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
             <div className="info-panel tip mb-4"><h3>{t('ch6.step3TryTitle')}</h3><p>{t('ch6.step3TryDesc')}</p></div>
-            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={2} precomputedTsne={dimredData?.tsne} precomputedUmap={dimredData?.umap} />
+            <DimRedViz pca={pcaCoords} cellTypes={data.cell_types} lang={lang} activeStep={2} precomputedTsne={tsneCoords} precomputedUmap={umapCoords} />
             <div className="flex justify-between mt-6">
               <button onClick={() => setActiveStep(1)} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium hover:border-red-500 hover:text-red-600 transition-colors">{t('ch6.step3Back')}</button>
               <button onClick={() => setActiveStep(3)} className="px-5 py-2.5 rounded-xl text-white font-medium shadow-sm" style={{ background: '#10b981' }}>{t('ch6.step3Next')}</button>
@@ -184,7 +215,7 @@ const [dimredData, setDimredData] = useState<DimredData | null>(null)
           <div className="viz-card">
             <div className="viz-card-header"><div className="step-number" style={{ background: '#10b981' }}>4</div><h2>{t('ch6.step4Name')}</h2></div>
             <div className="info-panel concept mb-4"><h3>{t('ch6.step4Compare')}</h3><p>{t('ch6.step4CompareDesc')}</p></div>
-            <DimRedViz data={processed.scaled} geneNames={processed.hvgNames} cellTypes={data.cell_types} lang={lang} activeStep={3} precomputedTsne={dimredData?.tsne} precomputedUmap={dimredData?.umap} />
+            <DimRedViz pca={pcaCoords} cellTypes={data.cell_types} lang={lang} activeStep={3} precomputedTsne={tsneCoords} precomputedUmap={umapCoords} />
             <div className="info-panel tip mt-6">
               <h3>{'\u26a0\ufe0f ' + t('ch6.step4Pitfalls')}</h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">

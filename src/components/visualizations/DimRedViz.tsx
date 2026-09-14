@@ -3,8 +3,9 @@ import { useEffect, useRef, useState, useMemo } from 'react'
 import p5 from 'p5'
 
 interface DimRedVizProps {
-  data: number[][]
-  geneNames: string[]
+  /** Precomputed PCA scores (n_cells x ~10). Required — never computed from
+   *  the raw 300x2000 matrix in the browser (that froze the main thread). */
+  pca: number[][]
   cellTypes: string[]
   lang?: 'en' | 'zh'
   activeStep: number
@@ -67,7 +68,12 @@ function makeCircles(n: number, seed: number = 42) {
   return { points: pts, labels }
 }
 
-function runTSNE(X: number[][], perplexity: number = 30, lr: number = 200, iterations: number = 300, seed: number = 42): number[][] {
+/**
+ * Compute the fixed inputs of t-SNE once: pairwise distances D and the
+ * perplexity-normalized, symmetrized affinity matrix P.
+ * (The old code recomputed D and P for EVERY animation frame — 6x waste.)
+ */
+function tsnePrepare(X: number[][], perplexity: number, seed: number) {
   const n = X.length, dim = X[0].length
   let rng = seed
   const rand = () => { rng = (rng * 16807) % 2147483647; return rng / 2147483647 }
@@ -91,7 +97,13 @@ function runTSNE(X: number[][], perplexity: number = 30, lr: number = 200, itera
     for (let j = 0; j < n; j++) { P[i][j] = i === j ? 0 : P[i][j] / sum }
   }
   for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { const v = (P[i][j] + P[j][i]) / (2 * n); P[i][j] = v; P[j][i] = v }
-  for (let iter = 0; iter < iterations; iter++) {
+  return { P, Y }
+}
+
+/** One batch of gradient-descent iterations over the prepared affinities. */
+function tsneIterate(Y: number[][], P: number[][], lr: number, steps: number) {
+  const n = Y.length
+  for (let iter = 0; iter < steps; iter++) {
     let Z = 0; const Q: number[][] = Array.from({ length: n }, () => Array(n).fill(0))
     for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { const dy0 = Y[i][0] - Y[j][0], dy1 = Y[i][1] - Y[j][1]; const q = 1 / (1 + dy0 * dy0 + dy1 * dy1); Q[i][j] = q; Q[j][i] = q; Z += 2 * q }
     for (let i = 0; i < n; i++) {
@@ -100,7 +112,29 @@ function runTSNE(X: number[][], perplexity: number = 30, lr: number = 200, itera
       Y[i][0] -= lr * gx; Y[i][1] -= lr * gy
     }
   }
+}
+
+/** Lightweight t-SNE for small synthetic datasets (step 1). */
+function runTSNE(X: number[][], perplexity: number = 30, lr: number = 200, iterations: number = 300, seed: number = 42): number[][] {
+  const { P, Y } = tsnePrepare(X, perplexity, seed)
+  tsneIterate(Y, P, lr, iterations)
   return Y
+}
+
+/**
+ * All animation checkpoints from ONE pass of the iteration, instead of the old
+ * behaviour of restarting t-SNE from scratch for every frame.
+ */
+function tsneAnimationFrames(X: number[][], perplexity: number, lr: number, checkpoints: number[], seed: number): number[][][] {
+  const { P, Y } = tsnePrepare(X, perplexity, seed)
+  const frames: number[][][] = []
+  let prev = 0
+  for (const cp of checkpoints) {
+    tsneIterate(Y, P, lr, cp - prev)
+    prev = cp
+    frames.push(Y.map(r => [r[0], r[1]]))
+  }
+  return frames
 }
 
 function runUMAP(X: number[][], nNeighbors: number = 15, minDist: number = 0.1, iterations: number = 200): number[][] {
@@ -158,10 +192,8 @@ function drawCellScatter(p: p5, coords: number[][], cellTypes: string[], W: numb
 
 const SYNTH_PALETTE: Record<string, [number, number, number]> = { 'Inner': [66, 133, 244], 'Outer': [234, 67, 53], 'Moon1': [66, 133, 244], 'Moon2': [234, 67, 53] }
 
-export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', activeStep, precomputedTsne, precomputedUmap }: DimRedVizProps) {
+export default function DimRedViz({ pca, cellTypes, lang = 'en', activeStep, precomputedTsne, precomputedUmap }: DimRedVizProps) {
   const isZh = lang === 'zh'
-  const nCells = data.length
-  const pca = useMemo(() => computePCA(data, 10).projected, [data])
 
   const [dataset, setDataset] = useState<'swissroll' | 'moons' | 'circles'>('swissroll')
   const step1Ref = useRef<HTMLDivElement>(null)
@@ -187,42 +219,58 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
   const step4AllRef = useRef<HTMLDivElement>(null)
   const step4AllP5 = useRef<p5 | null>(null)
 
-  // Use precomputed results if provided
+  // Step 2 (t-SNE convergence animation): debounced recompute.
+  // D and P are now computed ONCE for all frames (was: 6x from scratch).
+  // The 400ms timeout doubles as a drag-debounce — the cleanup cancels the
+  // pending run whenever perplexity/lr keep changing.
   useEffect(() => {
-    if (precomputedTsne) setTsneResult4(precomputedTsne)
-    if (precomputedUmap) setUmapResult(precomputedUmap)
-  }, [precomputedTsne, precomputedUmap])
-
-  useEffect(() => {
-    if (activeStep !== 1) return
+    if (activeStep !== 1 || !pca) return
     setIsComputing(true)
-    setTimeout(() => {
-      const frames: number[][][] = []
-      for (const it of [0, 20, 50, 100, 200, 300]) { frames.push(runTSNE(pca, perplexity, lr, it, 42)) }
+    const t = setTimeout(() => {
+      const frames = tsneAnimationFrames(pca, perplexity, lr, [0, 20, 50, 100, 200, 300], 42)
       setTsneFrames(frames)
       setTsneIter(0)
+      setTsnePlaying(false)
       setIsComputing(false)
-    }, 50)
+    }, 400)
+    return () => clearTimeout(t)
   }, [activeStep, perplexity, lr, pca])
 
+  // Step 3 (UMAP): with default parameters show the offline-precomputed
+  // embedding instantly; only recompute in the browser when the user actually
+  // moves the n_neighbors / min_dist sliders (debounced).
   useEffect(() => {
-    if (activeStep !== 2) return
+    if (activeStep !== 2 || !pca) return
+    if (precomputedUmap && nNeighbors === 15 && minDist === 0.1) {
+      setUmapResult(precomputedUmap)
+      setIsComputing(false)
+      return
+    }
     setIsComputing(true)
-    setTimeout(() => {
+    const t = setTimeout(() => {
       setUmapResult(runUMAP(pca, nNeighbors, minDist, 200))
       setIsComputing(false)
-    }, 50)
-  }, [activeStep, nNeighbors, minDist, pca])
+    }, 400)
+    return () => clearTimeout(t)
+  }, [activeStep, nNeighbors, minDist, pca, precomputedUmap])
 
+  // Step 4 (PCA vs t-SNE vs UMAP comparison): instant precomputed results on
+  // entry; heavy client-side compute only behind the explicit re-run button.
   useEffect(() => {
-    if (activeStep !== 3) return
+    if (activeStep !== 3 || !pca) return
+    if (tsneRunCount === 0 && precomputedTsne && precomputedUmap) {
+      setTsneResult4(precomputedTsne)
+      setUmapResult(precomputedUmap)
+      return
+    }
     setIsComputing(true)
-    setTimeout(() => {
+    const t = setTimeout(() => {
       setTsneResult4(runTSNE(pca, 30, 200, 300, Date.now()))
       setUmapResult(runUMAP(pca, 15, 0.1, 200))
       setIsComputing(false)
     }, 50)
-  }, [activeStep, tsneRunCount])
+    return () => clearTimeout(t)
+  }, [activeStep, tsneRunCount, pca, precomputedTsne, precomputedUmap])
 
   useEffect(() => {
     if (activeStep !== 0 || !step1Ref.current) return
@@ -307,8 +355,7 @@ export default function DimRedViz({ data, geneNames, cellTypes, lang = 'en', act
       <div>
         <div className="control-group">
           <label>{isZh ? '数据集' : 'Dataset'}:</label>
-          {isComputing && <div className="flex justify-center py-4 text-sm text-purple-500">{isZh ? '计算中...' : 'Computing...'}</div>}
-        {(['swissroll', 'moons', 'circles'] as const).map(ds => (
+          {(['swissroll', 'moons', 'circles'] as const).map(ds => (
             <button key={ds} onClick={() => setDataset(ds)}
               className={`px-3 py-1 rounded text-sm ${dataset === ds ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
               {ds === 'swissroll' ? (isZh ? '瑞士卷' : 'Swiss Roll') : ds === 'moons' ? (isZh ? '双月' : 'Two Moons') : (isZh ? '同心圆' : 'Circles')}
